@@ -1,0 +1,296 @@
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="sup">STRATEGIC OVERSIGHT DASHBOARD</div>
+      <h1>Dashboard Overview</h1>
+    </div>
+
+    <div class="header-actions">
+      <button>7 Days</button>
+      <button class="active">30 Days</button>
+      <button>Quarterly</button>
+    </div>
+  </div>
+
+  <!-- 4 PANEL GRID -->
+  <div class="grid">
+
+    <!-- PANEL 1 -->
+    <div class="card">
+  <h3>Vendor Performance / NO DATA AT THIS MOMENT</h3>
+
+  <!-- DONUT ROW -->
+  <div class="vp-donut-row">
+
+    <div class="vp-donut-item" *ngFor="let v of vendorHealth">
+
+      <div class="vp-donut"
+           [style.--p]="v.percent"
+           [class.green]="v.color==='green'"
+           [class.orange]="v.color==='orange'"
+           [class.red]="v.color==='red'">
+
+        <div class="vp-donut-inner">{{v.percent}}%</div>
+
+      </div>
+
+      <div class="vp-label">{{v.label}}</div>
+    </div>
+
+  </div>
+
+
+  <!-- TABLE -->
+    <table class="vp-table">
+
+      <thead>
+        <tr>
+          <th>PARTNER</th>
+          <th>MTTR (AVG)</th>
+          <th>FCR RATE</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let r of vendorRows">
+
+          <td>{{r.partner}}</td>
+
+          <td>
+            <span class="mttr">{{r.mttr}}</span>
+          </td>
+
+          <td>
+            <div class="fcr-wrap">
+              <div class="fcr-bar">
+                <div class="fcr-fill"
+                    [style.width.%]="r.fcr"
+                    [class.green]="r.color==='green'"
+                    [class.orange]="r.color==='orange'"
+                    [class.red]="r.color==='red'">
+                </div>
+              </div>
+              <span class="fcr-text">{{r.fcr}}%</span>
+            </div>
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+
+    <!-- PANEL 2 -->
+    <div class="card">
+      <h3>Total Asset Health STILL INTEGRATE WITH BACKEND DATA</h3>
+
+      <div class="asset-health">
+
+        <!-- LEFT — DONUT -->
+        <div class="ah-donut-wrap">
+
+          <div class="ah-donut">
+            <div class="ah-donut-inner">
+              <div class="ah-total">{{assetTotal}}</div>
+              <div class="ah-label">ACTIVE ASSETS</div>
+            </div>
+          </div>
+
+          <div class="ah-legend">
+            <span><i class="dot blue"></i> FGV</span>
+            <span><i class="dot yellow"></i> Edaran</span>
+            <span><i class="dot gray"></i> Other</span>
+          </div>
+
+        </div>
+
+
+        <!-- RIGHT — TOP FAULT -->
+        <div class="ah-right">
+
+          <div class="ah-subtitle">TOP 5 FAULT-PRONE MODELS</div>
+
+          <div class="ah-row" *ngFor="let m of topFault">
+
+            <div class="ah-model">{{m.name}}</div>
+
+            <div class="ah-bar">
+              <div class="ah-fill"
+                  [style.width.%]="m.rate">
+              </div>
+            </div>
+
+            <div class="ah-rate">{{m.rate}}% Fault Rate</div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- PANEL 3 — INCIDENT WALL (API LIVE) -->
+    
+
+    <div class="card">
+      <h3>
+        Incident Wall Management
+        <!-- <span class="badge">{{ incidents.length }}</span> -->
+      </h3>
+
+      <div class="incident-kpi-grid">
+
+        <!-- OPEN -->
+        <div class="iw-card iw-blue">
+          <div class="iw-title">OPEN TICKETS</div>
+          <div class="iw-value">{{openCount}}</div>
+
+          <div class="iw-sub">
+            <div>FGV: {{openCount}}</div>
+            <div>EDR: {{pendingCount}}</div>
+          </div>
+
+          <div class="iw-icon">⏳</div>
+        </div>
+
+
+        <!-- PENDING -->
+        <div class="iw-card iw-yellow">
+          <div class="iw-title">PENDING / AWAITING</div>
+          <div class="iw-value">{{pendingCount}}</div>
+
+          <div class="iw-sub">
+            3rd Party Wait<br>
+            User Action
+          </div>
+
+          <div class="iw-icon">⏸</div>
+        </div>
+
+
+        <!-- SOLVED -->
+        <div class="iw-card iw-green">
+          <div class="iw-title">SOLVED WITHIN SLA</div>
+          <div class="iw-value">{{solvedCount}}</div>
+
+          <div class="iw-sub">
+            ✔ Compliance OK
+          </div>
+
+          <div class="iw-icon">✔</div>
+        </div>
+
+
+        <!-- SLA LAPSED -->
+        <div class="iw-card iw-red">
+          <div class="iw-title">SLA LAPSED</div>
+          <div class="iw-value">{{lapsedCount}}</div>
+
+          <div class="iw-sub">
+            ⚠ Escalation Required
+          </div>
+
+          <div class="iw-icon">!</div>
+        </div>
+
+      </div>
+
+
+      <!-- <table class="incident-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>User</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let r of incidents">
+            <td>{{ r.id }}</td>
+            <td>{{ r.title }}</td>
+            <td>{{ r.user }}</td>
+            <td>
+              <span class="status">{{ r.status }}</span>
+            </td>
+            <td>{{ r.created | date:'yyyy-MM-dd HH:mm' }}</td>
+          </tr>
+
+          <tr *ngIf="incidents.length === 0">
+            <td colspan="5" class="empty">
+              No incident data
+            </td>
+          </tr>
+
+        </tbody>
+      </table> -->
+
+    </div>
+
+    <!-- PANEL 4 -->
+      <div class="card">
+        <h3>Brand Aging Analysis STILL INTEGRATING WITH BACKEND DATA</h3>
+
+        <div class="ba-wrapper">
+
+          <!-- LEFT — BRAND STACK -->
+          <div class="ba-left">
+
+            <div class="ba-row" *ngFor="let b of brandRows">
+
+              <div class="ba-brand">
+                <div class="ba-name">{{b.name}}</div>
+                <div class="ba-sub">{{b.category}}</div>
+              </div>
+
+              <div class="ba-bar">
+
+                <div class="seg new"    [style.width.%]="b.new"></div>
+                <div class="seg young"  [style.width.%]="b.young"></div>
+                <div class="seg mid"    [style.width.%]="b.mid"></div>
+                <div class="seg mature" [style.width.%]="b.mature"></div>
+                <div class="seg legacy" [style.width.%]="b.legacy"></div>
+
+              </div>
+
+              <div class="ba-total">{{b.total}} units</div>
+
+            </div>
+
+          </div>
+
+
+          <!-- RIGHT — QUICK STATS -->
+          <div class="ba-right">
+
+            <div class="ba-stat">
+              <div class="ba-stat-title">Critical Attrition</div>
+              <div class="ba-stat-value danger">HP Fleet</div>
+              <div class="ba-stat-sub">30.2% risk</div>
+            </div>
+
+            <div class="ba-stat">
+              <div class="ba-stat-title">Refresh CapEx</div>
+              <div class="ba-stat-value">$1.4M</div>
+              <div class="ba-stat-sub">FY25 budget</div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+
+  </div>
+
+</div>

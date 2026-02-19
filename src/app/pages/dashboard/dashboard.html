@@ -1,296 +1,168 @@
 <div class="page">
-
   <!-- HEADER -->
   <div class="header">
-    <div>
+    <div class="header-left">
       <div class="sup">STRATEGIC OVERSIGHT DASHBOARD</div>
       <h1>Dashboard Overview</h1>
     </div>
 
     <div class="header-actions">
-      <button>7 Days</button>
-      <button class="active">30 Days</button>
-      <button>Quarterly</button>
+      <!-- Wrap the time filters in their own group -->
+      <div class="btn-group">
+        <button>7 Days</button>
+        <button class="active">30 Days</button>
+        <button>Quarterly</button>
+      </div>
+      
+      <!-- PDF Button sits next to the group -->
+      <button class="btn-export">
+        <mat-icon>picture_as_pdf</mat-icon> Export PDF
+      </button>
     </div>
   </div>
 
-  <!-- 4 PANEL GRID -->
+
   <div class="grid">
-
-    <!-- PANEL 1 -->
+    <!-- 1. VENDOR PERFORMANCE -->
     <div class="card">
-  <h3>Vendor Performance / NO DATA AT THIS MOMENT</h3>
-
-  <!-- DONUT ROW -->
-  <div class="vp-donut-row">
-
-    <div class="vp-donut-item" *ngFor="let v of vendorHealth">
-
-      <div class="vp-donut"
-           [style.--p]="v.percent"
-           [class.green]="v.color==='green'"
-           [class.orange]="v.color==='orange'"
-           [class.red]="v.color==='red'">
-
-        <div class="vp-donut-inner">{{v.percent}}%</div>
-
+      <h3>Vendor Performance</h3>
+      
+      <!-- TOP: HEALTH SPINNERS -->
+      <div class="vp-row">
+        <div class="vp-item" *ngFor="let v of vendorHealth">
+          <div class="spinner-container">
+            <mat-progress-spinner 
+              mode="determinate" 
+              [value]="v.percent" 
+              [diameter]="64" 
+              [strokeWidth]="8"
+              [ngClass]="v.color"> <!-- We use CSS classes for colors -->
+            </mat-progress-spinner>
+            <div class="spinner-text">{{ v.percent }}%</div>
+          </div>
+          <div class="vp-label">{{ v.label }}</div>
+        </div>
       </div>
 
-      <div class="vp-label">{{v.label}}</div>
+      <!-- BOTTOM: PERFORMANCE TABLE -->
+      <table class="vp-table">
+        <thead>
+          <tr>
+            <th>PARTNER</th>
+            <th>MTTR (AVG)</th>
+            <th class="right-align">FCR RATE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of vendorRows">
+            <td>{{ r.partner }}</td>
+            <td [class]="r.color + '-text'">{{ r.mttr }}</td>
+            <td>
+              <div class="fcr-flex">
+                <mat-progress-bar 
+                  mode="determinate" 
+                  [value]="r.fcr" 
+                  [ngClass]="r.color" 
+                  class="custom-bar">
+                </mat-progress-bar>
+                <span class="fcr-val">{{ r.fcr }}%</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-  </div>
 
-
-  <!-- TABLE -->
-    <table class="vp-table">
-
-      <thead>
-        <tr>
-          <th>PARTNER</th>
-          <th>MTTR (AVG)</th>
-          <th>FCR RATE</th>
-        </tr>
-      </thead>
-
-      <tbody>
-
-        <tr *ngFor="let r of vendorRows">
-
-          <td>{{r.partner}}</td>
-
-          <td>
-            <span class="mttr">{{r.mttr}}</span>
-          </td>
-
-          <td>
-            <div class="fcr-wrap">
-              <div class="fcr-bar">
-                <div class="fcr-fill"
-                    [style.width.%]="r.fcr"
-                    [class.green]="r.color==='green'"
-                    [class.orange]="r.color==='orange'"
-                    [class.red]="r.color==='red'">
-                </div>
-              </div>
-              <span class="fcr-text">{{r.fcr}}%</span>
-            </div>
-          </td>
-
-        </tr>
-
-      </tbody>
-
-    </table>
-
-  </div>
-
-
-    <!-- PANEL 2 -->
+    <!-- 2. TOTAL ASSET HEALTH -->
     <div class="card">
-      <h3>Total Asset Health STILL INTEGRATE WITH BACKEND DATA</h3>
-
-      <div class="asset-health">
-
-        <!-- LEFT — DONUT -->
-        <div class="ah-donut-wrap">
-
-          <div class="ah-donut">
-            <div class="ah-donut-inner">
-              <div class="ah-total">{{assetTotal}}</div>
-              <div class="ah-label">ACTIVE ASSETS</div>
+      <h3>Total Asset Health</h3>
+      <div class="asset-flex">
+        <div class="ah-left">
+          <div class="spinner-wrapper">
+            <!-- diameter 110 is usually the sweet spot for these cards -->
+            <mat-progress-spinner 
+              mode="determinate" 
+              [value]="100" 
+              [diameter]="110" 
+              [strokeWidth]="10" 
+              color="primary">
+            </mat-progress-spinner>
+            
+            <div class="ah-inner">
+              <div class="ah-val">4,821</div>
+              <div class="ah-sub">ACTIVE ASSETS</div>
             </div>
           </div>
-
+          
           <div class="ah-legend">
             <span><i class="dot blue"></i> FGV</span>
             <span><i class="dot yellow"></i> Edaran</span>
             <span><i class="dot gray"></i> Other</span>
           </div>
-
         </div>
 
-
-        <!-- RIGHT — TOP FAULT -->
         <div class="ah-right">
-
-          <div class="ah-subtitle">TOP 5 FAULT-PRONE MODELS</div>
-
-          <div class="ah-row" *ngFor="let m of topFault">
-
-            <div class="ah-model">{{m.name}}</div>
-
-            <div class="ah-bar">
-              <div class="ah-fill"
-                  [style.width.%]="m.rate">
-              </div>
-            </div>
-
-            <div class="ah-rate">{{m.rate}}% Fault Rate</div>
-
+          <div class="sup-title">TOP 5 FAULT-PRONE MODELS</div>
+          <div class="fault-row" *ngFor="let m of topFault">
+            <div class="fault-info"><span>{{ m.name }}</span><span class="red-text">{{ m.rate }}%</span></div>
+            <mat-progress-bar mode="determinate" [value]="m.rate" color="warn" class="custom-bar"></mat-progress-bar>
           </div>
-
         </div>
-
       </div>
     </div>
 
-
-    <!-- PANEL 3 — INCIDENT WALL (API LIVE) -->
-    
-
+    <!-- 3. INCIDENT WALL -->
     <div class="card">
-      <h3>
-        Incident Wall Management
-        <!-- <span class="badge">{{ incidents.length }}</span> -->
-      </h3>
-
-      <div class="incident-kpi-grid">
-
-        <!-- OPEN -->
-        <div class="iw-card iw-blue">
-          <div class="iw-title">OPEN TICKETS</div>
-          <div class="iw-value">{{openCount}}</div>
-
-          <div class="iw-sub">
-            <div>FGV: {{openCount}}</div>
-            <div>EDR: {{pendingCount}}</div>
-          </div>
-
-          <div class="iw-icon">⏳</div>
+      <h3>Incident Wall Management</h3>
+      <div class="iw-grid">
+        <div class="iw-item iw-blue">
+          <div class="iw-label">OPEN TICKETS</div>
+          <div class="iw-value">{{ openCount }}</div>
+          <div class="iw-desc">FGV: {{ openCount }} | EDR: {{ pendingCount }}</div>
+          <mat-icon class="iw-icon">history</mat-icon>
         </div>
-
-
-        <!-- PENDING -->
-        <div class="iw-card iw-yellow">
-          <div class="iw-title">PENDING / AWAITING</div>
-          <div class="iw-value">{{pendingCount}}</div>
-
-          <div class="iw-sub">
-            3rd Party Wait<br>
-            User Action
-          </div>
-
-          <div class="iw-icon">⏸</div>
+        <div class="iw-item iw-yellow">
+          <div class="iw-label">PENDING / AWAITING</div>
+          <div class="iw-value">{{ pendingCount }}</div>
+          <div class="iw-desc">3rd Party Wait / Action</div>
+          <mat-icon class="iw-icon">pause_circle</mat-icon>
         </div>
-
-
-        <!-- SOLVED -->
-        <div class="iw-card iw-green">
-          <div class="iw-title">SOLVED WITHIN SLA</div>
-          <div class="iw-value">{{solvedCount}}</div>
-
-          <div class="iw-sub">
-            ✔ Compliance OK
-          </div>
-
-          <div class="iw-icon">✔</div>
+        <div class="iw-item iw-green">
+          <div class="iw-label">SOLVED WITHIN SLA</div>
+          <div class="iw-value">{{ solvedCount }}</div>
+          <div class="iw-desc">✔ Compliance OK</div>
+          <mat-icon class="iw-icon">verified</mat-icon>
         </div>
-
-
-        <!-- SLA LAPSED -->
-        <div class="iw-card iw-red">
-          <div class="iw-title">SLA LAPSED</div>
-          <div class="iw-value">{{lapsedCount}}</div>
-
-          <div class="iw-sub">
-            ⚠ Escalation Required
-          </div>
-
-          <div class="iw-icon">!</div>
+        <div class="iw-item iw-red">
+          <div class="iw-label">SLA LAPSED</div>
+          <div class="iw-value">{{ lapsedCount }}</div>
+          <div class="iw-desc">⚠ Escalation Required</div>
+          <mat-icon class="iw-icon">warning_amber</mat-icon>
         </div>
-
       </div>
-
-
-      <!-- <table class="incident-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>User</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <tr *ngFor="let r of incidents">
-            <td>{{ r.id }}</td>
-            <td>{{ r.title }}</td>
-            <td>{{ r.user }}</td>
-            <td>
-              <span class="status">{{ r.status }}</span>
-            </td>
-            <td>{{ r.created | date:'yyyy-MM-dd HH:mm' }}</td>
-          </tr>
-
-          <tr *ngIf="incidents.length === 0">
-            <td colspan="5" class="empty">
-              No incident data
-            </td>
-          </tr>
-
-        </tbody>
-      </table> -->
-
     </div>
 
-    <!-- PANEL 4 -->
-      <div class="card">
-        <h3>Brand Aging Analysis STILL INTEGRATING WITH BACKEND DATA</h3>
-
-        <div class="ba-wrapper">
-
-          <!-- LEFT — BRAND STACK -->
-          <div class="ba-left">
-
-            <div class="ba-row" *ngFor="let b of brandRows">
-
-              <div class="ba-brand">
-                <div class="ba-name">{{b.name}}</div>
-                <div class="ba-sub">{{b.category}}</div>
-              </div>
-
-              <div class="ba-bar">
-
-                <div class="seg new"    [style.width.%]="b.new"></div>
-                <div class="seg young"  [style.width.%]="b.young"></div>
-                <div class="seg mid"    [style.width.%]="b.mid"></div>
-                <div class="seg mature" [style.width.%]="b.mature"></div>
-                <div class="seg legacy" [style.width.%]="b.legacy"></div>
-
-              </div>
-
-              <div class="ba-total">{{b.total}} units</div>
-
+    <!-- 4. BRAND AGING -->
+    <div class="card">
+      <h3>Brand Aging Analysis</h3>
+      <div class="ba-flex">
+        <div class="ba-charts">
+          <div class="ba-row" *ngFor="let b of brandRows">
+            <div class="ba-info"><span>{{ b.name }}</span><span>{{ b.total }} units</span></div>
+            <div class="ba-full-bar">
+              <div class="seg new" [style.width.%]="b.new"></div>
+              <div class="seg young" [style.width.%]="b.young"></div>
+              <div class="seg mid" [style.width.%]="b.mid"></div>
+              <div class="seg legacy" [style.width.%]="b.legacy"></div>
             </div>
-
           </div>
-
-
-          <!-- RIGHT — QUICK STATS -->
-          <div class="ba-right">
-
-            <div class="ba-stat">
-              <div class="ba-stat-title">Critical Attrition</div>
-              <div class="ba-stat-value danger">HP Fleet</div>
-              <div class="ba-stat-sub">30.2% risk</div>
-            </div>
-
-            <div class="ba-stat">
-              <div class="ba-stat-title">Refresh CapEx</div>
-              <div class="ba-stat-value">$1.4M</div>
-              <div class="ba-stat-sub">FY25 budget</div>
-            </div>
-
-          </div>
-
+        </div>
+        <div class="ba-stats">
+          <div class="stat-box"><div class="sup">Critical Attrition</div><div class="stat-val red">HP Fleet</div><div class="sup">30.2% RISK</div></div>
+          <div class="stat-box"><div class="sup">Refresh CapEx</div><div class="stat-val">$1.4M</div><div class="sup">FY25 BUDGET</div></div>
         </div>
       </div>
-
-
+    </div>
   </div>
-
 </div>

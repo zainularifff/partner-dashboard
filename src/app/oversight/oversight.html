@@ -1,0 +1,90 @@
+<div class="page">
+  <div class="header">
+    <h1>Dashboard Overview</h1>
+  </div>
+
+  <div class="grid">
+    <!-- PANEL 1: TOTAL ASSETS -->
+    <div class="card">
+      <h3 class="card-title">Total Asset : <span class="blue-text">13,989</span></h3>
+      
+      <div class="asset-icons">
+        <div class="icon-item">
+          <span><mat-icon>business</mat-icon> GLC</span>
+          <strong>1090</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>account_balance</mat-icon> FSI</span>
+          <strong>8800</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>school</mat-icon> EDU</span>
+          <strong>100</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>government_up</mat-icon> GOV</span>
+          <strong>3999</strong>
+        </div>
+      </div>
+
+      <div class="asset-footer">
+        <div class="footer-stat">DESKTOP <strong>11,789</strong></div>
+        <div class="footer-stat">LAPTOP <strong>2,000</strong></div>
+        <div class="footer-stat">SERVER <strong>200</strong></div>
+        <div class="footer-stat">OTHERS <strong>0</strong></div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: INCIDENT WALL -->
+    <div class="card">
+      <h3 class="card-title">Incident Wall Management</h3>
+      <div class="status-banner">
+        <div class="status-box open">Open <div>2</div></div>
+        <div class="status-box prog">In Progress <div>0</div></div>
+        <div class="status-box solved">Solved <div>0</div></div>
+        <div class="status-box closed">Closed <div>0</div></div>
+      </div>
+
+      <div class="iw-body">
+        <div class="donut-placeholder">2</div>
+        <div class="donut-labels">
+          <div><i class="dot blue"></i> GLC (1)</div>
+          <div><i class="dot yellow"></i> EDU (1)</div>
+        </div>
+      </div>
+
+      <div class="priority-section">
+        <div class="sup">PRIORITY DISTRIBUTION</div>
+        <div class="priority-bar-container">
+          <div class="priority-bar-fill orange" style="width: 50%"></div>
+          <div class="priority-bar-fill yellow" style="width: 50%"></div>
+        </div>
+        <div class="priority-legend">
+          <span>Crit (0)</span><span>High (1)</span><span>Med (1)</span><span>Low (0)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: LEASE TIMELINE (FULL WIDTH) -->
+    <div class="card full-width">
+      <h3 class="card-title">Lease Lifecycle Timeline</h3>
+      <div class="timeline-list">
+        <div class="t-row" *ngFor="let item of leases">
+          <div class="t-info">
+            <strong>{{ item.name }}</strong><br>
+            <small>{{ item.startDate }}</small>
+          </div>
+          
+          <!-- RE-ADDED THE PROGRESS BAR CODE -->
+          <div class="t-progress-container">
+            <div class="t-bar" [style.width.%]="item.progress"></div>
+            <div class="t-labels">
+              <span class="days-left">{{ item.daysLeft }} Days Left</span>
+              <span class="end-date">{{ item.endDate }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

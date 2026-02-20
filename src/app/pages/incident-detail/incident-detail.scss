@@ -1,0 +1,116 @@
+.container {
+  padding: 24px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-weight: 500;
+    color: #333;
+  }
+
+  button {
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+}
+
+.table-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 0; // Remove padding so table is edge-to-edge
+  overflow: hidden;
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  thead {
+    background-color: #f1f3f5;
+    
+    th {
+      text-align: left;
+      padding: 16px;
+      color: #666;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #dee2e6;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #eee;
+      transition: background 0.2s;
+
+      &:hover {
+        background-color: #fdfdfd;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 16px;
+      vertical-align: middle;
+    }
+  }
+
+  .bold { font-weight: 600; color: #1a73e8; }
+  .title-text { color: #333; max-width: 400px; }
+  .center { text-align: center; }
+  .date-text { color: #888; font-family: monospace; }
+}
+
+.ip-badge {
+  background: #e8f0fe;
+  color: #1967d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.no-data {
+  padding: 40px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-open { background-color: #2196f3; }    // Blue
+.status-pending { background-color: #ffc107; } // Yellow
+.status-solved { background-color: #4caf50; }  // Green
+.status-lapsed { background-color: #f44336; }  // Red
+
+.mat-icon {
+  font-family: 'Material Icons' !important;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+button[mat-icon-button] {
+  overflow: hidden; /* This hides the 'ar' text if the icon fails to load */
+}

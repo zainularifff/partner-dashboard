@@ -3,16 +3,13 @@ import { DashboardComponent } from './pages/dashboard/dashboard';
 import { OversightComponent } from './pages/oversight/oversight';
 import { PartnerComponent } from './pages/partner/partner'; 
 
+// Update this import to match the class name in your .ts file
+import { IncidentComponent } from './pages/incident-detail/incident-detail'; 
+
 export const routes: Routes = [
-  // Default route
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-
-  // Sidebar link: routerLink="/dashboard"
   { path: 'dashboard', component: DashboardComponent },
-
-  // Sidebar link: routerLink="/oversight"
   { path: 'oversight', component: OversightComponent },
-
-  // Sidebar link: routerLink="/partner"
-  { path: 'partner', component: PartnerComponent } 
+  { path: 'partner', component: PartnerComponent },
+  { path: 'incident-detail/:type', component: IncidentComponent },
 ];

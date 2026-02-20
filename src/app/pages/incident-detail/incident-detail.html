@@ -1,0 +1,36 @@
+<div class="container">
+  <div class="header">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>{{ type | titlecase }} Tickets - Detailed Breakdown</h2>
+  </div>
+
+  <div class="card table-card">
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>TITLE / DESCRIPTION</th>
+          <th class="center">SOURCE</th>
+          <th>SUBMITTED ON</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredData">
+          <td class="bold">#{{ item.id }}</td>
+          <td class="title-text">{{ item.title }}</td>
+          <td class="center">
+            <span class="ip-badge">{{ item.origin }}</span>
+          </td>
+          <td class="date-text">{{ item.created | date:'dd MMM yyyy, HH:mm' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Show message if no data found -->
+    <div *ngIf="filteredData.length === 0" class="no-data">
+      No {{ type }} tickets found.
+    </div>
+  </div>
+</div>

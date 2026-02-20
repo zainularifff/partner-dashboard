@@ -80,39 +80,46 @@
     </div>
 
     <!-- 3. INCIDENT WALL -->
-    <div class="card">
-      <h3>Incident Wall Management</h3>
-      <div class="iw-grid">
-        <!-- ONLY THIS CARD IS CLICKABLE -->
-        <div class="iw-item iw-blue clickable-card" (click)="selectFilter('open')">
-          <div class="iw-label">OPEN TICKETS</div>
-          <div class="iw-value">{{ openCount }}</div>
-          <div class="iw-desc">.70: {{ openCount70 }} | .51: {{ openCount51 }}</div>
-          <mat-icon class="iw-icon">history</mat-icon>
-        </div>
-
-        <div class="iw-item iw-yellow">
-          <div class="iw-label">PENDING / AWAITING</div>
-          <div class="iw-value">{{ pendingCount }}</div>
-          <div class="iw-desc">3rd Party Wait / Action</div>
-          <mat-icon class="iw-icon">pause_circle</mat-icon>
-        </div>
-
-        <div class="iw-item iw-green">
-          <div class="iw-label">SOLVED WITHIN SLA</div>
-          <div class="iw-value">{{ solvedCount }}</div>
-          <div class="iw-desc">✔ Compliance OK</div>
-          <mat-icon class="iw-icon">verified</mat-icon>
-        </div>
-
-        <div class="iw-item iw-red">
-          <div class="iw-label">SLA LAPSED</div>
-          <div class="iw-value">{{ lapsedCount }}</div>
-          <div class="iw-desc">⚠ Escalation Required</div>
-          <mat-icon class="iw-icon">warning_amber</mat-icon>
-        </div>
+<!-- 3. INCIDENT WALL -->
+<div class="card">
+  <h3>Incident Wall Management</h3>
+  <div class="iw-grid">
+    
+    <!-- OPEN -->
+    <div class="iw-item iw-blue clickable-card" (click)="selectFilter('open')">
+        <div class="iw-label">OPEN TICKETS</div>
+        <div class="iw-value">{{ openCount }}</div>
+        <div class="iw-desc">.70: {{ openCount70 }} | .51: {{ openCount51 }}</div>
+        <mat-icon class="iw-icon">history</mat-icon>
       </div>
+
+      <!-- PENDING -->
+      <div class="iw-item iw-yellow clickable-card" (click)="selectFilter('pending')">
+        <div class="iw-label">PENDING / AWAITING</div>
+        <div class="iw-value">{{ pendingCount }}</div>
+        <div class="iw-desc">3rd Party Wait / Action</div>
+        <mat-icon class="iw-icon">pause_circle</mat-icon>
+      </div>
+
+      <!-- SOLVED -->
+      <div class="iw-item iw-green clickable-card" (click)="selectFilter('solved')">
+        <div class="iw-label">SOLVED WITHIN SLA</div>
+        <div class="iw-value">{{ solvedCount }}</div>
+        <div class="iw-desc">✔ Compliance OK</div>
+        <mat-icon class="iw-icon">verified</mat-icon>
+      </div>
+
+      <!-- LAPSED -->
+      <div class="iw-item iw-red clickable-card" (click)="selectFilter('lapsed')">
+        <div class="iw-label">SLA LAPSED</div>
+        <div class="iw-value">{{ lapsedCount }}</div>
+        <div class="iw-desc">⚠ Escalation Required</div>
+        <mat-icon class="iw-icon">warning_amber</mat-icon>
+      </div>
+
     </div>
+  </div>
+
 
     <!-- 4. BRAND AGING -->
     <div class="card">

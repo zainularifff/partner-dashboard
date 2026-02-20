@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IncidentApi } from '../../services/incident.api';
+import { IncidentApi } from '../../services/dashboard.api';
 import { MatIconModule } from '@angular/material/icon'; 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; 
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { Router } from '@angular/router'; 
 
 @Component({
   selector: 'app-dashboard',
@@ -59,7 +60,10 @@ export class DashboardComponent implements OnInit {
     { partner:'Ventrade Corp', mttr:'8.2h', fcr:65, color:'red' }
   ];
 
-  constructor(private api: IncidentApi) {}
+  constructor(
+    private api: IncidentApi,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     console.log('1. Dashboard Component Loaded');
@@ -87,7 +91,7 @@ export class DashboardComponent implements OnInit {
 
   // --- NEW: DRILL-DOWN FUNCTION ---
   selectFilter(type: string) {
-    this.selectedFilter = type;
+    this.router.navigate(['/incident-detail', type]);
     
     if (type === 'open') {
       this.selectedFilterLabel = 'Open Tickets';

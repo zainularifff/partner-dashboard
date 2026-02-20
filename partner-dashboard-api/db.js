@@ -1,36 +1,54 @@
 const sql = require('mssql');
 require('dotenv').config();
 
-const baseConfig = {
+// 1️⃣ HELPDESK POOLS (The missing ones causing your error)
+const pool70 = new sql.ConnectionPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  database: process.env.DB_NAME, // Note: Use DB_NAME_A / DB_NAME_B if they differ
-  options: {
-    encrypt: true,
-    trustServerCertificate: true
+  server: process.env.DB_SERVER_A,
+  database: process.env.DB_NAME_A_HELPDESK,
+  options: { encrypt: false, trustServerCertificate: true }
+});
+
+const pool51 = new sql.ConnectionPool({
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  server: process.env.DB_SERVER_B,
+  database: process.env.DB_NAME_B_HELPDESK,
+  options: { encrypt: false, trustServerCertificate: true }
+});
+
+// 2️⃣ TCO POOLS (For your Asset counting)
+const poolTCO70 = new sql.ConnectionPool({
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  server: process.env.DB_SERVER_A,
+  database: process.env.DB_NAME_A_TCO, // TCO3
+  options: { encrypt: false, trustServerCertificate: true }
+});
+
+const poolTCO51 = new sql.ConnectionPool({
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  server: process.env.DB_SERVER_B,
+  database: process.env.DB_NAME_B_TCO, // TCO
+  options: { encrypt: false, trustServerCertificate: true }
+});
+
+// 3️⃣ SHARED CONNECTION HANDLER
+async function getConnection(pool) {
+  if (!pool) throw new Error("Database pool is undefined. Check your exports in db.js.");
+  if (!pool.connected && !pool.connecting) {
+    await pool.connect();
   }
-};
+  return pool;
+}
 
-// Setup Pool for .70
-const pool70 = new sql.ConnectionPool({ 
-  ...baseConfig, 
-  server: process.env.DB_SERVER_A, // 192.168.140.70
-  database: 'helpdesk' 
-});
-
-// Setup Pool for .51
-const pool51 = new sql.ConnectionPool({ 
-  ...baseConfig, 
-  server: process.env.DB_SERVER_B, // 192.168.140.51
-  database: 'Helpdesk' 
-});
-
+// 4️⃣ EXPORT EVERYTHING (Matches your server.js imports)
 module.exports = {
   pool70, 
   pool51,
-  getConnection: async (pool) => {
-    if (!pool) throw new Error("Database pool is undefined. Check your exports in db.js.");
-    if (!pool.connected) await pool.connect();
-    return pool;
-  }
+  poolTCO70,
+  poolTCO51,
+  getConnection
 };

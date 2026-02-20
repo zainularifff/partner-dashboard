@@ -1,0 +1,74 @@
+<div class="page">
+  <div class="header">
+    <div class="header-left">
+      <div class="sup">nPoints™ AISM PLATFORM</div>
+      <h1>Partner Operations</h1>
+    </div>
+    <button class="btn-export">
+      <mat-icon>summarize</mat-icon> Partner Full Analysis
+    </button>
+  </div>
+
+  <div class="grid-2x2">
+    <!-- Card 1 -->
+    <div class="card">
+      <h3>Multi-Client Operation Overview</h3>
+      <div class="vp-row">
+        <div class="vp-item" *ngFor="let v of vendorHealth">
+          <div class="spinner-container">
+            <mat-progress-spinner mode="determinate" [value]="v.percent" [diameter]="45" [strokeWidth]="5"></mat-progress-spinner>
+            <div class="spinner-text">{{ v.percent }}%</div>
+          </div>
+          <div class="vp-label">{{ v.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+      <h3>Inventory & Logistic Overview</h3>
+      <div class="asset-flex">
+        <div class="ah-left">
+          <div class="spinner-wrapper">
+            <mat-progress-spinner mode="determinate" [value]="100" [diameter]="90" [strokeWidth]="8"></mat-progress-spinner>
+            <div class="ah-inner">
+              <div class="ah-val">{{ stockData.total | number }}</div>
+              <div class="ah-sub">TOTAL STOCK</div>
+            </div>
+          </div>
+        </div>
+        <div class="ah-right">
+          <div class="fault-row">
+            <div class="fault-info"><span>Logistic Compliance</span><span>{{stockData.logisticCompliance}}%</span></div>
+            <mat-progress-bar mode="determinate" [value]="stockData.logisticCompliance" class="custom-bar blue"></mat-progress-bar>
+          </div>
+          <div class="fault-row">
+            <div class="fault-info"><span>Fulfillment Rate</span><span>{{stockData.fulfillmentRate}}%</span></div>
+            <mat-progress-bar mode="determinate" [value]="stockData.fulfillmentRate" class="custom-bar blue"></mat-progress-bar>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Summary Report</div>
+
+  <!-- SUMMARY REPORT SECTION -->
+    <div class="report-grid">
+      <div class="card report-card" *ngFor="let r of reports">
+        <div class="report-main">
+          <div class="icon-box">
+            <mat-icon>description</mat-icon>
+          </div>
+          <!-- This container keeps the text from merging -->
+          <div class="rep-details">
+            <span class="rep-title">{{ r.name }}</span>
+            <span class="rep-status">{{ r.status }}</span>
+          </div>
+        </div>
+        <button class="btn-dl">
+          <mat-icon>download</mat-icon>
+        </button>
+      </div>
+    </div>
+</div>

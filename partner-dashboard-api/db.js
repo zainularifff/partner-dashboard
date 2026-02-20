@@ -1,63 +1,36 @@
 const sql = require('mssql');
+require('dotenv').config();
 
-const config = {
-  server: process.env.DB_SERVER,
-  database: process.env.DB_NAME,
+const baseConfig = {
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
+  database: process.env.DB_NAME, // Note: Use DB_NAME_A / DB_NAME_B if they differ
   options: {
-    encrypt: false,
+    encrypt: true,
     trustServerCertificate: true
   }
 };
 
-const pool = new sql.ConnectionPool(config);
-const poolConnect = pool.connect();
+// Setup Pool for .70
+const pool70 = new sql.ConnectionPool({ 
+  ...baseConfig, 
+  server: process.env.DB_SERVER_A, // 192.168.140.70
+  database: 'helpdesk' 
+});
 
-module.exports = { sql, pool, poolConnect };
+// Setup Pool for .51
+const pool51 = new sql.ConnectionPool({ 
+  ...baseConfig, 
+  server: process.env.DB_SERVER_B, // 192.168.140.51
+  database: 'Helpdesk' 
+});
 
-
-// const sql = require('mssql');
-// require('dotenv').config();
-
-// /* ===== HELPDESK ===== */
-
-// const hdConfig = {
-//   server: process.env.DB_HD_SERVER,
-//   database: process.env.DB_HD_NAME,
-//   user: process.env.DB_HD_USER,
-//   password: process.env.DB_HD_PASS,
-//   options: {
-//     encrypt: false,
-//     trustServerCertificate: true
-//   }
-// };
-
-// const hdPool = new sql.ConnectionPool(hdConfig);
-// const hdPoolConnect = hdPool.connect();
-
-
-// /* ===== TCO3 ===== */
-
-// const tcoConfig = {
-//   server: process.env.DB_TCO_SERVER,
-//   database: process.env.DB_TCO_NAME,
-//   user: process.env.DB_TCO_USER,
-//   password: process.env.DB_TCO_PASS,
-//   options: {
-//     encrypt: false,
-//     trustServerCertificate: true
-//   }
-// };
-
-// const tcoPool = new sql.ConnectionPool(tcoConfig);
-// const tcoPoolConnect = tcoPool.connect();
-
-
-// module.exports = {
-//   sql,
-//   hdPool,
-//   hdPoolConnect,
-//   tcoPool,
-//   tcoPoolConnect
-// };
+module.exports = {
+  pool70, 
+  pool51,
+  getConnection: async (pool) => {
+    if (!pool) throw new Error("Database pool is undefined. Check your exports in db.js.");
+    if (!pool.connected) await pool.connect();
+    return pool;
+  }
+};

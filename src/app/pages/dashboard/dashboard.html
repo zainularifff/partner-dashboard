@@ -7,51 +7,34 @@
     </div>
 
     <div class="header-actions">
-      <!-- Wrap the time filters in their own group -->
       <div class="btn-group">
         <button>7 Days</button>
         <button class="active">30 Days</button>
         <button>Quarterly</button>
       </div>
-      
-      <!-- PDF Button sits next to the group -->
       <button class="btn-export">
         <mat-icon>picture_as_pdf</mat-icon> Export PDF
       </button>
     </div>
   </div>
 
-
   <div class="grid">
     <!-- 1. VENDOR PERFORMANCE -->
     <div class="card">
       <h3>Vendor Performance</h3>
-      
-      <!-- TOP: HEALTH SPINNERS -->
       <div class="vp-row">
         <div class="vp-item" *ngFor="let v of vendorHealth">
           <div class="spinner-container">
-            <mat-progress-spinner 
-              mode="determinate" 
-              [value]="v.percent" 
-              [diameter]="64" 
-              [strokeWidth]="8"
-              [ngClass]="v.color"> <!-- We use CSS classes for colors -->
-            </mat-progress-spinner>
+            <mat-progress-spinner mode="determinate" [value]="v.percent" [diameter]="64" [strokeWidth]="8" [ngClass]="v.color"></mat-progress-spinner>
             <div class="spinner-text">{{ v.percent }}%</div>
           </div>
           <div class="vp-label">{{ v.label }}</div>
         </div>
       </div>
 
-      <!-- BOTTOM: PERFORMANCE TABLE -->
       <table class="vp-table">
         <thead>
-          <tr>
-            <th>PARTNER</th>
-            <th>MTTR (AVG)</th>
-            <th class="right-align">FCR RATE</th>
-          </tr>
+          <tr><th>PARTNER</th><th>MTTR (AVG)</th><th class="right-align">FCR RATE</th></tr>
         </thead>
         <tbody>
           <tr *ngFor="let r of vendorRows">
@@ -59,12 +42,7 @@
             <td [class]="r.color + '-text'">{{ r.mttr }}</td>
             <td>
               <div class="fcr-flex">
-                <mat-progress-bar 
-                  mode="determinate" 
-                  [value]="r.fcr" 
-                  [ngClass]="r.color" 
-                  class="custom-bar">
-                </mat-progress-bar>
+                <mat-progress-bar mode="determinate" [value]="r.fcr" [ngClass]="r.color" class="custom-bar"></mat-progress-bar>
                 <span class="fcr-val">{{ r.fcr }}%</span>
               </div>
             </td>
@@ -73,35 +51,24 @@
       </table>
     </div>
 
-
     <!-- 2. TOTAL ASSET HEALTH -->
     <div class="card">
       <h3>Total Asset Health</h3>
       <div class="asset-flex">
         <div class="ah-left">
           <div class="spinner-wrapper">
-            <!-- diameter 110 is usually the sweet spot for these cards -->
-            <mat-progress-spinner 
-              mode="determinate" 
-              [value]="100" 
-              [diameter]="110" 
-              [strokeWidth]="10" 
-              color="primary">
-            </mat-progress-spinner>
-            
+            <mat-progress-spinner mode="determinate" [value]="100" [diameter]="110" [strokeWidth]="10" color="primary"></mat-progress-spinner>
             <div class="ah-inner">
-              <div class="ah-val">4,821</div>
+              <div class="ah-val">{{ assetTotal | number }}</div>
               <div class="ah-sub">ACTIVE ASSETS</div>
             </div>
           </div>
-          
           <div class="ah-legend">
             <span><i class="dot blue"></i> FGV</span>
             <span><i class="dot yellow"></i> Edaran</span>
             <span><i class="dot gray"></i> Other</span>
           </div>
         </div>
-
         <div class="ah-right">
           <div class="sup-title">TOP 5 FAULT-PRONE MODELS</div>
           <div class="fault-row" *ngFor="let m of topFault">
@@ -116,24 +83,28 @@
     <div class="card">
       <h3>Incident Wall Management</h3>
       <div class="iw-grid">
-        <div class="iw-item iw-blue">
+        <!-- ONLY THIS CARD IS CLICKABLE -->
+        <div class="iw-item iw-blue clickable-card" (click)="selectFilter('open')">
           <div class="iw-label">OPEN TICKETS</div>
           <div class="iw-value">{{ openCount }}</div>
-          <div class="iw-desc">FGV: {{ openCount }} | EDR: {{ pendingCount }}</div>
+          <div class="iw-desc">.70: {{ openCount70 }} | .51: {{ openCount51 }}</div>
           <mat-icon class="iw-icon">history</mat-icon>
         </div>
+
         <div class="iw-item iw-yellow">
           <div class="iw-label">PENDING / AWAITING</div>
           <div class="iw-value">{{ pendingCount }}</div>
           <div class="iw-desc">3rd Party Wait / Action</div>
           <mat-icon class="iw-icon">pause_circle</mat-icon>
         </div>
+
         <div class="iw-item iw-green">
           <div class="iw-label">SOLVED WITHIN SLA</div>
           <div class="iw-value">{{ solvedCount }}</div>
           <div class="iw-desc">✔ Compliance OK</div>
           <mat-icon class="iw-icon">verified</mat-icon>
         </div>
+
         <div class="iw-item iw-red">
           <div class="iw-label">SLA LAPSED</div>
           <div class="iw-value">{{ lapsedCount }}</div>
@@ -149,7 +120,7 @@
       <div class="ba-flex">
         <div class="ba-charts">
           <div class="ba-row" *ngFor="let b of brandRows">
-            <div class="ba-info"><span>{{ b.name }}</span><span>{{ b.total }} units</span></div>
+            <div class="ba-info"><span>{{ b.name }}</span><span>{{ b.total | number }} units</span></div>
             <div class="ba-full-bar">
               <div class="seg new" [style.width.%]="b.new"></div>
               <div class="seg young" [style.width.%]="b.young"></div>
@@ -163,6 +134,40 @@
           <div class="stat-box"><div class="sup">Refresh CapEx</div><div class="stat-val">$1.4M</div><div class="sup">FY25 BUDGET</div></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- BREAKDOWN TABLE SECTION -->
+  <div class="card detail-section" *ngIf="selectedFilter">
+    <div class="detail-header">
+      <div class="title-group">
+        <mat-icon>assignment_late</mat-icon>
+        <h3>{{ selectedFilterLabel }} - Live Breakdown</h3>
+      </div>
+      <button class="btn-close" (click)="selectedFilter = null">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th width="80">ID</th>
+            <th>TITLE / DESCRIPTION</th>
+            <th width="150" class="center">SOURCE IP</th>
+            <th width="180">SUBMITTED ON</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of filteredIncidents">
+            <td class="bold">#{{ item.id }}</td>
+            <td class="title-text">{{ item.title }}</td>
+            <td class="center"><span class="ip-badge">{{ item.origin }}</span></td>
+            <td class="date-text">{{ item.created | date:'dd MMM yyyy, HH:mm' }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

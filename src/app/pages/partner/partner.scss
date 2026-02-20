@@ -1,0 +1,339 @@
+/* ================= PAGE LAYOUT ================= */
+.page {
+  padding: 24px;
+  background: #f8fafc;
+  min-height: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  .sup { font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 1px; }
+  h1 { font-size: 24px; font-weight: 800; color: #1e293b; margin: 4px 0 0; }
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin: 24px 0 12px;
+  letter-spacing: 0.5px;
+}
+
+/* ================= CONTAINER DEFINITION ================= */
+.card {
+  background: white;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* ================= GRID SYSTEM ================= */
+/* --- SHARED GRID CONFIGURATION --- */
+/* This ensures the top cards and bottom cards always align their edges */
+.grid-2x2, .report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr; /* EXACT same ratio for both rows */
+  gap: 24px;                        /* EXACT same spacing */
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+/* --- SUMMARY REPORT CARD REFINEMENT --- */
+.report-card {
+  /* Resetting flex to handle internal horizontal layout */
+  flex-direction: row !important; 
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px !important;
+  background: white;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+  height: 80px; /* Optional: Give them a fixed height to look uniform */
+
+  .report-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0; /* Prevents text from pushing the card wider */
+  }
+
+  .rep-details {
+    display: flex;
+    flex-direction: column; /* Title on top, Status below */
+    overflow: hidden;
+
+    .rep-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* Adds "..." if name is too long */
+    }
+
+    .rep-status {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+  }
+}
+
+/* --- BUTTON ALIGNMENT --- */
+.btn-dl {
+  flex-shrink: 0; /* Prevents the download button from getting squashed */
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* ================= 1. MULTI-CLIENT OVERVIEW ================= */
+.vp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.vp-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.spinner-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+
+  .spinner-text {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 800;
+    color: #1e293b;
+  }
+}
+
+.vp-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+/* ================= 2. INVENTORY OVERVIEW ================= */
+.asset-flex {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.ah-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 120px; /* Match or slightly exceed your spinner diameter */
+  flex-shrink: 0;
+}
+
+.spinner-wrapper {
+  position: relative; // This is the anchor
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 110px; // Match your [diameter]
+  width: 110px;
+
+  .ah-inner {
+    position: absolute; // Puts text "on top" of the spinner
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); // Force dead-center
+    text-align: center;
+    width: 100%;
+
+    .ah-val { 
+      font-size: 20px; 
+      font-weight: 800; 
+      color: #1e293b; 
+      line-height: 1;
+      margin: 0;
+    }
+    
+    .ah-sub { 
+      font-size: 8px; 
+      color: #94a3b8; 
+      font-weight: 700;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+.ah-right { flex: 1; }
+
+.fault-row {
+  margin-bottom: 16px;
+  .fault-info {
+    display: flex;
+    justify-content: space-between; /* Fixes label and % overlap */
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+}
+
+/* ================= 3. SUMMARY REPORTS ================= */
+/* --- SUMMARY REPORT CARD REFINEMENT --- */
+.report-card {
+  flex-direction: row !important; /* Icon and text on the left, button on the right */
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px !important;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #2f6fed;
+    background: #fcfdfe;
+  }
+
+  .report-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* THIS PREVENTS THE TEXT JOINING */
+  .rep-details {
+    display: flex;
+    flex-direction: column; /* Forces status BELOW title */
+    text-align: left;
+
+    .rep-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+
+    .rep-status {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+  }
+}
+
+.icon-box {
+  background: #eff6ff;
+  color: #2f6fed;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.btn-dl {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  
+  &:hover {
+    background: #e2e8f0;
+    color: #2f6fed;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+
+.btn-dl {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  &:hover { background: #e2e8f0; color: #2f6fed; }
+}
+
+/* ================= BUTTONS & BARS ================= */
+.btn-export {
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { background: #334155; }
+}
+
+.custom-bar {
+  height: 8px !important;
+  border-radius: 4px;
+  background-color: #f1f5f9 !important;
+}
+
+::ng-deep .custom-bar.blue .mdc-linear-progress__bar-inner {
+  border-color: #2f6fed !important;
+}

@@ -348,3 +348,67 @@
   color: #64748b;
 }
 
+/* Only the Open Ticket card gets the hover effect */
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    filter: brightness(0.98);
+  }
+}
+
+
+
+/* TABLE STYLING TO MATCH SCREENSHOT */
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+    padding: 12px 8px;
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  td {
+    padding: 16px 8px;
+    font-size: 13px;
+    color: #475569;
+    border-bottom: 1px solid #f8fafc;
+    
+    &.bold { font-weight: 700; color: #1e293b; }
+    &.title-text { color: #334155; }
+    &.date-text { color: #64748b; font-size: 12px; }
+    &.center { text-align: center; }
+  }
+
+  .ip-badge {
+    background: #eff6ff;
+    color: #2f6fed;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  &:hover { color: #ef4444; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

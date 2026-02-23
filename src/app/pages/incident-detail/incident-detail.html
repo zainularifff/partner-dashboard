@@ -3,37 +3,36 @@
   <div class="header">
     <div class="header-left">
       <div class="sup">SERVICE DESK OPERATIONS</div>
-      <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px">
         <button class="back-btn" (click)="goBack()">
           <mat-icon>arrow_back</mat-icon>
         </button>
         <h1>{{ type | uppercase }} Ticket Records</h1>
       </div>
     </div>
-    
+
     <div class="header-actions">
-        <div class="search-box" [class.active]="isFocused">
-            <mat-icon>search</mat-icon>
-            <input 
-              type="text" 
-              placeholder="Search ID, Title or Client Name..." 
-              [(ngModel)]="searchTerm" 
-              (input)="onSearchChange()"
-              (focus)="isFocused = true" 
-              (blur)="isFocused = false">
-            
-            <button *ngIf="searchTerm" class="clear-btn" (click)="searchTerm=''; onSearchChange()">
-              <mat-icon>close</mat-icon>
-            </button>
-        </div>
+      <div class="search-box" [class.active]="isFocused">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Search ID, Title or Client Name..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+          (focus)="isFocused = true"
+          (blur)="isFocused = false"
+        />
+
+        <button *ngIf="searchTerm" class="clear-btn" (click)="searchTerm = ''; onSearchChange()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- DYNAMIC PILL INDICATORS -->
   <div class="server-status-bar" *ngIf="!isLoading">
-    <div *ngFor="let server of serverStats" 
-        class="status-pill" 
-        [ngClass]="server.color">
+    <div *ngFor="let server of serverStats" class="status-pill" [ngClass]="server.color">
       <span class="dot"></span>
       <span class="label">{{ server.label }}:</span>
       <span class="value">{{ server.count }}</span>
@@ -60,19 +59,52 @@
               <th>ID</th>
               <th>Request By</th>
               <th>TITLE / DESCRIPTION</th>
-              <th>CLIENT SOURCE</th> <!-- Renamed for clarity -->
+              <th>CLIENT SOURCE</th>
               <th>SUBMITTED ON</th>
+              <!-- Muncul untuk Pending, Solved, atau Lapsed -->
+              <th *ngIf="type === 'lapsed' || type === 'solved' || type === 'pending'">
+                {{
+                  type === 'lapsed'
+                    ? 'DAYS LAPSED'
+                    : type === 'pending'
+                      ? 'DAYS PENDING'
+                      : 'TOTAL DAYS'
+                }}
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let t of tickets; let i = index">
-              <td class="bold">{{ ((currentPage - 1) * pageSize) + (i + 1) }}</td>
+              <td class="bold">{{ (currentPage - 1) * pageSize + (i + 1) }}</td>
               <td class="bold">#{{ t.id }}</td>
               <td class="bold">{{ t.requestBy }}</td>
-              <td class="title-text">{{ t.title }}</td>
-              <!-- Displays Client_A, Client_B, etc. -->
-              <td class="bold">{{ t.source }}</td> 
+              <td style="padding: 16px 24px; vertical-align: top; min-width: 500px !important">
+                <div
+                  style="
+                    white-space: pre-line !important;
+                    word-break: break-word !important;
+                    display: block !important;
+                    overflow: visible !important;
+                    text-overflow: clip !important;
+                    line-height: 1.6 !important;
+                    color: #475569;
+                  "
+                >
+                  {{ t.title }}
+                </div>
+              </td>
+              <td class="bold">{{ t.source }}</td>
               <td class="date-text">{{ t.date }}</td>
+              <!-- Show days lapsed with special styling if type is 'lapsed' -->
+              <td
+                *ngIf="type === 'lapsed' || type === 'solved' || type === 'pending'"
+                [style.color]="
+                  type === 'lapsed' ? '#ef4444' : type === 'pending' ? '#f59e0b' : '#10b981'
+                "
+                style="font-weight: 800; text-align: center"
+              >
+                {{ t.daysElapsed }} Days
+              </td>
             </tr>
           </tbody>
         </table>
@@ -82,9 +114,9 @@
       <div class="pagination-footer">
         <div class="footer-left">
           <div class="page-info">
-            Showing <b>{{tickets.length}}</b> of <b>{{filteredData.length}}</b> entries
+            Showing <b>{{ tickets.length }}</b> of <b>{{ filteredData.length }}</b> entries
           </div>
-          
+
           <div class="page-size-filter">
             <span>Show</span>
             <select (change)="onPageSizeChange($event)">
@@ -95,10 +127,40 @@
           </div>
         </div>
 
+        <!-- UPDATED PAGINATION CONTROLS -->
         <div class="btn-group-nav">
-          <button class="btn-nav" [disabled]="currentPage === 1" (click)="prevPage()">Previous</button>
-          <span class="page-num">Page {{currentPage}} of {{totalPages}}</span>
-          <button class="btn-nav" [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+          <!-- First Page -->
+          <button
+            class="btn-nav"
+            [disabled]="currentPage === 1"
+            (click)="currentPage = 1; updatePagination()"
+          >
+            <mat-icon>first_page</mat-icon>
+          </button>
+
+          <!-- Previous -->
+          <button class="btn-nav" [disabled]="currentPage === 1" (click)="prevPage()">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          <!-- Current Info -->
+          <span class="page-num"
+            >Page <b>{{ currentPage }}</b> of <b>{{ totalPages }}</b></span
+          >
+
+          <!-- Next -->
+          <button class="btn-nav" [disabled]="currentPage === totalPages" (click)="nextPage()">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+
+          <!-- Last Page -->
+          <button
+            class="btn-nav"
+            [disabled]="currentPage === totalPages"
+            (click)="currentPage = totalPages; updatePagination()"
+          >
+            <mat-icon>last_page</mat-icon>
+          </button>
         </div>
       </div>
     </ng-container>

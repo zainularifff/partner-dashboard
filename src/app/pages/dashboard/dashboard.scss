@@ -1,28 +1,28 @@
 /* ================= 1. GLOBAL LAYOUT LOCK ================= */
-.page { 
-  padding: 15px 24px; 
+.page {
+  padding: 15px 24px;
   /* Subtract the height of your footer (adjust 40px to match your footer's height) */
-  height: calc(100vh - 40px); 
+  height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   background: #f8fafc;
-  overflow: hidden;        /* Prevents the dashboard from pushing into the footer area */
+  overflow: hidden; /* Prevents the dashboard from pushing into the footer area */
 }
 
-.header { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
-  flex-shrink: 0;          /* Prevents header from squashing */
+  flex-shrink: 0; /* Prevents header from squashing */
 }
 
 .header-actions {
   display: flex;
   flex-direction: column; /* Stacks the filter group and PDF button */
-  align-items: flex-end;   /* Aligns both to the right edge */
-  gap: 8px;               /* Space between filters and PDF button */
+  align-items: flex-end; /* Aligns both to the right edge */
+  gap: 8px; /* Space between filters and PDF button */
 }
 
 .btn-group {
@@ -45,7 +45,7 @@
       background: white;
       border-radius: 6px;
       color: #2f6fed;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
   }
 }
@@ -70,104 +70,127 @@
     height: 16px;
   }
 
-  &:hover { background: #1e5ad4; }
+  &:hover {
+    background: #1e5ad4;
+  }
 }
 
-
-.grid { 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr; /* Force exactly two equal rows */
-  gap: 16px; 
-  flex: 1;                 /* Grid fills all remaining space above footer */
-  min-height: 0;           /* CRITICAL: Allows internal content to shrink */
+  gap: 16px;
+  flex: 1; /* Grid fills all remaining space above footer */
+  min-height: 0; /* CRITICAL: Allows internal content to shrink */
 }
 
-.card { 
-  background: white; 
-  border-radius: 12px; 
-  border: 1px solid #eef2f6; 
-  display: flex; 
-  flex-direction: column; 
-  padding: clamp(10px, 2vh, 18px); 
-  overflow: hidden;        
-  min-height: 0;           /* CRITICAL: Prevents card from expanding grid */
+.card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #eef2f6;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(10px, 2vh, 18px);
+  overflow: hidden;
+  min-height: 0; /* CRITICAL: Prevents card from expanding grid */
 
-  h3 { 
-    font-size: 14px; 
-    margin-bottom: clamp(8px, 1.5vh, 12px); 
-    font-weight: 700; 
-    color: #1e293b; 
-    flex-shrink: 0; 
+  h3 {
+    font-size: 14px;
+    margin-bottom: clamp(8px, 1.5vh, 12px);
+    font-weight: 700;
+    color: #1e293b;
+    flex-shrink: 0;
   }
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
     border-color: #e2e8f0;
-  }   
+  }
 }
 
 /* ================= 2. INCIDENT WALL (FIXED SQUASH) ================= */
-.iw-grid { 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
-  grid-template-rows: 1fr 1fr; 
-  gap: 10px; 
-  flex: 1;                 
-  min-height: 0;           
+.iw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
 }
 
-.iw-item { 
-  padding: 12px; 
-  border-radius: 10px; 
-  position: relative; 
+.iw-item {
+  padding: 12px;
+  border-radius: 10px;
+  position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
 
-  .iw-value { font-size: clamp(24px, 3vh, 28px); font-weight: 800; line-height: 1; z-index: 1; }
-  .iw-label, .iw-desc { font-size: 10px; z-index: 1; font-weight: 700; }
-  
-  .iw-icon { 
-    position: absolute; 
-    bottom: -5px; 
-    right: -5px; 
-    font-size: 45px !important; 
-    width: 45px !important; 
-    height: 45px !important; 
-    opacity: 0.1; 
-    transform: rotate(-10deg); 
+  .iw-value {
+    font-size: clamp(24px, 3vh, 28px);
+    font-weight: 800;
+    line-height: 1;
+    z-index: 1;
+  }
+  .iw-label,
+  .iw-desc {
+    font-size: 10px;
+    z-index: 1;
+    font-weight: 700;
+  }
+
+  .iw-icon {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    font-size: 45px !important;
+    width: 45px !important;
+    height: 45px !important;
+    opacity: 0.1;
+    transform: rotate(-10deg);
   }
 }
 
 /* ================= 3. BRAND AGING (FIXED OVERFLOW) ================= */
-.ba-flex { 
-  display: flex; 
-  gap: 15px; 
-  flex: 1; 
-  min-height: 0; 
+.ba-flex {
+  display: flex;
+  gap: 15px;
+  flex: 1;
+  min-height: 0;
 }
 
-.ba-charts { 
-  flex: 2; 
-  display: flex; 
-  flex-direction: column; 
+.ba-charts {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
   justify-content: space-around; /* Distributes bars evenly inside card height */
-  height: 100%; 
+  height: 100%;
 }
 
-.ba-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 4px; }
-.ba-full-bar { height: 8px; display: flex; border-radius: 5px; overflow: hidden; background: #f1f5f9; }
+.ba-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.ba-full-bar {
+  height: 8px;
+  display: flex;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
 
-.ba-stats { 
-  flex: 1; 
-  border-left: 1px solid #f1f5f9; 
-  padding-left: 15px; 
-  display: flex; 
-  flex-direction: column; 
-  justify-content: center; 
-  gap: 15px; 
+.ba-stats {
+  flex: 1;
+  border-left: 1px solid #f1f5f9;
+  padding-left: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 15px;
 }
 
 /* ================= 4. VENDOR & ASSET (SPINNER FIX) ================= */
@@ -206,7 +229,7 @@
 .vp-table {
   width: 100%;
   border-collapse: collapse;
-  
+
   th {
     font-size: 10px;
     color: #cbd5e1;
@@ -227,16 +250,25 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  
-  .fcr-val { min-width: 30px; text-align: right; }
+
+  .fcr-val {
+    min-width: 30px;
+    text-align: right;
+  }
 }
 
 /* --- COLOR OVERRIDES (Material Deep Target) --- */
 ::ng-deep {
   /* Spinners */
-  .green circle  { stroke: #22c55e !important; }
-  .orange circle { stroke: #f59e0b !important; }
-  .red circle    { stroke: #ef4444 !important; }
+  .green circle {
+    stroke: #22c55e !important;
+  }
+  .orange circle {
+    stroke: #f59e0b !important;
+  }
+  .red circle {
+    stroke: #ef4444 !important;
+  }
 
   /* Progress Bars */
   .custom-bar {
@@ -244,40 +276,85 @@
     border-radius: 4px;
     background-color: #f1f5f9 !important; /* The gray track */
 
-    &.green .mdc-linear-progress__bar-inner { border-color: #22c55e !important; }
-    &.orange .mdc-linear-progress__bar-inner { border-color: #f59e0b !important; }
-    &.red .mdc-linear-progress__bar-inner { border-color: #ef4444 !important; }
+    &.green .mdc-linear-progress__bar-inner {
+      border-color: #22c55e !important;
+    }
+    &.orange .mdc-linear-progress__bar-inner {
+      border-color: #f59e0b !important;
+    }
+    &.red .mdc-linear-progress__bar-inner {
+      border-color: #ef4444 !important;
+    }
   }
 }
 
 /* Utility Text Colors */
-.green-text { color: #22c55e; }
-.orange-text { color: #f59e0b; }
-.red-text { color: #ef4444; }
+.green-text {
+  color: #22c55e;
+}
+.orange-text {
+  color: #f59e0b;
+}
+.red-text {
+  color: #ef4444;
+}
 
 /* ================= 5. COLORS & UTILS ================= */
-.iw-blue { background: #eff6ff; color: #1e40af; }
-.iw-yellow { background: #fffbeb; color: #92400e; }
-.iw-green { background: #f0fdf4; color: #166534; }
-.iw-red { background: #fef2f2; color: #991b1b; }
+.iw-blue {
+  background: #eff6ff;
+  color: #1e40af;
+}
+.iw-yellow {
+  background: #fffbeb;
+  color: #92400e;
+}
+.iw-green {
+  background: #f0fdf4;
+  color: #166534;
+}
+.iw-red {
+  background: #fef2f2;
+  color: #991b1b;
+}
 
-.seg.new { background: #3b82f6; }
-.seg.young { background: #10b981; }
-.seg.mid { background: #f59e0b; }
-.seg.legacy { background: #ef4444; }
+.seg.new {
+  background: #3b82f6;
+}
+.seg.young {
+  background: #10b981;
+}
+.seg.mid {
+  background: #f59e0b;
+}
+.seg.legacy {
+  background: #ef4444;
+}
 
 .btn-export {
-  background: #2f6fed; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700;
-  display: flex; align-items: center; gap: 8px; height: 36px; cursor: pointer;
-  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  background: #2f6fed;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  cursor: pointer;
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
 }
 
 /* ================= 2. TOTAL ASSET HEALTH (FIXED) ================= */
-.asset-flex { 
-  display: flex; 
-  gap: 20px; 
-  align-items: center; 
-  flex: 1; 
+.asset-flex {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex: 1;
   min-height: 0; /* Prevents overflow */
 }
 
@@ -285,7 +362,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 140px; 
+  width: 140px;
   flex-shrink: 0; /* Important: stops the right side from squashing the spinner */
 }
 
@@ -300,15 +377,15 @@
     text-align: center;
     pointer-events: none;
 
-    .ah-val { 
-      font-size: 24px; 
-      font-weight: 800; 
-      color: #1e293b; 
+    .ah-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1e293b;
       line-height: 1;
     }
-    .ah-sub { 
-      font-size: 8px; 
-      color: #94a3b8; 
+    .ah-sub {
+      font-size: 8px;
+      color: #94a3b8;
       font-weight: 700;
       margin-top: 4px;
       letter-spacing: 0.5px;
@@ -316,14 +393,14 @@
   }
 }
 
-.ah-right { 
-  flex: 1; 
+.ah-right {
+  flex: 1;
   min-width: 0; /* Critical: allows the progress bars to stay within the box */
 }
 
 .fault-row {
   margin-bottom: 12px;
-  
+
   .fault-info {
     display: flex;
     justify-content: space-between;
@@ -337,19 +414,19 @@
   .custom-bar {
     height: 6px !important;
     border-radius: 10px;
-    
+
     ::ng-deep .mdc-linear-progress__bar-inner {
       border-color: #ef4444 !important; /* Force red for Fault Rate */
     }
   }
 }
 
-.ah-legend { 
-  display: flex; 
-  gap: 8px; 
-  margin-top: 10px; 
-  font-size: 9px; 
-  font-weight: 700; 
+.ah-legend {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 9px;
+  font-weight: 700;
   color: #64748b;
 }
 
@@ -357,15 +434,13 @@
 .clickable-card {
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     filter: brightness(0.98);
   }
 }
-
-
 
 /* TABLE STYLING TO MATCH SCREENSHOT */
 .detail-table {
@@ -387,11 +462,21 @@
     font-size: 13px;
     color: #475569;
     border-bottom: 1px solid #f8fafc;
-    
-    &.bold { font-weight: 700; color: #1e293b; }
-    &.title-text { color: #334155; }
-    &.date-text { color: #64748b; font-size: 12px; }
-    &.center { text-align: center; }
+
+    &.bold {
+      font-weight: 700;
+      color: #1e293b;
+    }
+    &.title-text {
+      color: #334155;
+    }
+    &.date-text {
+      color: #64748b;
+      font-size: 12px;
+    }
+    &.center {
+      text-align: center;
+    }
   }
 
   .ip-badge {
@@ -410,10 +495,18 @@
   border: none;
   cursor: pointer;
   color: #94a3b8;
-  &:hover { color: #ef4444; }
+  &:hover {
+    color: #ef4444;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

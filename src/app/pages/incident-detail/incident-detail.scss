@@ -1,116 +1,186 @@
-.container {
-  padding: 24px;
-  background-color: #f8f9fa;
-  min-height: 100vh;
+/* ================= 1. PAGE & CARD SETUP ================= */
+:host {
+  display: block;
+  height: 100%; 
+}
+
+.page {
+  padding: 24px 32px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  box-sizing: border-box;
 }
 
 .header {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-end;
   margin-bottom: 24px;
+  flex-shrink: 0;
 
-  h2 {
-    margin: 0;
-    font-weight: 500;
-    color: #333;
-  }
-
-  button {
-    background: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
+  .sup { font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 1px; margin-bottom: 4px; }
+  h1 { margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; }
 }
 
-.table-card {
+.table-card-main {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  padding: 0; // Remove padding so table is edge-to-edge
-  overflow: hidden;
+  border-radius: 12px; 
+  border: 1px solid #eef2f6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  
+  flex: 1;                 /* Card fills remaining vertical space */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;        
+  min-height: 0;           
 }
 
-.detail-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+/* ================= 2. THE CENTERED LOADER ================= */
+.loader-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
 
-  thead {
-    background-color: #f1f3f5;
-    
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #f1f5f9; border-top: 3px solid #2f6fed;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .loader-text {
+    text-align: center;
+    span { display: block; font-weight: 700; color: #1e293b; font-size: 1.1rem; }
+    small { color: #94a3b8; font-size: 0.85rem; font-weight: 500; font-style: italic; }
+  }
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ================= 3. TABLE AREA (FIXED GAP) ================= */
+.table-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* ✅ Fix: Keeps table at the top regardless of row count */
+
+  .detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    align-self: flex-start;    /* ✅ Fix: Stops table from stretching height-wise */
+
     th {
-      text-align: left;
-      padding: 16px;
-      color: #666;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 2px solid #dee2e6;
+      position: sticky; top: 0; background: #f8fafc; z-index: 10;
+      text-align: left; padding: 14px 24px; font-size: 10px; font-weight: 800; color: #94a3b8;
+    }
+    td { padding: 16px 24px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; }
+    .bold { font-weight: 700; color: #2f6fed; }
+  }
+}
+
+/* ================= 4. PAGINATION FOOTER ================= */
+.pagination-footer {
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+
+  /* Left Side Grouping */
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .page-info { font-size: 12px; color: #94a3b8; b { color: #1e293b; } }
+
+  .page-size-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+
+    select {
+      padding: 4px 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #f8fafc;
+      font-weight: 700;
+      color: #2f6fed;
+      outline: none;
+      cursor: pointer;
+      &:hover { border-color: #cbd5e1; }
     }
   }
 
-  tbody {
-    tr {
-      border-bottom: 1px solid #eee;
-      transition: background 0.2s;
+  /* Right Side Navigation */
+  .btn-group-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 
-      &:hover {
-        background-color: #fdfdfd;
-      }
+    .page-num { font-size: 12px; font-weight: 700; color: #1e293b; }
 
-      &:last-child {
-        border-bottom: none;
-      }
-    }
-
-    td {
-      padding: 16px;
-      vertical-align: middle;
+    .btn-nav {
+      padding: 6px 16px; border: 1px solid #e2e8f0; background: white;
+      border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
+      color: #64748b;
+      &:disabled { opacity: 0.4; cursor: default; }
+      &:hover:not(:disabled) { border-color: #2f6fed; color: #2f6fed; }
     }
   }
-
-  .bold { font-weight: 600; color: #1a73e8; }
-  .title-text { color: #333; max-width: 400px; }
-  .center { text-align: center; }
-  .date-text { color: #888; font-family: monospace; }
 }
 
-.ip-badge {
-  background: #e8f0fe;
-  color: #1967d2;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
+/* ================= 5. HEADER & SEARCH UTILS ================= */
+.back-btn {
+  background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s;
+  &:hover { background: #f1f5f9; }
 }
 
-.no-data {
-  padding: 40px;
-  text-align: center;
-  color: #999;
-  font-style: italic;
-}
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 16px;
+  width: 280px;
+  height: 40px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
-.status-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
+  mat-icon { font-size: 20px; width: 20px; height: 20px; color: #94a3b8; margin-right: 12px; }
 
-.status-open { background-color: #2196f3; }    // Blue
-.status-pending { background-color: #ffc107; } // Yellow
-.status-solved { background-color: #4caf50; }  // Green
-.status-lapsed { background-color: #f44336; }  // Red
+  input {
+    border: none; background: transparent; outline: none;
+    font-size: 13px; font-weight: 500; color: #1e293b; width: 100%;
+    &::placeholder { color: #94a3b8; font-weight: 400; }
+  }
 
-.mat-icon {
-  font-family: 'Material Icons' !important;
-  display: inline-block;
-  vertical-align: middle;
-  line-height: 1;
-}
+  &:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-button[mat-icon-button] {
-  overflow: hidden; /* This hides the 'ar' text if the icon fails to load */
+  &.active {
+    background: white; width: 340px;
+    border-color: #2f6fed; box-shadow: 0 4px 12px rgba(47, 111, 237, 0.15);
+    mat-icon { color: #2f6fed; }
+  }
+
+  .clear-btn {
+    background: none; border: none; padding: 0; cursor: pointer; color: #cbd5e1;
+    display: flex; align-items: center;
+    &:hover { color: #ef4444; }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; margin: 0; }
+  }
 }

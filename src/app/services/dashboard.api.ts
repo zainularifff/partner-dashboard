@@ -4,12 +4,22 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class IncidentApi {
-  // Point this to your Node.js API
-  private apiUrl = 'http://localhost:3000/api/incidents';
+  private baseUrl = 'http://localhost:3000/api';
 
   constructor(private http: HttpClient) {}
 
-  list(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+  // 1. Dashboard Boxes (Fast Summary)
+  getSummary(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/dashboard/summary`);
+  }
+
+  // 2. Detail Table (Full List - Ensure route is UNCOMMENTED in server.js)
+  getFullList(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/dashboard`);
+  }
+
+  // 3. Inside IncidentApi class
+  getAssetTotal(): Observable<{ totalAssets: number }> {
+    return this.http.get<{ totalAssets: number }>(`${this.baseUrl}/assets/total`);
   }
 }

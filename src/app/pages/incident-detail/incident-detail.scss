@@ -24,12 +24,13 @@
   h1 { margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; }
 }
 
-/* ================= 2. PILL INDICATORS (NEW - MATCHES IMAGE) ================= */
+/* ================= 2. DYNAMIC PILL INDICATORS (FIXED) ================= */
 .server-status-bar {
   display: flex;
   gap: 12px;
-  margin: 0 0 16px 4px; /* Aligns with table edge */
+  margin: 0 0 16px 4px; 
   flex-shrink: 0;
+  flex-wrap: wrap; /* Allows wrapping if many servers are added */
 }
 
 .status-pill {
@@ -48,8 +49,12 @@
     margin-right: 10px;
   }
 
-  &.blue .dot { background-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+  /* Support for dynamic colors from TS colors array */
+  &.blue .dot   { background-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
   &.orange .dot { background-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+  &.purple .dot { background-color: #a855f7; box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1); }
+  &.green .dot  { background-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+  &.cyan .dot   { background-color: #06b6d4; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); }
 
   .label {
     font-size: 11px;
@@ -105,7 +110,7 @@
 
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* ================= 5. TABLE AREA ================= */
+/* ================= 5. TABLE AREA (NAVY BLUE FIX) ================= */
 .table-scroll {
   flex: 1;
   overflow-y: auto;
@@ -122,9 +127,15 @@
       text-transform: uppercase; border-bottom: 1px solid #f1f5f9;
     }
     td { padding: 16px 24px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; }
-    .bold { font-weight: 700; color: #234aa5; }
+    
+    /* Changed to match the dark navy blue in your reference image */
+    .bold { font-weight: 700; color: #1e3a8a; } 
+    
     .title-text { color: #475569; }
     .date-text { color: #94a3b8; font-size: 12px; }
+
+    /* Column styling to match image: first column (#) is light gray */
+    td:first-child { color: #94a3b8; font-weight: 600; width: 40px; }
   }
 }
 
@@ -146,6 +157,7 @@
     select {
       padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 6px;
       background: #f8fafc; font-weight: 700; color: #2f6fed; cursor: pointer;
+      outline: none;
     }
   }
 
@@ -155,9 +167,9 @@
     .btn-nav {
       padding: 6px 16px; border: 1px solid #e2e8f0; background: white;
       border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
-      color: #64748b;
+      color: #64748b; transition: 0.2s;
       &:disabled { opacity: 0.4; cursor: default; }
-      &:hover:not(:disabled) { border-color: #2f6fed; color: #2f6fed; }
+      &:hover:not(:disabled) { border-color: #2f6fed; color: #2f6fed; background: #f0f7ff; }
     }
   }
 }
@@ -168,7 +180,7 @@
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: 0.2s;
   mat-icon { font-size: 20px; color: #64748b; }
-  &:hover { background: #f1f5f9; color: #2f6fed; }
+  &:hover { background: #f1f5f9; color: #2f6fed; border-color: #2f6fed; }
 }
 
 .search-box {

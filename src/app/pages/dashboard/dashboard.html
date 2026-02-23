@@ -18,10 +18,11 @@
   </div>
 
   <div class="grid">
-    <!-- 1. VENDOR PERFORMANCE -->
+    <!-- 1. VENDOR PERFORMANCE (Now Dynamic) -->
     <div class="card">
-      <h3>Vendor Performance</h3>
+      <h3>Server & Vendor Health</h3>
       <div class="vp-row">
+        <!-- Circular spinners generate automatically for every server in .env -->
         <div class="vp-item" *ngFor="let v of vendorHealth">
           <div class="spinner-container">
             <mat-progress-spinner mode="determinate" [value]="v.percent" [diameter]="64" [strokeWidth]="8" [ngClass]="v.color"></mat-progress-spinner>
@@ -30,6 +31,7 @@
           <div class="vp-label">{{ v.label }}</div>
         </div>
       </div>
+      
       <table class="vp-table">
         <thead>
           <tr><th>PARTNER</th><th>MTTR (AVG)</th><th class="right-align">FCR RATE</th></tr>
@@ -72,7 +74,7 @@
       </div>
     </div>
 
-    <!-- 3. INCIDENT WALL -->
+    <!-- 3. INCIDENT WALL (Dynamic Breakdown) -->
     <div class="card">
       <h3>Incident Wall Management</h3>
       <div class="iw-grid">
@@ -80,7 +82,17 @@
         <div class="iw-item iw-blue clickable-card" (click)="selectFilter('open')">
           <div class="iw-label">OPEN TICKETS</div>
           <div class="iw-value">{{ openCount }}</div>
-          <div class="iw-desc">Open / Waiting</div>
+          <div class="iw-desc">Open / Wating</div>
+          <div class="iw-desc">
+             <!-- Automatically shows .70: 5 | .51: 10 | etc.
+             <ng-container *ngFor="let s of vendorHealth; let i = index; let last = last">
+                <span *ngIf="s.type === 'server'">
+                  {{ s.label.replace('SERVER ', '') }}: {{ s.rawCount }}
+                  
+                  <ng-container *ngIf="!last && vendorHealth[i+1]?.type === 'server'"> | </ng-container>
+                </span>
+             </ng-container> -->
+          </div>
           <mat-icon class="iw-icon">history</mat-icon>
         </div>
 

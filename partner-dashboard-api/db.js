@@ -1,54 +1,75 @@
 const sql = require('mssql');
 require('dotenv').config();
 
-// 1️⃣ HELPDESK POOLS (The missing ones causing your error)
-const pool70 = new sql.ConnectionPool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  server: process.env.DB_SERVER_A,
-  database: process.env.DB_NAME_A_HELPDESK,
-  options: { encrypt: false, trustServerCertificate: true }
-});
+// 1. Configuration - Parse the JSON array from .env
+const clients = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
 
-const pool51 = new sql.ConnectionPool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  server: process.env.DB_SERVER_B,
-  database: process.env.DB_NAME_B_HELPDESK,
-  options: { encrypt: false, trustServerCertificate: true }
-});
+// 2. Registry to store the active Connection Pools
+const pools = {
+  helpdesk: new Map(),
+  tco: new Map()
+};
 
-// 2️⃣ TCO POOLS (For your Asset counting)
-const poolTCO70 = new sql.ConnectionPool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  server: process.env.DB_SERVER_A,
-  database: process.env.DB_NAME_A_TCO, // TCO3
-  options: { encrypt: false, trustServerCertificate: true }
-});
+/**
+ * Internal helper to get/create a connection pool using client-specific credentials
+ */
+async function getPool(client, type) {
+  const cleanIp = client.ip.trim();
+  const dbName = type === 'helpdesk' ? process.env.DB_NAME_HELPDESK : process.env.DB_NAME_TCO;
+  const poolKey = `${cleanIp}_${type}`;
 
-const poolTCO51 = new sql.ConnectionPool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  server: process.env.DB_SERVER_B,
-  database: process.env.DB_NAME_B_TCO, // TCO
-  options: { encrypt: false, trustServerCertificate: true }
-});
+  if (!pools[type].has(poolKey)) {
+    const config = {
+      user: process.env.DB_USER,
+      password: client.pass, // ✅ Pulls the specific password from the JSON object
+      server: cleanIp,
+      database: dbName,
+      options: { 
+        encrypt: false, 
+        trustServerCertificate: true,
+        connectTimeout: 10000 
+      }
+    };
+    
+    console.log(`[DB] Initializing Pool: ${client.name} (${cleanIp}) -> ${dbName}`);
+    pools[type].set(poolKey, new sql.ConnectionPool(config));
+  }
 
-// 3️⃣ SHARED CONNECTION HANDLER
-async function getConnection(pool) {
-  if (!pool) throw new Error("Database pool is undefined. Check your exports in db.js.");
+  const pool = pools[type].get(poolKey);
+  
   if (!pool.connected && !pool.connecting) {
     await pool.connect();
   }
   return pool;
 }
 
-// 4️⃣ EXPORT EVERYTHING (Matches your server.js imports)
+/**
+ * Logic to query ALL servers defined in DB_CLIENTS
+ */
+async function queryAllServers(type, queryStr) {
+  const promises = clients.map(async (client) => {
+    try {
+      // ✅ Pass the whole client object to get the correct password
+      const pool = await getPool(client, type);
+      const result = await pool.request().query(queryStr);
+      
+      // Tag rows with the Client Name for the Frontend
+      return result.recordset.map(row => ({ 
+        ...row, 
+        origin_server_id: client.name,
+        client_name: client.name
+      }));
+    } catch (err) {
+      console.error(`[DB Error] ${client.name} (${client.ip}):`, err.message);
+      return []; 
+    }
+  });
+
+  const results = await Promise.all(promises);
+  return results.flat();
+}
+
 module.exports = {
-  pool70, 
-  pool51,
-  poolTCO70,
-  poolTCO51,
-  getConnection
+  queryAllServers,
+  clients
 };

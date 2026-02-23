@@ -7,7 +7,7 @@
         <button class="back-btn" (click)="goBack()">
           <mat-icon>arrow_back</mat-icon>
         </button>
-        <h1>Open Ticket Records</h1>
+        <h1>{{ type | uppercase }} Ticket Records</h1>
       </div>
     </div>
     
@@ -16,7 +16,7 @@
             <mat-icon>search</mat-icon>
             <input 
               type="text" 
-              placeholder="Search ID, Title or Source IP..." 
+              placeholder="Search ID, Title or Client Name..." 
               [(ngModel)]="searchTerm" 
               (input)="onSearchChange()"
               (focus)="isFocused = true" 
@@ -29,18 +29,14 @@
     </div>
   </div>
 
-  <!-- PILL INDICATORS (REFERENCE IMAGE STYLE) -->
+  <!-- DYNAMIC PILL INDICATORS -->
   <div class="server-status-bar" *ngIf="!isLoading">
-    <div class="status-pill blue">
+    <div *ngFor="let server of serverStats" 
+        class="status-pill" 
+        [ngClass]="server.color">
       <span class="dot"></span>
-      <span class="label">SERVER .70:</span>
-      <span class="value">{{ openCount70 }}</span>
-    </div>
-
-    <div class="status-pill orange">
-      <span class="dot"></span>
-      <span class="label">SERVER .51:</span>
-      <span class="value">{{ openCount51 }}</span>
+      <span class="label">{{ server.label }}:</span>
+      <span class="value">{{ server.count }}</span>
     </div>
   </div>
 
@@ -64,7 +60,7 @@
               <th>ID</th>
               <th>Request By</th>
               <th>TITLE / DESCRIPTION</th>
-              <th>SOURCE</th>
+              <th>CLIENT SOURCE</th> <!-- Renamed for clarity -->
               <th>SUBMITTED ON</th>
             </tr>
           </thead>
@@ -74,7 +70,8 @@
               <td class="bold">#{{ t.id }}</td>
               <td class="bold">{{ t.requestBy }}</td>
               <td class="title-text">{{ t.title }}</td>
-              <td>{{ t.source }}</td>
+              <!-- Displays Client_A, Client_B, etc. -->
+              <td class="bold">{{ t.source }}</td> 
               <td class="date-text">{{ t.date }}</td>
             </tr>
           </tbody>

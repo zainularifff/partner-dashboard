@@ -21,9 +21,8 @@ import { IncidentApi } from '../../services/dashboard.api';
   styleUrls: ['./incident-detail.scss']
 })
 export class IncidentComponent implements OnInit {
-  // Fix TS2339 by declaring these:
-  openCount70: number = 0;
-  openCount51: number = 0;
+  // Array to hold the dynamic status pills (e.g., Client_A: 5, Client_B: 22)
+  serverStats: { label: string, count: number, color: string }[] = [];
 
   type: string = '';
   allData: any[] = [];
@@ -36,15 +35,7 @@ export class IncidentComponent implements OnInit {
   isLoading: boolean = false;
   searchTerm: string = '';
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: IncidentApi) {
-    // Extract counts from Dashboard navigation if available
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras.state as { counts: any };
-    if (state && state.counts) {
-      this.openCount70 = state.counts.count70 || 0;
-      this.openCount51 = state.counts.count51 || 0;
-    }
-  }
+  constructor(private route: ActivatedRoute, private router: Router, private api: IncidentApi) {}
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -62,22 +53,43 @@ export class IncidentComponent implements OnInit {
           title: x.title,
           requestBy: x.user_name || 'Unknown',
           statusCode: Number(x.request_status),
-          source: x.origin_ip || 'N/A', 
+          // ✅ MATCH BACKEND: Use origin_server_id from your new db.js
+          source: x.origin_server_id || 'N/A', 
           date: new Date(Number(x.request_time) * 1000).toLocaleDateString('en-GB', {
             day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
           })
         }));
 
-        // If counts weren't passed, calculate them from live data
-        if (this.openCount70 === 0 && this.openCount51 === 0) {
-          this.openCount70 = this.allData.filter(x => x.source.includes('.70') && x.statusCode === 0).length;
-          this.openCount51 = this.allData.filter(x => x.source.includes('.51') && x.statusCode === 0).length;
-        }
-
+        // Generate the counts per server name
+        this.calculateDynamicStats();
+        
         this.applyFilter();
         this.isLoading = false;
       },
       error: () => this.isLoading = false
+    });
+  }
+
+  calculateDynamicStats() {
+    const serverMap = new Map<string, number>();
+    const colors = ['blue', 'orange', 'purple', 'green', 'cyan'];
+
+    // Group only 'Open' (status 0) tickets by their Client Name
+    this.allData.forEach(ticket => {
+      if (ticket.statusCode === 0) {
+        const name = ticket.source; // This is now "Client_A" or "Client_B"
+        serverMap.set(name, (serverMap.get(name) || 0) + 1);
+      }
+    });
+
+    // Convert map to array for the *ngFor loop in HTML
+    this.serverStats = Array.from(serverMap.entries()).map(([name, count], index) => {
+      return {
+        // ✅ SIMPLIFIED: No more IP splitting logic needed
+        label: `SERVER ${name}`,
+        count: count,
+        color: colors[index % colors.length]
+      };
     });
   }
 
@@ -92,14 +104,14 @@ export class IncidentComponent implements OnInit {
       if (this.type === 'open') matchType = x.statusCode === 0;
       else if (this.type === 'pending') matchType = x.statusCode === 13;
       else if (this.type === 'solved') matchType = x.statusCode === 2;
-      else if (this.type === 'lapsed') matchType = x.statusCode !== 2; // Simplified logic
+      else if (this.type === 'lapsed') matchType = x.statusCode !== 2;
       else matchType = true;
 
       const search = this.searchTerm.toLowerCase();
       return matchType && (
         x.id.toString().includes(search) || 
         x.title.toLowerCase().includes(search) ||
-        x.source.toLowerCase().includes(search)
+        x.source.toLowerCase().includes(search) // Matches search against Client Name
       );
     });
     this.updatePagination();

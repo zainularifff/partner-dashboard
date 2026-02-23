@@ -24,20 +24,64 @@
   h1 { margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; }
 }
 
+/* ================= 2. PILL INDICATORS (NEW - MATCHES IMAGE) ================= */
+.server-status-bar {
+  display: flex;
+  gap: 12px;
+  margin: 0 0 16px 4px; /* Aligns with table edge */
+  flex-shrink: 0;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+
+  &.blue .dot { background-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+  &.orange .dot { background-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+
+  .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 8px;
+  }
+
+  .value {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+  }
+}
+
+/* ================= 3. THE MAIN TABLE CARD ================= */
 .table-card-main {
   background: white;
   border-radius: 12px; 
   border: 1px solid #eef2f6;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   
-  flex: 1;                 /* Card fills remaining vertical space */
+  flex: 1;                 
   display: flex;
   flex-direction: column;
   overflow: hidden;        
   min-height: 0;           
 }
 
-/* ================= 2. THE CENTERED LOADER ================= */
+/* ================= 4. CENTERED LOADER ================= */
 .loader-container {
   flex: 1;
   display: flex;
@@ -56,35 +100,35 @@
   .loader-text {
     text-align: center;
     span { display: block; font-weight: 700; color: #1e293b; font-size: 1.1rem; }
-    small { color: #94a3b8; font-size: 0.85rem; font-weight: 500; font-style: italic; }
   }
 }
 
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* ================= 3. TABLE AREA (FIXED GAP) ================= */
+/* ================= 5. TABLE AREA ================= */
 .table-scroll {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* ✅ Fix: Keeps table at the top regardless of row count */
 
   .detail-table {
     width: 100%;
     border-collapse: collapse;
-    align-self: flex-start;    /* ✅ Fix: Stops table from stretching height-wise */
 
     th {
       position: sticky; top: 0; background: #f8fafc; z-index: 10;
       text-align: left; padding: 14px 24px; font-size: 10px; font-weight: 800; color: #94a3b8;
+      text-transform: uppercase; border-bottom: 1px solid #f1f5f9;
     }
     td { padding: 16px 24px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; }
-    .bold { font-weight: 700; color: #2f6fed; }
+    .bold { font-weight: 700; color: #234aa5; }
+    .title-text { color: #475569; }
+    .date-text { color: #94a3b8; font-size: 12px; }
   }
 }
 
-/* ================= 4. PAGINATION FOOTER ================= */
+/* ================= 6. PAGINATION FOOTER ================= */
 .pagination-footer {
   padding: 16px 24px;
   background: white;
@@ -94,43 +138,20 @@
   align-items: center;
   flex-shrink: 0;
 
-  /* Left Side Grouping */
-  .footer-left {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-  }
-
+  .footer-left { display: flex; align-items: center; gap: 32px; }
   .page-info { font-size: 12px; color: #94a3b8; b { color: #1e293b; } }
 
   .page-size-filter {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: #94a3b8;
-
+    display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8;
     select {
-      padding: 4px 8px;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      background: #f8fafc;
-      font-weight: 700;
-      color: #2f6fed;
-      outline: none;
-      cursor: pointer;
-      &:hover { border-color: #cbd5e1; }
+      padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 6px;
+      background: #f8fafc; font-weight: 700; color: #2f6fed; cursor: pointer;
     }
   }
 
-  /* Right Side Navigation */
   .btn-group-nav {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
+    display: flex; align-items: center; gap: 12px;
     .page-num { font-size: 12px; font-weight: 700; color: #1e293b; }
-
     .btn-nav {
       padding: 6px 16px; border: 1px solid #e2e8f0; background: white;
       border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
@@ -141,46 +162,21 @@
   }
 }
 
-/* ================= 5. HEADER & SEARCH UTILS ================= */
+/* ================= 7. HEADER UTILS ================= */
 .back-btn {
   background: white; border: 1px solid #e2e8f0; border-radius: 8px;
-  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: 0.2s;
-  &:hover { background: #f1f5f9; }
+  mat-icon { font-size: 20px; color: #64748b; }
+  &:hover { background: #f1f5f9; color: #2f6fed; }
 }
 
 .search-box {
-  display: flex;
-  align-items: center;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 0 16px;
-  width: 280px;
-  height: 40px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-
+  display: flex; align-items: center; background: #f1f5f9; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 0 16px; width: 280px; height: 40px; transition: all 0.3s;
   mat-icon { font-size: 20px; width: 20px; height: 20px; color: #94a3b8; margin-right: 12px; }
-
-  input {
-    border: none; background: transparent; outline: none;
-    font-size: 13px; font-weight: 500; color: #1e293b; width: 100%;
-    &::placeholder { color: #94a3b8; font-weight: 400; }
-  }
-
-  &:hover { background: #f8fafc; border-color: #cbd5e1; }
-
-  &.active {
-    background: white; width: 340px;
-    border-color: #2f6fed; box-shadow: 0 4px 12px rgba(47, 111, 237, 0.15);
-    mat-icon { color: #2f6fed; }
-  }
-
-  .clear-btn {
-    background: none; border: none; padding: 0; cursor: pointer; color: #cbd5e1;
-    display: flex; align-items: center;
-    &:hover { color: #ef4444; }
-    mat-icon { font-size: 16px; width: 16px; height: 16px; margin: 0; }
-  }
+  input { border: none; background: transparent; outline: none; font-size: 13px; color: #1e293b; width: 100%; }
+  &:hover { background: #f8fafc; }
+  &.active { background: white; width: 340px; border-color: #2f6fed; box-shadow: 0 4px 12px rgba(47, 111, 237, 0.1); }
+  .clear-btn { background: none; border: none; cursor: pointer; color: #cbd5e1; &:hover { color: #ef4444; } }
 }

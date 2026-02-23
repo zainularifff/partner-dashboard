@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // ✅ 1. ADDED FOR [(ngModel)]
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,7 +10,6 @@ import { IncidentApi } from '../../services/dashboard.api';
 @Component({
   selector: 'app-incident-detail',
   standalone: true,
-  // ✅ 2. ADDED FormsModule TO IMPORTS
   imports: [
     CommonModule, 
     FormsModule, 
@@ -22,20 +21,30 @@ import { IncidentApi } from '../../services/dashboard.api';
   styleUrls: ['./incident-detail.scss']
 })
 export class IncidentComponent implements OnInit {
+  // Fix TS2339 by declaring these:
+  openCount70: number = 0;
+  openCount51: number = 0;
+
   type: string = '';
   allData: any[] = [];
   filteredData: any[] = [];
-  isFocused: boolean = false;  
-  // ✅ 3. RENAMED TO 'tickets' TO MATCH YOUR HTML *ngFor="let t of tickets"
   tickets: any[] = []; 
-  
+  isFocused: boolean = false;
   currentPage: number = 1;
   pageSize: number = 10;
   totalPages: number = 0;
   isLoading: boolean = false;
   searchTerm: string = '';
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: IncidentApi) {}
+  constructor(private route: ActivatedRoute, private router: Router, private api: IncidentApi) {
+    // Extract counts from Dashboard navigation if available
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras.state as { counts: any };
+    if (state && state.counts) {
+      this.openCount70 = state.counts.count70 || 0;
+      this.openCount51 = state.counts.count51 || 0;
+    }
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -51,18 +60,20 @@ export class IncidentComponent implements OnInit {
         this.allData = rows.map(x => ({
           id: x.request_no,
           title: x.title,
+          requestBy: x.user_name || 'Unknown',
           statusCode: Number(x.request_status),
-          // ✅ 4. RENAMED 'origin' to 'source' TO MATCH HTML {{t.source}}
           source: x.origin_ip || 'N/A', 
-          // Change 'Short' to 'short'
-            date: new Date(Number(x.request_time) * 1000).toLocaleDateString('en-GB', {
-            day: '2-digit', 
-            month: 'short', // ✅ Fix: lowercase 'short'
-            year: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit'
-            })
+          date: new Date(Number(x.request_time) * 1000).toLocaleDateString('en-GB', {
+            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          })
         }));
+
+        // If counts weren't passed, calculate them from live data
+        if (this.openCount70 === 0 && this.openCount51 === 0) {
+          this.openCount70 = this.allData.filter(x => x.source.includes('.70') && x.statusCode === 0).length;
+          this.openCount51 = this.allData.filter(x => x.source.includes('.51') && x.statusCode === 0).length;
+        }
+
         this.applyFilter();
         this.isLoading = false;
       },
@@ -70,33 +81,26 @@ export class IncidentComponent implements OnInit {
     });
   }
 
-  // ✅ 5. UPDATED SEARCH TO WORK WITH [(ngModel)]
   onSearchChange() {
     this.currentPage = 1;
     this.applyFilter();
   }
 
   applyFilter() {
-    const now = new Date();
     this.filteredData = this.allData.filter(x => {
       let matchType = false;
       if (this.type === 'open') matchType = x.statusCode === 0;
       else if (this.type === 'pending') matchType = x.statusCode === 13;
       else if (this.type === 'solved') matchType = x.statusCode === 2;
-      else if (this.type === 'lapsed') {
-        // Simple logic for items older than 7 days
-        const itemDate = new Date(x.date);
-        const diff = (now.getTime() - itemDate.getTime()) / (1000 * 3600 * 24);
-        matchType = x.statusCode !== 2 && diff > 7;
-      } else {
-        matchType = true; // Show all if no type
-      }
+      else if (this.type === 'lapsed') matchType = x.statusCode !== 2; // Simplified logic
+      else matchType = true;
 
       const search = this.searchTerm.toLowerCase();
-      const matchSearch = x.id.toString().includes(search) || 
-                          x.title.toLowerCase().includes(search);
-      
-      return matchType && matchSearch;
+      return matchType && (
+        x.id.toString().includes(search) || 
+        x.title.toLowerCase().includes(search) ||
+        x.source.toLowerCase().includes(search)
+      );
     });
     this.updatePagination();
   }
@@ -108,16 +112,10 @@ export class IncidentComponent implements OnInit {
   }
 
   onPageSizeChange(event: any) {
-  // Update the pageSize variable with the new selection
-  this.pageSize = Number(event.target.value);
-  
-  // Reset to the first page to avoid "out of bounds" errors
-  this.currentPage = 1;
-  
-  // Refresh the table view
-  this.updatePagination();
-    }
-
+    this.pageSize = Number(event.target.value);
+    this.currentPage = 1;
+    this.updatePagination();
+  }
 
   nextPage() { if (this.currentPage < this.totalPages) { this.currentPage++; this.updatePagination(); } }
   prevPage() { if (this.currentPage > 1) { this.currentPage--; this.updatePagination(); } }

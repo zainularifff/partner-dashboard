@@ -29,6 +29,21 @@
     </div>
   </div>
 
+  <!-- PILL INDICATORS (REFERENCE IMAGE STYLE) -->
+  <div class="server-status-bar" *ngIf="!isLoading">
+    <div class="status-pill blue">
+      <span class="dot"></span>
+      <span class="label">SERVER .70:</span>
+      <span class="value">{{ openCount70 }}</span>
+    </div>
+
+    <div class="status-pill orange">
+      <span class="dot"></span>
+      <span class="label">SERVER .51:</span>
+      <span class="value">{{ openCount51 }}</span>
+    </div>
+  </div>
+
   <!-- THE WHITE CARD -->
   <div class="card table-card-main">
     <!-- LOADING STATE -->
@@ -36,7 +51,6 @@
       <div class="spinner"></div>
       <div class="loader-text">
         <span>Retrieving Live Data</span>
-        <!-- <small>Connecting to SQL Clusters .70 & .51...</small> -->
       </div>
     </div>
 
@@ -46,24 +60,28 @@
         <table class="detail-table">
           <thead>
             <tr>
+              <th>#</th>
               <th>ID</th>
+              <th>Request By</th>
               <th>TITLE / DESCRIPTION</th>
               <th>SOURCE</th>
               <th>SUBMITTED ON</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let t of tickets">
-              <td class="bold">#{{t.id}}</td>
-              <td class="title-text">{{t.title}}</td>
-              <td>{{t.source}}</td>
-              <td class="date-text">{{t.date}}</td>
+            <tr *ngFor="let t of tickets; let i = index">
+              <td class="bold">{{ ((currentPage - 1) * pageSize) + (i + 1) }}</td>
+              <td class="bold">#{{ t.id }}</td>
+              <td class="bold">{{ t.requestBy }}</td>
+              <td class="title-text">{{ t.title }}</td>
+              <td>{{ t.source }}</td>
+              <td class="date-text">{{ t.date }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- ✅ CLEANER PAGINATION FOOTER -->
+      <!-- PAGINATION FOOTER -->
       <div class="pagination-footer">
         <div class="footer-left">
           <div class="page-info">

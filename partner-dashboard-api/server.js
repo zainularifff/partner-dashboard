@@ -13,6 +13,7 @@ app.get('/api/dashboard', async (req, res) => {
 
     const query = `
       SELECT 
+        user_name, 
         request_no,
         title,
         request_status,

@@ -11,32 +11,50 @@ app.get('/api/dashboard', async (req, res) => {
     const p70 = await getConnection(pool70);
     const p51 = await getConnection(pool51);
 
+    const query = `
+      SELECT 
+        request_no,
+        title,
+        request_status,
+        request_time
+      FROM HD_REQUEST
+      ORDER BY request_time DESC
+    `;
+
     const results = await Promise.allSettled([
-      p70.request().query('SELECT * FROM HD_REQUEST'),
-      p51.request().query('SELECT * FROM HD_REQUEST')
+      p70.request().query(query),
+      p51.request().query(query)
     ]);
 
     let combinedData = [];
 
     if (results[0].status === 'fulfilled') {
-      const data70 = results[0].value.recordset.map(row => ({ 
-        ...row, origin_ip: '192.168.140.70' 
+      const data70 = results[0].value.recordset.map(row => ({
+        ...row,
+        origin_ip: '192.168.140.70'
       }));
       combinedData = [...combinedData, ...data70];
     }
 
     if (results[1].status === 'fulfilled') {
-      const data51 = results[1].value.recordset.map(row => ({ 
-        ...row, origin_ip: '192.168.140.51' 
+      const data51 = results[1].value.recordset.map(row => ({
+        ...row,
+        origin_ip: '192.168.140.51'
       }));
       combinedData = [...combinedData, ...data51];
     }
 
+    // 🔥 Important: global sort after combine
+    combinedData.sort((a, b) => b.request_time - a.request_time);
+
     res.json(combinedData);
 
   } catch (err) {
-    console.error("DEBUG ERROR:", err); 
-    res.status(500).json({ message: "Database Connection Failed", error: err.message });
+    console.error("DEBUG ERROR:", err);
+    res.status(500).json({
+      message: "Database Connection Failed",
+      error: err.message
+    });
   }
 });
 

@@ -23,9 +23,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   styleUrls: ['./incident-detail.scss'],
 })
 
-// Main component class for incident details
 export class IncidentComponent implements OnInit {
-  serverStats: { label: string; count: number; color: string }[] = [];
+  serverStats: { label: string; count: number; color: string; sourceKey: string }[] = [];
 
   type: string = '';
   allData: any[] = [];
@@ -37,6 +36,9 @@ export class IncidentComponent implements OnInit {
   totalPages: number = 0;
   isLoading: boolean = false;
   searchTerm: string = '';
+  
+  // ✅ UPDATE: Gunakan Array untuk simpan banyak server yang dipilih
+  selectedServers: string[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -45,7 +47,6 @@ export class IncidentComponent implements OnInit {
     private cdr: ChangeDetectorRef,
   ) {}
 
-  // Initialize component and load data based on route parameter
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
       this.type = params.get('type') || '';
@@ -53,7 +54,6 @@ export class IncidentComponent implements OnInit {
     });
   }
 
-  // Load data from API and transform it for display
   loadData() {
     this.isLoading = true;
     this.api.getFullList().subscribe({
@@ -62,14 +62,10 @@ export class IncidentComponent implements OnInit {
 
         this.allData = rows.map((x) => {
           const reqTime = Number(x.request_time);
-
-          // If completed_time is missing or zero, use current time to calculate elapsed days
-          const endTime =
-            x.completed_time && Number(x.completed_time) > 0
+          const endTime = x.completed_time && Number(x.completed_time) > 0
               ? Number(x.completed_time)
               : nowInSeconds;
 
-          // Calculate elapsed days, ensuring it doesn't go negative
           const diffSeconds = endTime - reqTime;
           const diffDays = Math.floor(diffSeconds / 86400);
 
@@ -95,12 +91,42 @@ export class IncidentComponent implements OnInit {
     });
   }
 
-  // Calculate dynamic stats for server distribution
+  // ✅ UPDATE: Fungsi toggle untuk masukkan/buang server dari Array
+  toggleServerFilter(sourceKey: string) {
+    const index = this.selectedServers.indexOf(sourceKey);
+    
+    if (index > -1) {
+      // Jika sudah ada, buang dari array (Unselect)
+      this.selectedServers.splice(index, 1);
+    } else {
+      // Jika belum ada, masukkan dalam array (Select)
+      this.selectedServers.push(sourceKey);
+    }
+    
+    this.currentPage = 1; 
+    this.applyFilter();
+  }
+
+  // ✅ TAMBAH: Fungsi optional untuk reset semua filter server
+  clearServerFilters() {
+    this.selectedServers = [];
+    this.currentPage = 1;
+    this.applyFilter();
+  }
+
   calculateDynamicStats() {
     const serverMap = new Map<string, number>();
     const colors = ['blue', 'orange', 'purple', 'green', 'cyan'];
 
-    this.filteredData.forEach((ticket) => {
+    const baseDataByType = this.allData.filter(x => {
+      if (this.type === 'open') return x.statusCode === 0;
+      if (this.type === 'pending') return x.statusCode === 13;
+      if (this.type === 'solved') return x.statusCode === 2;
+      if (this.type === 'lapsed') return x.statusCode !== 2 && x.daysElapsed > 7;
+      return true;
+    });
+
+    baseDataByType.forEach((ticket) => {
       const name = ticket.source;
       serverMap.set(name, (serverMap.get(name) || 0) + 1);
     });
@@ -108,45 +134,45 @@ export class IncidentComponent implements OnInit {
     this.serverStats = Array.from(serverMap.entries()).map(([name, count], index) => {
       return {
         label: `SERVER ${name}`,
+        sourceKey: name,
         count: count,
         color: colors[index % colors.length],
       };
     });
   }
 
-  // Handler for search input change
   onSearchChange() {
     this.currentPage = 1;
     this.applyFilter();
   }
 
-  // Filter data based on type and search term
   applyFilter() {
     this.filteredData = this.allData.filter((x) => {
+      // 1. Tapis mengikut Type Dashboard
       let matchType = false;
-
       if (this.type === 'open') matchType = x.statusCode === 0;
       else if (this.type === 'pending') matchType = x.statusCode === 13;
       else if (this.type === 'solved') matchType = x.statusCode === 2;
-      // ✅ FIX LOGIK LAPSED:
-      // Tiket dikira LAPSED hanya jika:
-      // 1. Belum Solved (x.statusCode !== 2)
-      // 2. DAN sudah lebih dari 7 hari (x.daysElapsed > 7)
-      else if (this.type === 'lapsed') {
-        matchType = x.statusCode !== 2 && x.daysElapsed > 7;
-      } else {
-        matchType = true;
-      }
+      else if (this.type === 'lapsed') matchType = x.statusCode !== 2 && x.daysElapsed > 7;
+      else matchType = true;
 
+      // 2. Tapis mengikut Search Term
       const search = this.searchTerm.toLowerCase();
-
-      return (
-        matchType &&
-        (x.id.toString().includes(search) ||
-          x.title.toLowerCase().includes(search) ||
-          x.source.toLowerCase().includes(search) ||
-          x.requestBy.toLowerCase().includes(search))
+      const matchSearch = (
+        x.id.toString().includes(search) ||
+        x.title.toLowerCase().includes(search) ||
+        x.source.toLowerCase().includes(search) ||
+        x.requestBy.toLowerCase().includes(search)
       );
+
+      // 3. ✅ UPDATE: Tapis mengikut Array Selected Servers
+      // Jika array kosong, matchServer sentiasa true (tunjuk semua)
+      // Jika ada isi, hanya tunjuk source yang wujud dalam array tersebut
+      const matchServer = this.selectedServers.length > 0 
+        ? this.selectedServers.includes(x.source) 
+        : true;
+
+      return matchType && matchSearch && matchServer;
     });
 
     // Susun data (Sorting)
@@ -160,23 +186,19 @@ export class IncidentComponent implements OnInit {
     this.updatePagination();
   }
 
-  // Update pagination based on filtered data
   updatePagination() {
     this.totalPages = Math.ceil(this.filteredData.length / this.pageSize);
     const start = (this.currentPage - 1) * this.pageSize;
     this.tickets = this.filteredData.slice(start, start + this.pageSize);
-
     this.cdr.detectChanges();
   }
 
-  // Handler for page size change
+  // ... (Fungsi pagination lain kekal sama) ...
   onPageSizeChange(event: any) {
     this.pageSize = Number(event.target.value);
     this.currentPage = 1;
     this.updatePagination();
   }
-
-  // Pagination controls
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
@@ -192,14 +214,10 @@ export class IncidentComponent implements OnInit {
   goBack() {
     this.router.navigate(['/dashboard']);
   }
-
-  // Go to first page of results
   firstPage() {
     this.currentPage = 1;
     this.updatePagination();
   }
-
-  // Go to last page of results
   lastPage() {
     this.currentPage = this.totalPages;
     this.updatePagination();

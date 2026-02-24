@@ -1,13 +1,12 @@
 /* ================= 1. GLOBAL LAYOUT LOCK ================= */
 .page {
   padding: 15px 24px;
-  /* Subtract the height of your footer (adjust 40px to match your footer's height) */
   height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   background: #f8fafc;
-  overflow: hidden; /* Prevents the dashboard from pushing into the footer area */
+  overflow: hidden; 
 }
 
 .header {
@@ -15,14 +14,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  flex-shrink: 0; /* Prevents header from squashing */
+  flex-shrink: 0; 
 }
 
 .header-actions {
   display: flex;
-  flex-direction: column; /* Stacks the filter group and PDF button */
-  align-items: flex-end; /* Aligns both to the right edge */
-  gap: 8px; /* Space between filters and PDF button */
+  flex-direction: column; 
+  align-items: flex-end; 
+  gap: 8px; 
 }
 
 .btn-group {
@@ -77,11 +76,11 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr; /* Force exactly two equal rows */
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr; 
   gap: 16px;
-  flex: 1; /* Grid fills all remaining space above footer */
-  min-height: 0; /* CRITICAL: Allows internal content to shrink */
+  flex: 1; 
+  min-height: 0; 
 }
 
 .card {
@@ -92,7 +91,7 @@
   flex-direction: column;
   padding: clamp(10px, 2vh, 18px);
   overflow: hidden;
-  min-height: 0; /* CRITICAL: Prevents card from expanding grid */
+  min-height: 0; 
 
   h3 {
     font-size: 14px;
@@ -164,7 +163,7 @@
   flex: 2;
   display: flex;
   flex-direction: column;
-  justify-content: space-around; /* Distributes bars evenly inside card height */
+  justify-content: space-around; 
   height: 100%;
 }
 
@@ -194,7 +193,6 @@
 }
 
 /* ================= 4. VENDOR & ASSET (SPINNER FIX) ================= */
-/* --- SPINNER ALIGNMENT --- */
 .vp-row {
   display: flex;
   justify-content: space-around;
@@ -225,7 +223,6 @@
   text-transform: uppercase;
 }
 
-/* --- TABLE & PROGRESS BARS --- */
 .vp-table {
   width: 100%;
   border-collapse: collapse;
@@ -257,105 +254,44 @@
   }
 }
 
-/* --- COLOR OVERRIDES (Material Deep Target) --- */
+/* ================= 5. COLORS & UTILS ================= */
 ::ng-deep {
-  /* Spinners */
-  .green circle {
-    stroke: #22c55e !important;
-  }
-  .orange circle {
-    stroke: #f59e0b !important;
-  }
-  .red circle {
-    stroke: #ef4444 !important;
-  }
+  .green circle { stroke: #22c55e !important; }
+  .orange circle { stroke: #f59e0b !important; }
+  .red circle { stroke: #ef4444 !important; }
 
-  /* Progress Bars */
   .custom-bar {
     height: 8px !important;
     border-radius: 4px;
-    background-color: #f1f5f9 !important; /* The gray track */
+    background-color: #f1f5f9 !important; 
 
-    &.green .mdc-linear-progress__bar-inner {
-      border-color: #22c55e !important;
-    }
-    &.orange .mdc-linear-progress__bar-inner {
-      border-color: #f59e0b !important;
-    }
-    &.red .mdc-linear-progress__bar-inner {
-      border-color: #ef4444 !important;
-    }
+    &.green .mdc-linear-progress__bar-inner { border-color: #22c55e !important; }
+    &.orange .mdc-linear-progress__bar-inner { border-color: #f59e0b !important; }
+    &.red .mdc-linear-progress__bar-inner { border-color: #ef4444 !important; }
   }
 }
 
-/* Utility Text Colors */
-.green-text {
-  color: #22c55e;
-}
-.orange-text {
-  color: #f59e0b;
-}
-.red-text {
-  color: #ef4444;
-}
+.green-text { color: #22c55e; }
+.orange-text { color: #f59e0b; }
+.red-text { color: #ef4444; }
 
-/* ================= 5. COLORS & UTILS ================= */
-.iw-blue {
-  background: #eff6ff;
-  color: #1e40af;
-}
-.iw-yellow {
-  background: #fffbeb;
-  color: #92400e;
-}
-.iw-green {
-  background: #f0fdf4;
-  color: #166534;
-}
-.iw-red {
-  background: #fef2f2;
-  color: #991b1b;
-}
+.iw-blue { background: #eff6ff; color: #1e40af; }
+.iw-yellow { background: #fffbeb; color: #92400e; }
+.iw-green { background: #f0fdf4; color: #166534; }
+.iw-red { background: #fef2f2; color: #991b1b; }
 
-.seg.new {
-  background: #3b82f6;
-}
-.seg.young {
-  background: #10b981;
-}
-.seg.mid {
-  background: #f59e0b;
-}
-.seg.legacy {
-  background: #ef4444;
-}
+.seg.new { background: #3b82f6; }
+.seg.young { background: #10b981; }
+.seg.mid { background: #f59e0b; }
+.seg.legacy { background: #ef4444; }
 
-.btn-export {
-  background: #2f6fed;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  cursor: pointer;
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-}
-
-/* ================= 2. TOTAL ASSET HEALTH (FIXED) ================= */
+/* ================= 6. TOTAL ASSET HEALTH (FIXED) ================= */
 .asset-flex {
   display: flex;
   gap: 20px;
   align-items: center;
   flex: 1;
-  min-height: 0; /* Prevents overflow */
+  min-height: 0; 
 }
 
 .ah-left {
@@ -363,7 +299,7 @@
   flex-direction: column;
   align-items: center;
   width: 140px;
-  flex-shrink: 0; /* Important: stops the right side from squashing the spinner */
+  flex-shrink: 0; 
 }
 
 .spinner-wrapper {
@@ -395,7 +331,7 @@
 
 .ah-right {
   flex: 1;
-  min-width: 0; /* Critical: allows the progress bars to stay within the box */
+  min-width: 0; 
 }
 
 .fault-row {
@@ -407,106 +343,265 @@
     font-size: 11px;
     font-weight: 700;
     margin-bottom: 4px;
-    white-space: nowrap; /* Prevents the "14%" from wrapping */
+    white-space: nowrap; 
+
+    .model-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      padding-right: 8px;
+    }
   }
 
-  /* Make bars slim and red */
-  .custom-bar {
+  ::ng-deep .custom-red-bar {
     height: 6px !important;
     border-radius: 10px;
+    --mdc-linear-progress-active-indicator-color: #ef4444 !important;
+    --mdc-linear-progress-track-color: #f1f5f9 !important;
 
-    ::ng-deep .mdc-linear-progress__bar-inner {
-      border-color: #ef4444 !important; /* Force red for Fault Rate */
+    .mdc-linear-progress__bar-inner { border-color: #ef4444 !important; }
+  }
+}
+
+/* ================= 7. MISC & RESPONSIVE TWEAKS ================= */
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #1e293b;
+  
+  .blue-text {
+    color: #2f6fed;
+    font-weight: 800;
+    margin-left: 5px;
+  }
+}
+
+.asset-icons {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  padding: 0 5px;
+
+  .icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    gap: 8px;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #2f6fed;
+      }
+    }
+
+    strong {
+      font-size: 18px;
+      color: #1e293b;
+      font-weight: 800;
     }
   }
 }
 
-.ah-legend {
+.asset-footer {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
   margin-top: 10px;
-  font-size: 9px;
-  font-weight: 700;
-  color: #64748b;
+
+  .footer-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+
+    strong {
+      font-size: 17px;
+      color: #2f6fed;
+      font-weight: 800;
+    }
+  }
 }
 
-/* Only the Open Ticket card gets the hover effect */
+.no-data {
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+}
+
 .clickable-card {
   cursor: pointer;
   transition: all 0.2s ease;
-
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    filter: brightness(0.98);
   }
 }
 
-/* TABLE STYLING TO MATCH SCREENSHOT */
-.detail-table {
+
+/* ================= LEASE LIFECYCLE TIMELINE (ONLY) ================= */
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Jarak antara setiap baris lease */
+  padding: 5px 0;
+}
+
+.t-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px; /* Ruang extra di bawah untuk label 'Days Left' */
+  gap: 20px;
   width: 100%;
-  border-collapse: collapse;
+}
 
-  th {
-    text-align: left;
-    padding: 12px 8px;
-    font-size: 11px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #f1f5f9;
-  }
+.t-info {
+  width: 180px;      /* Lebar tetap supaya bar sejajar di sebelah kanan */
+  flex-shrink: 0;
+  line-height: 1.4;
 
-  td {
-    padding: 16px 8px;
+  strong {
     font-size: 13px;
-    color: #475569;
-    border-bottom: 1px solid #f8fafc;
-
-    &.bold {
-      font-weight: 700;
-      color: #1e293b;
-    }
-    &.title-text {
-      color: #334155;
-    }
-    &.date-text {
-      color: #64748b;
-      font-size: 12px;
-    }
-    &.center {
-      text-align: center;
-    }
-  }
-
-  .ip-badge {
-    background: #eff6ff;
-    color: #2f6fed;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-family: monospace;
-    font-size: 11px;
     font-weight: 700;
+    color: #1e293b;
+    text-transform: uppercase;
+  }
+
+  small {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
   }
 }
 
-.btn-close {
-  background: none;
-  border: none;
-  cursor: pointer;
+.t-progress-container {
+  flex: 1;
+  height: 10px;
+  background: #f1f5f9; /* Warna tapak bar (track) */
+  border-radius: 10px;
+  position: relative;  /* Penting untuk kedudukan .days-left */
+}
+
+.t-bar {
+  height: 100%;
+  border-radius: 10px;
+  /* Warna gradient dari Hijau ke Biru */
+  background: linear-gradient(90deg, #10b981, #3b82f6); 
+  transition: width 0.5s ease-in-out;
+}
+
+.t-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 8px;
   color: #94a3b8;
-  &:hover {
-    color: #ef4444;
+  text-transform: uppercase;
+}
+
+.days-left {
+  color: #ef4444; /* Warna merah amaran */
+  font-weight: 800;
+  position: absolute;
+  right: 0;      /* Melekat di hujung kanan bar */
+  top: -22px;    /* Terapung di atas bar */
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.end-date {
+  /* Secara default, t-labels justify-between akan tolak tarikh ni ke kanan */
+}
+
+// ================= CLIENT SELECTOR (FIXED) ================= */
+.client-selector-wrapper {
+  .btn-client-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    height: 40px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #64748b;
+    }
+
+    .label {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .arrow {
+      color: #94a3b8;
+      margin-left: 4px;
+    }
+
+    &:hover {
+      border-color: #2f6fed;
+      background: #f8fafc;
+    }
   }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+/* Style untuk Dropdown List */
+::ng-deep .client-dropdown-menu {
+  border-radius: 12px !important;
+  margin-top: 8px;
+  min-width: 220px !important;
+  padding: 8px 0 !important;
+
+  .mat-mdc-menu-item {
+    height: 44px !important;
+    
+    &:hover {
+      background: #f1f5f9 !important;
+    }
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 4px 0;
+  }
+
+  /* Style Checkbox dalam menu */
+  mat-checkbox {
+    pointer-events: none; /* Biar click event handled by menu-item */
+    font-weight: 600;
+    color: #475569;
   }
 }

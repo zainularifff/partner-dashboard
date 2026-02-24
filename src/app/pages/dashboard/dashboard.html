@@ -5,17 +5,82 @@
       <div class="sup">STRATEGIC OVERSIGHT DASHBOARD</div>
       <h1>Dashboard Overview</h1>
     </div>
+
     <div class="header-actions">
+      <!-- TIME RANGE FILTER -->
       <div class="btn-group">
         <button>7 Days</button>
         <button class="active">30 Days</button>
         <button>Quarterly</button>
       </div>
-      <button class="btn-export"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
+
+      <div class="client-selector-wrapper">
+        <button class="btn-client-filter" [matMenuTriggerFor]="clientMenu">
+          <mat-icon>lan</mat-icon>
+          <span class="label">
+            {{
+              selectedServers.length === 0 ? 'All Clients' : selectedServers.length + ' Selected'
+            }}
+          </span>
+          <mat-icon class="arrow">expand_more</mat-icon>
+        </button>
+
+        <mat-menu #clientMenu="matMenu" class="client-dropdown-menu">
+          <button mat-menu-item (click)="clearServerFilters()">
+            <mat-icon>restart_alt</mat-icon>
+            <span>Show All Clients</span>
+          </button>
+          <div class="divider"></div>
+
+          <!-- ✅ Bahagian ini yang akan display Client A, B, etc -->
+          <button
+            mat-menu-item
+            *ngFor="let s of serverStats"
+            (click)="toggleServerFilter(s.sourceKey); $event.stopPropagation()"
+          >
+            <mat-checkbox [checked]="selectedServers.includes(s.sourceKey)" color="primary">
+              {{ s.label }}
+            </mat-checkbox>
+          </button>
+        </mat-menu>
+      </div>
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid" *ngIf="!isLoading">
+    <!-- PANEL 1: TOTAL ASSETS -->
+    <div class="card">
+      <h3 class="card-title">
+        Total Asset : <span class="blue-text">{{ assetTotal | number }}</span>
+      </h3>
+
+      <div class="asset-icons">
+        <div class="icon-item">
+          <span><mat-icon>business</mat-icon> GLC</span>
+          <strong>1,090</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>account_balance</mat-icon> FSI</span>
+          <strong>8,800</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>school</mat-icon> EDU</span>
+          <strong>100</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>account_balance</mat-icon> GOV</span>
+          <strong>3,999</strong>
+        </div>
+      </div>
+
+      <div class="asset-footer">
+        <div class="footer-stat">DESKTOP <strong>11,789</strong></div>
+        <div class="footer-stat">LAPTOP <strong>2,000</strong></div>
+        <div class="footer-stat">SERVER <strong>200</strong></div>
+        <div class="footer-stat">OTHERS <strong>0</strong></div>
+      </div>
+    </div>
+
     <!-- 1. VENDOR PERFORMANCE -->
     <div class="card">
       <h3>Server & Vendor Health</h3>
@@ -82,25 +147,26 @@
             </div>
           </div>
         </div>
+
         <div class="ah-right">
           <div class="sup-title">TOP 5 FAULT-PRONE MODELS</div>
           <div class="fault-row" *ngFor="let m of topFault">
             <div class="fault-info">
-              <span>{{ m.name }}</span
-              ><span class="red-text">{{ m.rate }}%</span>
+              <span class="model-name">{{ m.name || 'UNKNOWN MODEL' }}</span>
+              <span [ngClass]="getBarColor(m.rate) + '-text'">{{ m.rate }}%</span>
             </div>
+
             <mat-progress-bar
               mode="determinate"
               [value]="m.rate"
-              color="warn"
-              class="custom-bar"
+              [ngClass]="'custom-bar ' + getBarColor(m.rate)"
             ></mat-progress-bar>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. INCIDENT WALL (CLEAN VERSION) -->
+    <!-- 3. INCIDENT WALL -->
     <div class="card">
       <h3>Incident Wall Management</h3>
       <div class="iw-grid">
@@ -114,7 +180,7 @@
         <div class="iw-item iw-yellow clickable-card" (click)="selectFilter('pending')">
           <div class="iw-label">PENDING / AWAITING</div>
           <div class="iw-value">{{ pendingCount }}</div>
-          <div class="iw-desc">3rd Party Wait / Action</div>
+          <div class="iw-desc">3rd Party Wait</div>
           <mat-icon class="iw-icon">pause_circle</mat-icon>
         </div>
 
@@ -141,18 +207,62 @@
         <div class="ba-charts">
           <div class="ba-row" *ngFor="let b of brandRows">
             <div class="ba-info">
-              <span>{{ b.name }}</span
-              ><span>{{ b.total | number }} units</span>
+              <span>{{ b.name }}</span>
+              <span>{{ b.total | number }} units</span>
             </div>
             <div class="ba-full-bar">
-              <div class="seg new" [style.width.%]="b.new"></div>
-              <div class="seg young" [style.width.%]="b.young"></div>
-              <div class="seg mid" [style.width.%]="b.mid"></div>
-              <div class="seg legacy" [style.width.%]="b.legacy"></div>
+              <div
+                class="seg new"
+                [style.width.%]="b.new"
+                [matTooltip]="'New: ' + b.new + '%'"
+              ></div>
+              <div
+                class="seg young"
+                [style.width.%]="b.young"
+                [matTooltip]="'Young: ' + b.young + '%'"
+              ></div>
+              <div
+                class="seg mid"
+                [style.width.%]="b.mid"
+                [matTooltip]="'Mid: ' + b.mid + '%'"
+              ></div>
+              <div
+                class="seg legacy"
+                [style.width.%]="b.legacy"
+                [matTooltip]="'Legacy: ' + b.legacy + '%'"
+              ></div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 5. LEASE LIFECYCLE -->
+    <div class="card full-width">
+      <h3 class="card-title">Lease Lifecycle Timeline</h3>
+      <div class="timeline-list">
+        <div class="t-row" *ngFor="let item of leases">
+          <div class="t-info">
+            <strong>{{ item.name }}</strong
+            ><br />
+            <small>{{ item.startDate }}</small>
+          </div>
+
+          <div class="t-progress-container">
+            <div class="t-bar" [style.width.%]="item.progress"></div>
+            <div class="t-labels">
+              <span class="days-left">{{ item.daysLeft }} Days Left</span>
+              <span class="end-date">{{ item.endDate }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div class="loader-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" [diameter]="50"></mat-progress-spinner>
+    <p>Syncing Strategic Dashboard...</p>
   </div>
 </div>

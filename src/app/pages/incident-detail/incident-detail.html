@@ -32,10 +32,17 @@
 
   <!-- DYNAMIC PILL INDICATORS -->
   <div class="server-status-bar" *ngIf="!isLoading">
-    <div *ngFor="let server of serverStats" class="status-pill" [ngClass]="server.color">
+    <div
+      class="status-pill"
+      *ngFor="let s of serverStats"
+      (click)="toggleServerFilter(s.sourceKey)"
+      [class.active-pill]="selectedServers.includes(s.sourceKey)"
+      [ngClass]="s.color"
+    >
+      <!-- Tambah ngClass untuk warna -->
       <span class="dot"></span>
-      <span class="label">{{ server.label }}:</span>
-      <span class="value">{{ server.count }}</span>
+      <span class="label">{{ s.label }}</span>
+      <span class="value">{{ s.count }}</span>
     </div>
   </div>
 
@@ -95,7 +102,7 @@
               </td>
               <td class="bold">{{ t.source }}</td>
               <td class="date-text">{{ t.date }}</td>
-              <!-- Show days lapsed with special styling if type is 'lapsed' -->
+              <!-- Show days elapsed with special styling -->
               <td
                 *ngIf="type === 'lapsed' || type === 'solved' || type === 'pending'"
                 [style.color]="
@@ -127,38 +134,25 @@
           </div>
         </div>
 
-        <!-- UPDATED PAGINATION CONTROLS -->
+        <!-- PAGINATION CONTROLS -->
         <div class="btn-group-nav">
-          <!-- First Page -->
-          <button
-            class="btn-nav"
-            [disabled]="currentPage === 1"
-            (click)="currentPage = 1; updatePagination()"
-          >
+          <button class="btn-nav" [disabled]="currentPage === 1" (click)="firstPage()">
             <mat-icon>first_page</mat-icon>
           </button>
 
-          <!-- Previous -->
           <button class="btn-nav" [disabled]="currentPage === 1" (click)="prevPage()">
             <mat-icon>chevron_left</mat-icon>
           </button>
 
-          <!-- Current Info -->
           <span class="page-num"
             >Page <b>{{ currentPage }}</b> of <b>{{ totalPages }}</b></span
           >
 
-          <!-- Next -->
           <button class="btn-nav" [disabled]="currentPage === totalPages" (click)="nextPage()">
             <mat-icon>chevron_right</mat-icon>
           </button>
 
-          <!-- Last Page -->
-          <button
-            class="btn-nav"
-            [disabled]="currentPage === totalPages"
-            (click)="currentPage = totalPages; updatePagination()"
-          >
+          <button class="btn-nav" [disabled]="currentPage === totalPages" (click)="lastPage()">
             <mat-icon>last_page</mat-icon>
           </button>
         </div>

@@ -39,64 +39,71 @@
 .server-status-bar {
   display: flex;
   gap: 12px;
-  margin: 0 0 16px 4px;
-  flex-shrink: 0;
-  flex-wrap: wrap; /* Allows wrapping if many servers are added */
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    border: 2px solid transparent; // Standby untuk active state
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer; // ✅ HOVER: Tukar mouse cursor
+    user-select: none;
+
+    // ✅ HOVER EFFECT: Pill "terangkat" dan lebih terang
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      filter: brightness(0.98);
+    }
+
+    // ✅ ACTIVE STATE: Bila pill dipilih
+    &.active-pill {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      
+      &.blue { 
+        border-color: #3b82f6; 
+        background: #eff6ff; 
+        color: #1e40af;
+      }
+      &.orange { 
+        border-color: #f59e0b; 
+        background: #fffbeb; 
+        color: #92400e;
+      }
+      &.purple { 
+        border-color: #8b5cf6; 
+        background: #f5f3ff; 
+        color: #5b21b6;
+      }
+      // Tambah warna lain kalau perlu...
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    // Warna Dot Asal
+    &.blue .dot { background: #3b82f6; }
+    &.orange .dot { background: #f59e0b; }
+    &.purple .dot { background: #8b5cf6; }
+
+    .label { margin-right: 6px; }
+    .value { font-weight: 800; color: #1e293b; }
+  }
 }
 
-.status-pill {
-  display: flex;
-  align-items: center;
-  background: white;
-  border: 1px solid #e2e8f0;
-  padding: 6px 14px;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 10px;
-  }
-
-  /* Support for dynamic colors from TS colors array */
-  &.blue .dot {
-    background-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-  &.orange .dot {
-    background-color: #f59e0b;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
-  }
-  &.purple .dot {
-    background-color: #a855f7;
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
-  }
-  &.green .dot {
-    background-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-  }
-  &.cyan .dot {
-    background-color: #06b6d4;
-    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
-  }
-
-  .label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-right: 8px;
-  }
-
-  .value {
-    font-size: 14px;
-    font-weight: 800;
-    color: #1e293b;
-  }
-}
 
 /* ================= 3. THE MAIN TABLE CARD ================= */
 .table-card-main {

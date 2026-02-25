@@ -8,11 +8,11 @@
 
     <div class="header-actions">
       <!-- TIME RANGE FILTER -->
-      <div class="btn-group">
+      <!-- <div class="btn-group">
         <button>7 Days</button>
         <button class="active">30 Days</button>
         <button>Quarterly</button>
-      </div>
+      </div> -->
 
       <div class="client-selector-wrapper">
         <button class="btn-client-filter" [matMenuTriggerFor]="clientMenu">
@@ -57,27 +57,36 @@
       <div class="asset-icons">
         <div class="icon-item">
           <span><mat-icon>business</mat-icon> GLC</span>
-          <strong>1,090</strong>
+          <strong>{{ sectorStats.glc | number }}</strong>
         </div>
         <div class="icon-item">
           <span><mat-icon>account_balance</mat-icon> FSI</span>
-          <strong>8,800</strong>
+          <strong>{{ sectorStats.fsi | number }}</strong>
         </div>
         <div class="icon-item">
           <span><mat-icon>school</mat-icon> EDU</span>
-          <strong>100</strong>
+          <strong>{{ sectorStats.edu | number }}</strong>
         </div>
         <div class="icon-item">
           <span><mat-icon>account_balance</mat-icon> GOV</span>
-          <strong>3,999</strong>
+          <strong>{{ sectorStats.gov | number }}</strong>
         </div>
       </div>
 
       <div class="asset-footer">
-        <div class="footer-stat">DESKTOP <strong>11,789</strong></div>
-        <div class="footer-stat">LAPTOP <strong>2,000</strong></div>
-        <div class="footer-stat">SERVER <strong>200</strong></div>
-        <div class="footer-stat">OTHERS <strong>0</strong></div>
+        <!-- Guna blue-text untuk Desktop, Laptop & Server macam dalam gambar -->
+        <div class="footer-stat">
+          DESKTOP <strong class="blue-text">{{ machineStats.desktop | number }}</strong>
+        </div>
+        <div class="footer-stat">
+          LAPTOP <strong class="blue-text">{{ machineStats.laptop | number }}</strong>
+        </div>
+        <div class="footer-stat">
+          SERVER <strong class="blue-text">{{ machineStats.server | number }}</strong>
+        </div>
+        <div class="footer-stat">
+          OTHERS <strong>{{ machineStats.others | number }}</strong>
+        </div>
       </div>
     </div>
 

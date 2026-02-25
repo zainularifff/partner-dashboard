@@ -203,7 +203,7 @@ app.get('/api/assets/top-faults', systemAuthMiddleware, validateClientFilter, as
   }
 });
 
-// 7️⃣ Brand Aging Analysis - Menghimpun data dari semua server
+// 7️⃣ Brand Aging Analysis - DIRECT TCO VERSION
 app.get('/api/assets/brand-aging', systemAuthMiddleware, validateClientFilter, async (req, res) => {
   try {
     let selectedClient = req.query.client || '';
@@ -219,96 +219,145 @@ app.get('/api/assets/brand-aging', systemAuthMiddleware, validateClientFilter, a
         DECLARE @sql NVARCHAR(MAX) = '
           SELECT 
             CASE 
-                -- ✅ Kategori Gergasi Windows & Korporat
-                WHEN UPPER(a.MadeCompany) LIKE ''%HP%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%HEWLETT%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%COMPAQ%'' THEN ''HP''
+                WHEN UPPER(a.MadeCompany) LIKE ''%HP%'' OR UPPER(a.MadeCompany) LIKE ''%HEWLETT%'' OR UPPER(a.MadeCompany) LIKE ''%COMPAQ%'' THEN ''HP''
                 WHEN UPPER(a.MadeCompany) LIKE ''%DELL%'' THEN ''DELL''
-                WHEN UPPER(a.MadeCompany) LIKE ''%LENOVO%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%THINKPAD%'' THEN ''LENOVO''
+                WHEN UPPER(a.MadeCompany) LIKE ''%LENOVO%'' OR UPPER(a.MadeCompany) LIKE ''%THINKPAD%'' THEN ''LENOVO''
                 WHEN UPPER(a.MadeCompany) LIKE ''%ASUS%'' THEN ''ASUS''
-                WHEN UPPER(a.MadeCompany) LIKE ''%ACER%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%PREDATOR%'' THEN ''ACER''
-                
-                -- ✅ Kategori Premium & Apple
-                WHEN UPPER(a.MadeCompany) LIKE ''%APPLE%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%MACBOOK%'' THEN ''APPLE''
-                
-                -- ✅ Kategori Gaming & High-End
+                WHEN UPPER(a.MadeCompany) LIKE ''%ACER%'' OR UPPER(a.MadeCompany) LIKE ''%PREDATOR%'' THEN ''ACER''
+                WHEN UPPER(a.MadeCompany) LIKE ''%APPLE%'' OR UPPER(a.MadeCompany) LIKE ''%MACBOOK%'' THEN ''APPLE''
                 WHEN UPPER(a.MadeCompany) LIKE ''%MSI%'' THEN ''MSI''
                 WHEN UPPER(a.MadeCompany) LIKE ''%RAZER%'' THEN ''RAZER''
-                WHEN UPPER(a.MadeCompany) LIKE ''%GIGABYTE%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%AORUS%'' THEN ''GIGABYTE''
-                
-                -- ✅ Kategori Lain-lain (Common)
+                WHEN UPPER(a.MadeCompany) LIKE ''%GIGABYTE%'' OR UPPER(a.MadeCompany) LIKE ''%AORUS%'' THEN ''GIGABYTE''
                 WHEN UPPER(a.MadeCompany) LIKE ''%SAMSUNG%'' THEN ''SAMSUNG''
-                WHEN UPPER(a.MadeCompany) LIKE ''%MICROSOFT%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%SURFACE%'' THEN ''MICROSOFT''
-                WHEN UPPER(a.MadeCompany) LIKE ''%HUAWEI%'' 
-                     OR UPPER(a.MadeCompany) LIKE ''%MATEBOOK%'' THEN ''HUAWEI''
-                
+                WHEN UPPER(a.MadeCompany) LIKE ''%MICROSOFT%'' OR UPPER(a.MadeCompany) LIKE ''%SURFACE%'' THEN ''MICROSOFT''
+                WHEN UPPER(a.MadeCompany) LIKE ''%HUAWEI%'' OR UPPER(a.MadeCompany) LIKE ''%MATEBOOK%'' THEN ''HUAWEI''
                 ELSE ''OTHERS'' 
             END AS name,
-            ISNULL(DATEDIFF(year, TRY_CAST(v.Object_Value_Str AS DATETIME), GETDATE()), 3) AS Age
+            ISNULL(DATEDIFF(year, TRY_CAST(v.Object_Value_Str AS DATETIME), GETDATE()), 3) AS Age,
+            ISNULL(tci.MachineType, ''Unknown'') AS MachineType -- Pastikan tak NULL
           FROM ' + QUOTENAME(@AssetDB) + '.[dbo].[TS_OBJECT_ROOT] a
+          LEFT JOIN ' + QUOTENAME(@AssetDB) + '.[dbo].[ts_client_info] tci ON a.Object_root_idn = tci.Object_root_idn
           LEFT JOIN (
               SELECT Object_Root_Idn, MAX(Object_Value_Idn) as MaxValId
               FROM ' + QUOTENAME(@AssetDB) + '.[dbo].[TSHI_OBJECT_CURRENT]
               WHERE Object_Field_Idn = 14
               GROUP BY Object_Root_Idn
           ) c_filter ON a.Object_Root_Idn = c_filter.Object_Root_Idn
-          LEFT JOIN ' + QUOTENAME(@AssetDB) + '.[dbo].[TSHI_OBJECT_VALUE] v 
-              ON c_filter.MaxValId = v.Object_Value_Idn
+          LEFT JOIN ' + QUOTENAME(@AssetDB) + '.[dbo].[TSHI_OBJECT_VALUE] v ON c_filter.MaxValId = v.Object_Value_Idn
           WHERE a.MadeCompany NOT LIKE ''%VMware%''';
         
         EXEC sp_executesql @sql;`;
 
     const rawResults = await db.querySpecificServers('tco', query, selectedClient);
+    
+    const brandMap = {}; 
 
-    const brandMap = {};
-    rawResults.forEach((curr) => {
+    rawResults.forEach(curr => {
       const bName = curr.name;
-      if (!brandMap[bName]) {
-        brandMap[bName] = { name: bName, total: 0, n: 0, s: 0, ag: 0, c: 0 };
+      const mType = curr.MachineType;
+      const groupKey = `${bName}-${mType}`;
+
+      if (!brandMap[groupKey]) {
+        brandMap[groupKey] = { 
+          name: bName, 
+          machineType: mType, 
+          total: 0, n: 0, s: 0, ag: 0, c: 0 
+        };
       }
-      brandMap[bName].total += 1;
-      if (curr.Age < 1) brandMap[bName].n += 1;
-      else if (curr.Age <= 2) brandMap[bName].s += 1;
-      else if (curr.Age === 3) brandMap[bName].ag += 1;
-      else brandMap[bName].c += 1;
+      
+      brandMap[groupKey].total += 1; 
+      
+      // Pembetulan logik kiraan (Guna groupKey secara konsisten)
+      if (curr.Age < 1) {
+          brandMap[groupKey].n += 1;
+      } else if (curr.Age <= 2) {
+          brandMap[groupKey].s += 1;
+      } else if (curr.Age === 3) {
+          brandMap[groupKey].ag += 1;
+      } else {
+          brandMap[groupKey].c += 1;
+      }
     });
 
-    // ✅ Susun mengikut total terbanyak & ambil Top 10 supaya brand baru ni muncul
     const finalResults = Object.values(brandMap)
-      .filter((b) => b.total > 0)
+      .filter(b => b.total > 0)
       .sort((a, b) => b.total - a.total)
-      .slice(0, 10)
-      .map((b) => ({
+      .map(b => ({
         name: b.name,
+        machineType: b.machineType,
         total: b.total,
         new: Math.round((b.n * 100) / b.total),
         standard: Math.round((b.s * 100) / b.total),
         aging: Math.round((b.ag * 100) / b.total),
-        critical: Math.round((b.c * 100) / b.total),
+        critical: Math.round((b.c * 100) / b.total)
       }));
 
     res.json(finalResults);
+
   } catch (err) {
+    console.error('[BRAND-AGING ERROR]', err.message);
     res.status(500).json({ message: err.message });
   }
 });
 
-// 8️⃣ TEST QUERY MANUAL KE TCO SERVER (Debugging)
-app.get('/api/test-compaq', async (req, res) => {
+// 8️⃣ Asset Summary (GLC, FSI, Desktop, Laptop, Server, Others) - MULTI-SERVER SUM VERSION
+app.get('/api/assets/summary', async (req, res) => {
   try {
-    // Kita tembak terus ke TCO server .53 secara manual untuk check
-    const query = `SELECT MadeCompany, COUNT(*) as total FROM [TCO].[dbo].[TS_OBJECT_ROOT] GROUP BY MadeCompany`;
-    const results = await db.querySpecificServers('tco', query, 'Project_B');
-    res.json(results);
+    const selectedClient = req.query.client || '';
+
+    const query = `
+        DECLARE @AssetDB NVARCHAR(50) = (
+            SELECT TOP 1 name FROM sys.databases 
+            WHERE name IN ('TCO3', 'TCO') 
+            ORDER BY CASE WHEN name = 'TCO3' THEN 1 ELSE 2 END
+        );
+
+        DECLARE @sql NVARCHAR(MAX) = '
+          SELECT 
+            COUNT(*) AS totalAsset,
+            COUNT(CASE WHEN b.Object_Full_Name LIKE ''%GLC%'' THEN 1 END) AS glc,
+            COUNT(CASE WHEN b.Object_Full_Name LIKE ''%FSI%'' THEN 1 END) AS fsi,
+            COUNT(CASE WHEN b.Object_Full_Name LIKE ''%EDU%'' THEN 1 END) AS edu,
+            COUNT(CASE WHEN b.Object_Full_Name LIKE ''%GOV%'' THEN 1 END) AS gov,
+            COUNT(CASE WHEN tci.MachineType = ''Desktop'' THEN 1 END) AS desktop,
+            COUNT(CASE WHEN tci.MachineType = ''Laptop'' THEN 1 END) AS laptop,
+            COUNT(CASE WHEN tci.MachineType = ''Server'' THEN 1 END) AS server,
+            COUNT(CASE WHEN (tci.MachineType NOT IN (''Desktop'', ''Laptop'', ''Server'') OR tci.MachineType IS NULL) THEN 1 END) AS others
+          FROM ' + QUOTENAME(@AssetDB) + '.[dbo].[TS_OBJECT_ROOT] a
+          LEFT JOIN ' + QUOTENAME(@AssetDB) + '.[dbo].[ts_object_relation] b ON a.Object_rel_idn = b.Object_rel_idn
+          LEFT JOIN ' + QUOTENAME(@AssetDB) + '.[dbo].[ts_client_info] tci ON a.Object_root_idn = tci.Object_root_idn';
+        
+        EXEC sp_executesql @sql;`;
+
+    // 1. Ambil data dari semua server (akan dapat array, cth: [ {serverA_data}, {serverB_data} ])
+    const results = await db.querySpecificServers('tco', query, selectedClient);
+    
+    // 2. GABUNGKAN (SUM) SEMUA HASIL SERVER
+    const combinedSummary = results.reduce((acc, curr) => {
+        acc.totalAsset += (curr.totalAsset || 0);
+        acc.glc += (curr.glc || 0);
+        acc.fsi += (curr.fsi || 0);
+        acc.edu += (curr.edu || 0);
+        acc.gov += (curr.gov || 0);
+        acc.desktop += (curr.desktop || 0);
+        acc.laptop += (curr.laptop || 0);
+        acc.server += (curr.server || 0);
+        acc.others += (curr.others || 0);
+        return acc;
+    }, { 
+        totalAsset: 0, glc: 0, fsi: 0, edu: 0, gov: 0, 
+        desktop: 0, laptop: 0, server: 0, others: 0 
+    });
+
+    // 3. Hantar objek tunggal yang sudah dicampurkan
+    res.json(combinedSummary);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[SUMMARY ERROR]', err.message);
+    res.status(500).json({ message: 'Summary Error', error: err.message });
   }
 });
+
 
 /* =====================================================
     🚀 SERVER START

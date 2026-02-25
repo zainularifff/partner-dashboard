@@ -10,7 +10,6 @@ export class IncidentApi {
   constructor(private http: HttpClient) {}
 
   // 1. Dashboard Boxes (KPI Summary)
-  // Tambah parameter 'client' untuk Master Filter
   getSummary(client: string = ''): Observable<any> {
     return this.http.get(`${this.baseUrl}/dashboard/summary?client=${client}`);
   }
@@ -35,10 +34,14 @@ export class IncidentApi {
     return this.http.get<any[]>(`${this.baseUrl}/assets/brand-aging?client=${client}`);
   }
 
-  // 6. Clients List (Untuk populate Dropdown Filter)
-  // Nota: URL di bawah diselaraskan dengan server.js anda (/api/dashboard/clients)
+  // 6. Clients List (Dropdown Filter)
   getClients(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/dashboard/clients`);
   }
-}
 
+  // ✅ 7. Asset Summary (Dibetulkan format URL & kurungan)
+  getAssetSummary(clientId: string = ''): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/assets/summary?client=${clientId}`);
+  }
+
+} 

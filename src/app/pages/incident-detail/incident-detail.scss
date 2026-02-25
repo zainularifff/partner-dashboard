@@ -52,39 +52,40 @@
     font-size: 13px;
     font-weight: 600;
     color: #475569;
-    border: 2px solid transparent; // Standby untuk active state
+    border: 2px solid #f1f5f9; // Border halus sebagai base
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer; // ✅ HOVER: Tukar mouse cursor
+    cursor: pointer;
     user-select: none;
 
-    // ✅ HOVER EFFECT: Pill "terangkat" dan lebih terang
     &:hover {
       transform: translateY(-3px);
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-      filter: brightness(0.98);
     }
 
-    // ✅ ACTIVE STATE: Bila pill dipilih
-    &.active-pill {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    // 🔵 LOGIC BIRU (PROJECT)
+    &.blue {
+      .dot { background: #3b82f6; }
+      &:hover { border-color: #bfdbfe; }
       
-      &.blue { 
-        border-color: #3b82f6; 
-        background: #eff6ff; 
+      &.active-pill {
+        background: #eff6ff;
+        border-color: #3b82f6;
         color: #1e40af;
+        .value { color: #1e40af; }
       }
-      &.orange { 
-        border-color: #f59e0b; 
-        background: #fffbeb; 
-        color: #92400e;
+    }
+
+    // 🟠 LOGIC OREN (CLIENT)
+    &.orange {
+      .dot { background: #f97316; }
+      &:hover { border-color: #ffedd5; }
+
+      &.active-pill {
+        background: #fff7ed;
+        border-color: #f97316;
+        color: #9a3412;
+        .value { color: #9a3412; }
       }
-      &.purple { 
-        border-color: #8b5cf6; 
-        background: #f5f3ff; 
-        color: #5b21b6;
-      }
-      // Tambah warna lain kalau perlu...
     }
 
     .dot {
@@ -92,15 +93,24 @@
       height: 10px;
       border-radius: 50%;
       margin-right: 10px;
+      transition: transform 0.2s;
     }
 
-    // Warna Dot Asal
-    &.blue .dot { background: #3b82f6; }
-    &.orange .dot { background: #f59e0b; }
-    &.purple .dot { background: #8b5cf6; }
+    .label { margin-right: 8px; }
+    
+    .value { 
+      font-weight: 800; 
+      color: #1e293b;
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      margin-left: 4px;
+    }
 
-    .label { margin-right: 6px; }
-    .value { font-weight: 800; color: #1e293b; }
+    // Bila active, value box pun tukar warna sikit
+    &.active-pill.blue .value { background: #dbeafe; }
+    &.active-pill.orange .value { background: #ffedd5; }
   }
 }
 

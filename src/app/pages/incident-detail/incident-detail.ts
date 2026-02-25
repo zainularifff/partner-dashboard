@@ -22,7 +22,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   templateUrl: './incident-detail.html',
   styleUrls: ['./incident-detail.scss'],
 })
-
 export class IncidentComponent implements OnInit {
   serverStats: { label: string; count: number; color: string; sourceKey: string }[] = [];
 
@@ -36,8 +35,7 @@ export class IncidentComponent implements OnInit {
   totalPages: number = 0;
   isLoading: boolean = false;
   searchTerm: string = '';
-  
-  // ✅ UPDATE: Gunakan Array untuk simpan banyak server yang dipilih
+
   selectedServers: string[] = [];
 
   constructor(
@@ -66,21 +64,23 @@ export class IncidentComponent implements OnInit {
               ? Number(x.completed_time)
               : nowInSeconds;
 
-          const diffSeconds = endTime - reqTime;
-          const diffDays = Math.floor(diffSeconds / 86400);
+          const diffDays = Math.floor((endTime - reqTime) / 86400);
+
+          let status = 'healthy';
+          if (diffDays > 7) status = 'critical';
+          else if (diffDays >= 3) status = 'warning';
 
           return {
             id: x.request_no,
             title: x.user_summary || 'No Summary Available',
             requestBy: x.user_name || 'Unknown',
             statusCode: Number(x.request_status),
-            source: x.origin_server_id || 'N/A',
+            source: x.serverId ? x.serverId.toString() : 'N/A',
             date: new Date(reqTime * 1000).toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
+              day: '2-digit', month: 'short', year: 'numeric',
             }),
             daysElapsed: diffDays > 0 ? diffDays : 0,
+            ageStatus: status
           };
         });
 
@@ -91,34 +91,16 @@ export class IncidentComponent implements OnInit {
     });
   }
 
-  // ✅ UPDATE: Fungsi toggle untuk masukkan/buang server dari Array
-  toggleServerFilter(sourceKey: string) {
-    const index = this.selectedServers.indexOf(sourceKey);
-    
-    if (index > -1) {
-      // Jika sudah ada, buang dari array (Unselect)
-      this.selectedServers.splice(index, 1);
-    } else {
-      // Jika belum ada, masukkan dalam array (Select)
-      this.selectedServers.push(sourceKey);
-    }
-    
-    this.currentPage = 1; 
-    this.applyFilter();
-  }
-
-  // ✅ TAMBAH: Fungsi optional untuk reset semua filter server
-  clearServerFilters() {
-    this.selectedServers = [];
-    this.currentPage = 1;
+  // ✅ FIX: Fungsi yang kau cari untuk setelkan TS2339
+  onSearchChange(): void {
+    this.currentPage = 1; // Balik ke page 1 bila cari benda baru
     this.applyFilter();
   }
 
   calculateDynamicStats() {
     const serverMap = new Map<string, number>();
-    const colors = ['blue', 'orange', 'purple', 'green', 'cyan'];
 
-    const baseDataByType = this.allData.filter(x => {
+    const baseDataByType = this.allData.filter((x) => {
       if (this.type === 'open') return x.statusCode === 0;
       if (this.type === 'pending') return x.statusCode === 13;
       if (this.type === 'solved') return x.statusCode === 2;
@@ -131,24 +113,33 @@ export class IncidentComponent implements OnInit {
       serverMap.set(name, (serverMap.get(name) || 0) + 1);
     });
 
-    this.serverStats = Array.from(serverMap.entries()).map(([name, count], index) => {
+    this.serverStats = Array.from(serverMap.entries()).map(([name, count]) => {
+      const lowerName = name.toLowerCase();
+      let colorClass = 'blue'; 
+
+      if (lowerName.includes('client')) {
+        colorClass = 'orange'; 
+      }
+
       return {
-        label: `SERVER ${name}`,
+        label: name === 'N/A' ? 'Unknown' : `SERVER .${name}`,
         sourceKey: name,
         count: count,
-        color: colors[index % colors.length],
+        color: colorClass,
       };
     });
   }
 
-  onSearchChange() {
+  toggleServerFilter(sourceKey: string) {
+    const index = this.selectedServers.indexOf(sourceKey);
+    if (index > -1) this.selectedServers.splice(index, 1);
+    else this.selectedServers.push(sourceKey);
     this.currentPage = 1;
     this.applyFilter();
   }
 
   applyFilter() {
     this.filteredData = this.allData.filter((x) => {
-      // 1. Tapis mengikut Type Dashboard
       let matchType = false;
       if (this.type === 'open') matchType = x.statusCode === 0;
       else if (this.type === 'pending') matchType = x.statusCode === 13;
@@ -156,31 +147,15 @@ export class IncidentComponent implements OnInit {
       else if (this.type === 'lapsed') matchType = x.statusCode !== 2 && x.daysElapsed > 7;
       else matchType = true;
 
-      // 2. Tapis mengikut Search Term
       const search = this.searchTerm.toLowerCase();
-      const matchSearch = (
-        x.id.toString().includes(search) ||
+      const matchSearch = x.id.toString().includes(search) ||
         x.title.toLowerCase().includes(search) ||
         x.source.toLowerCase().includes(search) ||
-        x.requestBy.toLowerCase().includes(search)
-      );
+        x.requestBy.toLowerCase().includes(search);
 
-      // 3. ✅ UPDATE: Tapis mengikut Array Selected Servers
-      // Jika array kosong, matchServer sentiasa true (tunjuk semua)
-      // Jika ada isi, hanya tunjuk source yang wujud dalam array tersebut
-      const matchServer = this.selectedServers.length > 0 
-        ? this.selectedServers.includes(x.source) 
-        : true;
-
+      const matchServer = this.selectedServers.length > 0 ? this.selectedServers.includes(x.source) : true;
       return matchType && matchSearch && matchServer;
     });
-
-    // Susun data (Sorting)
-    if (this.type === 'lapsed' || this.type === 'pending') {
-      this.filteredData.sort((a, b) => b.daysElapsed - a.daysElapsed);
-    } else if (this.type === 'solved') {
-      this.filteredData.sort((a, b) => a.daysElapsed - b.daysElapsed);
-    }
 
     this.calculateDynamicStats();
     this.updatePagination();
@@ -193,33 +168,10 @@ export class IncidentComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  // ... (Fungsi pagination lain kekal sama) ...
-  onPageSizeChange(event: any) {
-    this.pageSize = Number(event.target.value);
-    this.currentPage = 1;
-    this.updatePagination();
-  }
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.updatePagination();
-    }
-  }
-  prevPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.updatePagination();
-    }
-  }
-  goBack() {
-    this.router.navigate(['/dashboard']);
-  }
-  firstPage() {
-    this.currentPage = 1;
-    this.updatePagination();
-  }
-  lastPage() {
-    this.currentPage = this.totalPages;
-    this.updatePagination();
-  }
+  onPageSizeChange(e: any) { this.pageSize = Number(e.target.value); this.currentPage = 1; this.updatePagination(); }
+  nextPage() { if (this.currentPage < this.totalPages) { this.currentPage++; this.updatePagination(); } }
+  prevPage() { if (this.currentPage > 1) { this.currentPage--; this.updatePagination(); } }
+  goBack() { this.router.navigate(['/dashboard']); }
+  firstPage() { this.currentPage = 1; this.updatePagination(); }
+  lastPage() { this.currentPage = this.totalPages; this.updatePagination(); }
 }

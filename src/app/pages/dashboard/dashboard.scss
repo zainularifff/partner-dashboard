@@ -151,6 +151,70 @@
   }
 }
 
+/* ================= 3. DESIGNER CARD (FIXED SQUASH) ================= */
+.designer-card {
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    .total-val { color: #2563eb; font-weight: 800; margin-left: 5px; }
+  }
+
+  // Barisan Sektor (Atas)
+  .sector-row {
+    display: flex;
+    justify-content: space-around;
+    margin: 25px 0;
+
+    .sector-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+
+      .s-icon { font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; }
+      .s-label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+      .s-val { font-size: 1.1rem; font-weight: 800; margin-top: 2px; }
+
+      // Warna mengikut design
+      .glc-color, .glc-text { color: #a855f7; } // Ungu
+      .fsi-color, .fsi-text { color: #2dd4bf; } // Teal
+      .edu-color, .edu-text { color: #f59e0b; } // Oren
+      .gov-color, .gov-text { color: #d946ef; } // Pink
+    }
+  }
+
+  .card-divider { height: 1px; background: #f1f5f9; margin-bottom: 20px; }
+
+  // Barisan Hardware (Bawah)
+  .hardware-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .hw-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      mat-icon { color: #475569; font-size: 22px; width: 22px; height: 22px; }
+      
+      .hw-info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+        small { color: #3b82f6; font-size: 0.65rem; font-weight: 700; }
+        strong { color: #0f172a; font-size: 1rem; font-weight: 800; }
+      }
+    }
+  }
+}
+
 /* ================= 3. BRAND AGING (FIXED OVERFLOW) ================= */
 .ba-flex {
   display: flex;

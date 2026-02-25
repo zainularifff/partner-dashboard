@@ -83,7 +83,14 @@
           <tbody>
             <tr *ngFor="let t of tickets; let i = index">
               <td class="bold">{{ (currentPage - 1) * pageSize + (i + 1) }}</td>
-              <td class="bold">#{{ t.id }}</td>
+              <td class="bold">
+                <a
+                  [routerLink]="['/ticket-view', t.uuid]"
+                  style="cursor: pointer; text-decoration: none; color: #1e3a8a"
+                >
+                  #{{ t.id }}
+                </a>
+              </td>
               <td class="bold">{{ t.requestBy }}</td>
               <td style="padding: 16px 24px; vertical-align: top; min-width: 500px !important">
                 <div

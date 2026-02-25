@@ -8,11 +8,11 @@
 
     <div class="header-actions">
       <!-- TIME RANGE FILTER -->
-      <!-- <div class="btn-group">
+      <div class="btn-group">
         <button>7 Days</button>
         <button class="active">30 Days</button>
         <button>Quarterly</button>
-      </div> -->
+      </div>
 
       <div class="client-selector-wrapper">
         <button class="btn-client-filter" [matMenuTriggerFor]="clientMenu">
@@ -27,7 +27,6 @@
 
         <mat-menu #clientMenu="matMenu" class="client-dropdown-menu">
           <button mat-menu-item (click)="clearServerFilters()">
-            <mat-icon>restart_alt</mat-icon>
             <span>Show All Clients</span>
           </button>
           <div class="divider"></div>
@@ -49,43 +48,66 @@
 
   <div class="grid" *ngIf="!isLoading">
     <!-- PANEL 1: TOTAL ASSETS -->
-    <div class="card">
-      <h3 class="card-title">
-        Total Asset : <span class="blue-text">{{ assetTotal | number }}</span>
-      </h3>
+    <div class="card designer-card">
+      <div class="card-header">
+        <h3 class="card-title">
+          Total Asset : <span class="total-val">{{ assetTotal | number }}</span>
+        </h3>
+      </div>
 
-      <div class="asset-icons">
-        <div class="icon-item">
-          <span><mat-icon>business</mat-icon> GLC</span>
-          <strong>{{ sectorStats.glc | number }}</strong>
+      <div class="sector-row">
+        <div class="sector-item">
+          <mat-icon class="s-icon glc-color">business</mat-icon>
+          <span class="s-label">GLC</span>
+          <strong class="s-val glc-text">{{ assetBreakdown.glc | number }}</strong>
         </div>
-        <div class="icon-item">
-          <span><mat-icon>account_balance</mat-icon> FSI</span>
-          <strong>{{ sectorStats.fsi | number }}</strong>
+        <div class="sector-item">
+          <mat-icon class="s-icon fsi-color">account_balance</mat-icon>
+          <span class="s-label">FSI</span>
+          <strong class="s-val fsi-text">{{ assetBreakdown.fsi | number }}</strong>
         </div>
-        <div class="icon-item">
-          <span><mat-icon>school</mat-icon> EDU</span>
-          <strong>{{ sectorStats.edu | number }}</strong>
+        <div class="sector-item">
+          <mat-icon class="s-icon edu-color">school</mat-icon>
+          <span class="s-label">EDU</span>
+          <strong class="s-val edu-text">{{ assetBreakdown.edu | number }}</strong>
         </div>
-        <div class="icon-item">
-          <span><mat-icon>account_balance</mat-icon> GOV</span>
-          <strong>{{ sectorStats.gov | number }}</strong>
+        <div class="sector-item">
+          <mat-icon class="s-icon gov-color">account_balance</mat-icon>
+          <span class="s-label">GOV</span>
+          <strong class="s-val gov-text">{{ assetBreakdown.gov | number }}</strong>
         </div>
       </div>
 
-      <div class="asset-footer">
-        <!-- Guna blue-text untuk Desktop, Laptop & Server macam dalam gambar -->
-        <div class="footer-stat">
-          DESKTOP <strong class="blue-text">{{ machineStats.desktop | number }}</strong>
+      <div class="card-divider"></div>
+
+      <div class="hardware-row">
+        <div class="hw-item">
+          <mat-icon>desktop_windows</mat-icon>
+          <div class="hw-info">
+            <small>DESKTOP</small>
+            <strong>{{ assetBreakdown.desktop | number }}</strong>
+          </div>
         </div>
-        <div class="footer-stat">
-          LAPTOP <strong class="blue-text">{{ machineStats.laptop | number }}</strong>
+        <div class="hw-item">
+          <mat-icon>laptop_mac</mat-icon>
+          <div class="hw-info">
+            <small>LAPTOP</small>
+            <strong>{{ assetBreakdown.laptop | number }}</strong>
+          </div>
         </div>
-        <div class="footer-stat">
-          SERVER <strong class="blue-text">{{ machineStats.server | number }}</strong>
+        <div class="hw-item">
+          <mat-icon>dns</mat-icon>
+          <div class="hw-info">
+            <small>SERVER</small>
+            <strong>{{ assetBreakdown.server | number }}</strong>
+          </div>
         </div>
-        <div class="footer-stat">
-          OTHERS <strong>{{ machineStats.others | number }}</strong>
+        <div class="hw-item">
+          <mat-icon>phonelink_setup</mat-icon>
+          <div class="hw-info">
+            <small>OTHERS</small>
+            <strong>{{ assetBreakdown.others | number }}</strong>
+          </div>
         </div>
       </div>
     </div>
@@ -189,7 +211,7 @@
         </div>
 
         <div class="iw-item iw-yellow clickable-card" (click)="selectFilter('pending')">
-          <div class="iw-label">PENDING / AWAITING</div>
+          <div class="iw-label">PENDING / IN PROGRESS</div>
           <div class="iw-value">{{ pendingCount }}</div>
           <div class="iw-desc">3rd Party Wait</div>
           <mat-icon class="iw-icon">pause_circle</mat-icon>

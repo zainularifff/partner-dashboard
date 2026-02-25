@@ -5,15 +5,19 @@ let projects = [];
 let flatServerList = [];
 
 try {
+  // 1. Ambil data client dari .env
   projects = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
+
   projects.forEach(proj => {
+    // Masukkan server projek utama
     flatServerList.push({
       name: proj.projectName,
       ip: proj.projectIp,
-      pass: "P@ssw0rd", 
+      pass: "P@ssw0rd", // 💡 Tips: Sebaiknya letak dlm .env juga
       type: 'project'
     });
 
+    // Masukkan server client di bawah projek
     if (proj.clients && Array.isArray(proj.clients)) {
       proj.clients.forEach(c => {
         flatServerList.push({
@@ -34,87 +38,93 @@ const clients = Object.freeze(flatServerList);
 const pools = { helpdesk: new Map(), tco: new Map() };
 
 /* =====================================================
-    CREATE / REUSE CONNECTION POOL (INDIVIDUAL DB DETECT)
+   🔌 CREATE / REUSE CONNECTION POOL
 ===================================================== */
-// db.js - Versi Paling Stabil
 async function getPool(client, type) {
   const cleanIp = client.ip.trim();
   const poolKey = `${cleanIp}_${type}`;
 
   if (!pools[type].has(poolKey)) {
-    console.log(`[DB] Menghubungi ${client.name} (${cleanIp}) buat kali pertama...`);
-    
+    // ✅ OPTIMASI: Kita terus sambung ke DB sasaran tanpa perlu "Double Connect"
     const baseConfig = {
       user: process.env.DB_USER,
       password: client.pass,
       server: cleanIp,
-      database: 'master', 
-      options: { encrypt: true, trustServerCertificate: true, connectTimeout: 15000 },
+      // Jika Helpdesk, terus ke DB Helpdesk. Jika TCO, kita guna 'master' supaya SQL boleh scan TCO/TCO3 secara Union
+      database: type === 'helpdesk' ? process.env.DB_NAME_HELPDESK : 'master',
+      options: {
+        encrypt: false, // Set false jika server lokal Petronas
+        trustServerCertificate: true,
+        connectTimeout: 10000,
+      },
+      requestTimeout: 60000 // Tingkatkan sikit sbb Union query mungkin berat
     };
 
     try {
-      const tempPool = await new sql.ConnectionPool(baseConfig).connect();
-      
-      // ✅ Cari DB secara manual
-      const dbCheck = await tempPool.request().query(`
-        SELECT TOP 1 name FROM sys.databases 
-        WHERE name IN ('TCO3', 'TCO') 
-        ORDER BY CASE WHEN name = 'TCO3' THEN 1 ELSE 2 END
-      `);
-      
-      const actualDb = type === 'helpdesk' 
-        ? process.env.DB_NAME_HELPDESK 
-        : (dbCheck.recordset[0]?.name || 'TCO');
+      console.log(`[DB] 🔄 Connecting to ${client.name} (${cleanIp})...`);
+      const pool = new sql.ConnectionPool(baseConfig);
+      const connectedPool = await pool.connect();
 
-      await tempPool.close();
-
-      const finalPool = new sql.ConnectionPool({
-        ...baseConfig,
-        database: actualDb,
-        requestTimeout: 30000,
+      connectedPool.on('error', err => {
+        console.error(`[SQL ERROR] ${client.name}:`, err.message);
       });
 
-      // Simpan pool yang dah diconnect siap-siap
-      pools[type].set(poolKey, await finalPool.connect());
-      console.log(`[DB] ✅ Server ${client.name} sedia guna database: ${actualDb}`);
+      pools[type].set(poolKey, connectedPool);
+      console.log(`[DB] ✅ ${client.name} is ready.`);
     } catch (err) {
-      console.error(`[DB Error] ❌ Gagal di ${client.name}:`, err.message);
-      return null; // Return null supaya querySpecificServers boleh teruskan ke server lain
+      console.error(`[DB ERROR] ❌ ${client.name} failed:`, err.message);
+      return null;
     }
   }
 
   const pool = pools[type].get(poolKey);
-  // Pastikan pool masih hidup sebelum return
   if (!pool.connected) await pool.connect();
   return pool;
 }
 
-// db.js - Versi Paling Stabil
+/* =====================================================
+   🔎 QUERY MULTIPLE SERVERS (WITH OPTIONAL FILTER)
+===================================================== */
 async function querySpecificServers(type, queryStr, filterId = '') {
+  // Filter mengikut nama (Project_A, Client_B, etc.)
   const selectedClients = (filterId && filterId.trim() !== '')
     ? clients.filter(c => filterId.split(',').map(i => i.trim()).includes(c.name))
     : clients;
 
-  console.log(`[DB] Memulakan query pada ${selectedClients.length} server...`);
-
   const promises = selectedClients.map(async (client) => {
     try {
       const pool = await getPool(client, type);
+      if (!pool) return [];
+
       const result = await pool.request().query(queryStr);
       
-      // Ambil jumlah rekod untuk log terminal
-      const rowCount = result.recordset.length;
-      console.log(`   ✅ ${client.name}: Berjaya tarik ${rowCount} rekod.`);
+      // ✅ Inject serverId & serverType untuk logic mapping sektor dlm server.js
+      return result.recordset.map(row => ({
+        ...row,
+        serverId: client.name,
+        serverType: client.type
+      }));
 
-      return result.recordset.map(row => ({ ...row, serverId: client.name }));
     } catch (err) {
-      console.error(`   ❌ ${client.name} (${client.ip}) GAGAL:`, err.message);
+      console.error(`   ❌ ${client.name} query failed:`, err.message);
       return [];
     }
   });
 
-  const results = await Promise.all(promises);
-  return results.flat(); // Gabungkan semua hasil server menjadi satu array
+  const results = await Promise.allSettled(promises);
+
+  return results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value)
+    .flat();
 }
 
-module.exports = { querySpecificServers, queryAllServers: (t, q) => querySpecificServers(t, q, ''), projects, clients };
+/* =====================================================
+   EXPORT
+===================================================== */
+module.exports = {
+  querySpecificServers,
+  queryAllServers: (type, query) => querySpecificServers(type, query, ''),
+  projects,
+  clients
+};

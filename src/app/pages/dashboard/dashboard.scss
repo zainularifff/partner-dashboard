@@ -288,10 +288,11 @@
 /* ================= 6. TOTAL ASSET HEALTH (FIXED) ================= */
 .asset-flex {
   display: flex;
-  gap: 20px;
+  gap: 30px;
   align-items: center;
   flex: 1;
-  min-height: 0; 
+  min-height: 0;
+  padding: 10px;
 }
 
 .ah-left {
@@ -299,71 +300,75 @@
   flex-direction: column;
   align-items: center;
   width: 140px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .spinner-wrapper {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  
+  canvas {
+    cursor: pointer; // Cursor berubah bila hover pada bahagian warna
+  }
 
   .ah-inner {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
-    pointer-events: none;
-
-    .ah-val {
-      font-size: 24px;
-      font-weight: 800;
-      color: #1e293b;
-      line-height: 1;
-    }
-    .ah-sub {
-      font-size: 8px;
-      color: #94a3b8;
-      font-weight: 700;
-      margin-top: 4px;
-      letter-spacing: 0.5px;
-    }
+    pointer-events: none; // ✅ PENTING: Supaya cursor boleh "tembus" ke canvas di belakang
+    
+    .ah-val { font-size: 28px; font-weight: 800; color: #1e293b; }
+    .ah-sub { font-size: 9px; color: #94a3b8; font-weight: 700; }
   }
 }
 
 .ah-right {
   flex: 1;
-  min-width: 0; 
+  min-width: 0;
 }
 
 .fault-row {
   margin-bottom: 12px;
+
+  &:last-child { margin-bottom: 0; }
 
   .fault-info {
     display: flex;
     justify-content: space-between;
     font-size: 11px;
     font-weight: 700;
-    margin-bottom: 4px;
-    white-space: nowrap; 
+    margin-bottom: 6px;
 
     .model-name {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       flex: 1;
-      padding-right: 8px;
+      padding-right: 12px;
+      color: #334155;
+    }
+
+    .fault-percent {
+      font-weight: 800;
     }
   }
 
-  ::ng-deep .custom-red-bar {
+  // Progress bar yang dinamik warnanya
+  ::ng-deep .custom-progress-bar {
     height: 6px !important;
     border-radius: 10px;
-    --mdc-linear-progress-active-indicator-color: #ef4444 !important;
+    background-color: #f1f5f9 !important; // Track color
+
+    // Gunakan CSS variable dari HTML untuk warna bar
+    --mdc-linear-progress-active-indicator-color: var(--bar-color) !important;
     --mdc-linear-progress-track-color: #f1f5f9 !important;
 
-    .mdc-linear-progress__bar-inner { border-color: #ef4444 !important; }
+    .mdc-linear-progress__bar-inner {
+      border-color: var(--bar-color) !important;
+    }
   }
 }
-
 /* ================= 7. MISC & RESPONSIVE TWEAKS ================= */
 .card-title {
   font-size: 15px;
@@ -534,6 +539,39 @@
   /* Secara default, t-labels justify-between akan tolak tarikh ni ke kanan */
 }
 
+.ba-legend {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    .dot { width: 10px; height: 10px; border-radius: 2px; }
+    .l-txt { 
+      small { font-size: 9px; color: #666; display: block; line-height: 1; }
+      p { font-size: 11px; margin: 0; font-weight: 600; }
+    }
+  }
+}
+
+/* Warna Ikut Legend */
+.new, .dot.blue { background-color: #007bff; }
+.standard, .dot.green { background-color: #28a745; }
+.aging, .dot.orange { background-color: #fd7e14; }
+.critical, .dot.red { background-color: #dc3545; }
+
+.ba-full-bar {
+  display: flex;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+  
+  .seg { height: 100%; transition: width 0.3s ease; }
+}
+
+
 // ================= CLIENT SELECTOR (FIXED) ================= */
 .client-selector-wrapper {
   .btn-client-filter {
@@ -605,3 +643,4 @@
     color: #475569;
   }
 }
+

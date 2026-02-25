@@ -1,0 +1,115 @@
+<!-- brand-breakdown.html -->
+<div class="page-container">
+  
+  <!-- 1. HEADER (Title & Back Button) -->
+  <div class="top-header">
+    <div class="title-section">
+      <button [routerLink]="['/dashboard']" class="btn-back">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2>{{ selectedBrand }} Breakdown</h2>
+    </div>
+  </div>
+
+  <!-- 2. BRAND SUMMARY (GRAF + STATS GRID) -->
+  <div class="brand-summary-container">
+    <!-- Bahagian Graf Bulat -->
+    <div class="chart-wrapper">
+      <canvas baseChart
+        [data]="doughnutChartData"
+        [options]="doughnutChartOptions"
+        [type]="'doughnut'">
+      </canvas>
+      <div class="chart-center-info">
+        <small>Total Assets</small>
+        <strong>{{ totalAssetsAllClients }}</strong>
+      </div>
+    </div>
+
+    <!-- Bahagian Grid Nombor -->
+    <div class="stats-summary-grid">
+      <div class="stat-card-item blue">
+        <div class="icon-circle"><mat-icon>fiber_new</mat-icon></div>
+        <div class="val-group">
+          <small>NEW</small>
+          <p>{{ totalNew }}</p>
+        </div>
+      </div>
+      <div class="stat-card-item green">
+        <div class="icon-circle"><mat-icon>check_circle</mat-icon></div>
+        <div class="val-group">
+          <small>OPTIMAL</small>
+          <p>{{ totalStd }}</p>
+        </div>
+      </div>
+      <div class="stat-card-item orange">
+        <div class="icon-circle"><mat-icon>report_problem</mat-icon></div>
+        <div class="val-group">
+          <small>AGING</small>
+          <p>{{ totalAging }}</p>
+        </div>
+      </div>
+      <div class="stat-card-item red">
+        <div class="icon-circle"><mat-icon>dangerous</mat-icon></div>
+        <div class="val-group">
+          <small>CRITICAL</small>
+          <p>{{ totalCrit }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. LEGEND (Penerangan Warna) -->
+  <div class="ba-legend">
+    <div class="legend-item"><span class="dot blue"></span> <div class="l-txt"><small>NEW</small><p>Warranty Active</p></div></div>
+    <div class="legend-item"><span class="dot green"></span> <div class="l-txt"><small>STD</small><p>Optimal</p></div></div>
+    <div class="legend-item"><span class="dot orange"></span> <div class="l-txt"><small>AGING</small><p>Review Needed</p></div></div>
+    <div class="legend-item"><span class="dot red"></span> <div class="l-txt"><small>CRIT</small><p>Replacement</p></div></div>
+  </div>
+
+  <!-- 4. TABLE GROUPING (DATA ANDA KEKAL DI SINI) -->
+  <div class="client-section" *ngFor="let group of groupedClients">
+    
+    <div class="group-header">
+      <div class="client-title">
+        <mat-icon>business</mat-icon>
+        <span>{{ group.clientName }}</span>
+      </div>
+      <span class="total-badge">{{ group.totalInGroup }} Assets</span>
+    </div>
+
+    <div class="table-card">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>MODEL</th>
+            <th width="250">DISTRIBUTION</th>
+            <th>TOTAL</th>
+            <th class="text-center">ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of group.models">
+            <td><strong>{{ m.name }}</strong></td>
+            <td>
+              <div class="mini-bar">
+                <div class="seg new" [style.width.%]="getPercent(m.new, m.total)" [matTooltip]="m.new + ' New'"></div>
+                <div class="seg standard" [style.width.%]="getPercent(m.standard, m.total)" [matTooltip]="m.standard + ' Standard'"></div>
+                <div class="seg aging" [style.width.%]="getPercent(m.aging, m.total)" [matTooltip]="m.aging + ' Aging'"></div>
+                <div class="seg critical" [style.width.%]="getPercent(m.critical, m.total)" [matTooltip]="m.critical + ' Critical'"></div>
+              </div>
+            </td>
+            <td><strong>{{ m.total }}</strong></td>
+            <td class="text-center">
+              <button class="btn-view" [routerLink]="['/asset-list', group.clientName, m.name]">
+                View Details
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

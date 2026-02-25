@@ -134,13 +134,16 @@
       <div class="asset-flex">
         <div class="ah-left">
           <div class="spinner-wrapper">
-            <mat-progress-spinner
-              mode="determinate"
-              [value]="100"
-              [diameter]="110"
-              [strokeWidth]="10"
-              color="primary"
-            ></mat-progress-spinner>
+            <div style="display: block; width: 140px; height: 140px">
+              <canvas
+                baseChart
+                [data]="doughnutChartData"
+                [options]="doughnutChartOptions"
+                [type]="'doughnut'"
+              >
+              </canvas>
+            </div>
+
             <div class="ah-inner">
               <div class="ah-val">{{ assetTotal | number }}</div>
               <div class="ah-sub">ACTIVE ASSETS</div>
@@ -149,17 +152,16 @@
         </div>
 
         <div class="ah-right">
-          <div class="sup-title">TOP 5 FAULT-PRONE MODELS</div>
           <div class="fault-row" *ngFor="let m of topFault">
             <div class="fault-info">
-              <span class="model-name">{{ m.name || 'UNKNOWN MODEL' }}</span>
-              <span [ngClass]="getBarColor(m.rate) + '-text'">{{ m.rate }}%</span>
+              <span class="model-name" [matTooltip]="m.name">{{ m.name }}</span>
+              <span class="fault-percent" [style.color]="m.color">{{ m.rate }}%</span>
             </div>
-
             <mat-progress-bar
               mode="determinate"
               [value]="m.rate"
-              [ngClass]="'custom-bar ' + getBarColor(m.rate)"
+              class="custom-progress-bar"
+              [style.--bar-color]="m.color"
             ></mat-progress-bar>
           </div>
         </div>
@@ -203,9 +205,48 @@
     <!-- 4. BRAND AGING -->
     <div class="card">
       <h3>Brand Aging Analysis</h3>
+
+      <!-- 1. TAMBAH LEGEND DI ATAS -->
+      <div class="ba-legend">
+        <div class="legend-item">
+          <span class="dot blue"></span>
+          <div class="l-txt">
+            <small>NEW</small>
+            <p><1 Year</p>
+          </div>
+        </div>
+        <div class="legend-item">
+          <span class="dot green"></span>
+          <div class="l-txt">
+            <small>STANDARD</small>
+            <p>1-2 Years</p>
+          </div>
+        </div>
+        <div class="legend-item">
+          <span class="dot orange"></span>
+          <div class="l-txt">
+            <small>AGING</small>
+            <p>2-3 Years</p>
+          </div>
+        </div>
+        <div class="legend-item">
+          <span class="dot red"></span>
+          <div class="l-txt">
+            <small>CRITICAL</small>
+            <p>>3 Years</p>
+          </div>
+        </div>
+      </div>
+
       <div class="ba-flex">
         <div class="ba-charts">
-          <div class="ba-row" *ngFor="let b of brandRows">
+          <!-- 2. TUKAR PROPERTY NAME DALAM LOOP -->
+          <div
+            class="ba-row"
+            *ngFor="let b of brandRows"
+            [routerLink]="['/brand-breakdown', b.name]"
+            style="cursor: pointer"
+          >
             <div class="ba-info">
               <span>{{ b.name }}</span>
               <span>{{ b.total | number }} units</span>
@@ -217,19 +258,19 @@
                 [matTooltip]="'New: ' + b.new + '%'"
               ></div>
               <div
-                class="seg young"
-                [style.width.%]="b.young"
-                [matTooltip]="'Young: ' + b.young + '%'"
+                class="seg standard"
+                [style.width.%]="b.standard"
+                [matTooltip]="'Standard: ' + b.standard + '%'"
               ></div>
               <div
-                class="seg mid"
-                [style.width.%]="b.mid"
-                [matTooltip]="'Mid: ' + b.mid + '%'"
+                class="seg aging"
+                [style.width.%]="b.aging"
+                [matTooltip]="'Aging: ' + b.aging + '%'"
               ></div>
               <div
-                class="seg legacy"
-                [style.width.%]="b.legacy"
-                [matTooltip]="'Legacy: ' + b.legacy + '%'"
+                class="seg critical"
+                [style.width.%]="b.critical"
+                [matTooltip]="'Critical: ' + b.critical + '%'"
               ></div>
             </div>
           </div>

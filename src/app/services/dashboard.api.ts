@@ -41,3 +41,4 @@ export class IncidentApi {
     return this.http.get<any[]>(`${this.baseUrl}/dashboard/clients`);
   }
 }
+

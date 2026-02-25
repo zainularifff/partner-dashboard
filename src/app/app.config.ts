@@ -1,11 +1,14 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http'; // 1. Add this import
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+import { systemTokenInterceptor } from './core/system-token-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient() // 2. Add this to the array
+    provideHttpClient(
+      withInterceptors([systemTokenInterceptor])
+    )
   ]
 };

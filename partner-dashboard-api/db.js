@@ -1,114 +1,120 @@
 const sql = require('mssql');
 require('dotenv').config();
 
-// 1. Configuration - Parse the JSON array dari .env
-const clients = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
+let projects = [];
+let flatServerList = [];
 
-// 2. Registry untuk simpan Connection Pools
-const pools = {
-  helpdesk: new Map(),
-  tco: new Map(),
-};
+try {
+  projects = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
+  projects.forEach(proj => {
+    flatServerList.push({
+      name: proj.projectName,
+      ip: proj.projectIp,
+      pass: "P@ssw0rd", 
+      type: 'project'
+    });
 
-/**
- * Helper untuk create connection pool berdasarkan IP & Database yang betul
- */
+    if (proj.clients && Array.isArray(proj.clients)) {
+      proj.clients.forEach(c => {
+        flatServerList.push({
+          name: c.name,
+          ip: c.ip,
+          pass: "P@ssw0rd",
+          type: 'client'
+        });
+      });
+    }
+  });
+} catch (err) {
+  console.error('[DB Config Error] Invalid DB_CLIENTS JSON:', err.message);
+  process.exit(1);
+}
+
+const clients = Object.freeze(flatServerList);
+const pools = { helpdesk: new Map(), tco: new Map() };
+
+/* =====================================================
+    CREATE / REUSE CONNECTION POOL (INDIVIDUAL DB DETECT)
+===================================================== */
+// db.js - Versi Paling Stabil
 async function getPool(client, type) {
   const cleanIp = client.ip.trim();
-
-  // Tentukan nama DB secara dinamik (TCO3 prioritised)
-  const dbName =
-    type === 'helpdesk'
-      ? process.env.DB_NAME_HELPDESK
-      : process.env.DB_NAME_TCO3 || process.env.DB_NAME_TCO;
-
   const poolKey = `${cleanIp}_${type}`;
 
   if (!pools[type].has(poolKey)) {
-    const config = {
+    console.log(`[DB] Menghubungi ${client.name} (${cleanIp}) buat kali pertama...`);
+    
+    const baseConfig = {
       user: process.env.DB_USER,
       password: client.pass,
       server: cleanIp,
-      database: dbName,
-      options: {
-        encrypt: false,
-        trustServerCertificate: true,
-        connectTimeout: 10000,
-      },
+      database: 'master', 
+      options: { encrypt: true, trustServerCertificate: true, connectTimeout: 15000 },
     };
 
-    console.log(`[DB] Initializing Pool: ${client.name} (${cleanIp}) -> ${dbName}`);
-    pools[type].set(poolKey, new sql.ConnectionPool(config));
+    try {
+      const tempPool = await new sql.ConnectionPool(baseConfig).connect();
+      
+      // ✅ Cari DB secara manual
+      const dbCheck = await tempPool.request().query(`
+        SELECT TOP 1 name FROM sys.databases 
+        WHERE name IN ('TCO3', 'TCO') 
+        ORDER BY CASE WHEN name = 'TCO3' THEN 1 ELSE 2 END
+      `);
+      
+      const actualDb = type === 'helpdesk' 
+        ? process.env.DB_NAME_HELPDESK 
+        : (dbCheck.recordset[0]?.name || 'TCO');
+
+      await tempPool.close();
+
+      const finalPool = new sql.ConnectionPool({
+        ...baseConfig,
+        database: actualDb,
+        requestTimeout: 30000,
+      });
+
+      // Simpan pool yang dah diconnect siap-siap
+      pools[type].set(poolKey, await finalPool.connect());
+      console.log(`[DB] ✅ Server ${client.name} sedia guna database: ${actualDb}`);
+    } catch (err) {
+      console.error(`[DB Error] ❌ Gagal di ${client.name}:`, err.message);
+      return null; // Return null supaya querySpecificServers boleh teruskan ke server lain
+    }
   }
 
   const pool = pools[type].get(poolKey);
-  if (!pool.connected && !pool.connecting) {
-    await pool.connect();
-  }
+  // Pastikan pool masih hidup sebelum return
+  if (!pool.connected) await pool.connect();
   return pool;
 }
 
-/**
- * ✅ FUNGSI UTAMA: Query server SPESIFIK (Master Filter)
- */
+// db.js - Versi Paling Stabil
 async function querySpecificServers(type, queryStr, filterId = '') {
-  // 1. Log untuk debug (Tengok kat terminal nodejs kau)
-  console.log(`[DB] Filter Received: "${filterId}"`);
-
-  // 2. Tapis senarai clients
-  const selectedClients = filterId 
-    ? clients.filter(c => {
-        // Kita pecahkan string (cth: "Client_A,Client_B")
-        const filterList = filterId.split(',').map(item => item.trim());
-        
-        // Kita check match dengan c.name
-        // Tip: Kalau frontend hantar "Client_A" tapi .env kau "A", 
-        // kita buat check yang lebih fleksibel
-        return filterList.includes(c.name) || 
-               filterList.includes(`Client_${c.name}`) ||
-               filterList.includes(c.serverId);
-      }) 
+  const selectedClients = (filterId && filterId.trim() !== '')
+    ? clients.filter(c => filterId.split(',').map(i => i.trim()).includes(c.name))
     : clients;
 
-  // 3. Log untuk confirm server mana yang akan di-query
-  console.log(`[DB] Querying ${selectedClients.length} servers:`, selectedClients.map(c => c.name));
-
-  if (selectedClients.length === 0) {
-    console.warn(`[DB Warning] No matching servers found for filter: ${filterId}`);
-    return [];
-  }
+  console.log(`[DB] Memulakan query pada ${selectedClients.length} server...`);
 
   const promises = selectedClients.map(async (client) => {
     try {
       const pool = await getPool(client, type);
       const result = await pool.request().query(queryStr);
+      
+      // Ambil jumlah rekod untuk log terminal
+      const rowCount = result.recordset.length;
+      console.log(`   ✅ ${client.name}: Berjaya tarik ${rowCount} rekod.`);
 
-      return result.recordset.map((row) => ({
-        ...row,
-        serverId: client.name,
-        origin_server_id: client.name,
-        client_name: client.name,
-      }));
+      return result.recordset.map(row => ({ ...row, serverId: client.name }));
     } catch (err) {
-      console.error(`[DB Error] ${client.name}:`, err.message);
+      console.error(`   ❌ ${client.name} (${client.ip}) GAGAL:`, err.message);
       return [];
     }
   });
 
   const results = await Promise.all(promises);
-  return results.flat();
+  return results.flat(); // Gabungkan semua hasil server menjadi satu array
 }
 
-
-/**
- * Kekalkan fungsi asal untuk backward compatibility jika perlu
- */
-async function queryAllServers(type, queryStr) {
-  return querySpecificServers(type, queryStr, '');
-}
-
-module.exports = {
-  querySpecificServers,
-  queryAllServers,
-  clients,
-};
+module.exports = { querySpecificServers, queryAllServers: (t, q) => querySpecificServers(t, q, ''), projects, clients };

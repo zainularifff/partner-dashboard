@@ -42,13 +42,17 @@ html, body {
 }
 
 /* CONTENT AREA: This is where your Dashboard Component loads */
+/* CONTENT AREA: Tempat Dashboard Component loads */
+/* CONTENT AREA: Reset balik supaya tak kacau dashboard utama */
 .main-content-area {
   flex: 1;                
   display: flex;
   flex-direction: column;
   min-height: 0; 
-  /* Note: Scrolling is handled INSIDE the dashboard component now */
+  overflow: hidden; /* Tukar balik ke hidden */
 }
+
+
 
 /* FOOTER: Pinned to the bottom of main-body */
 .main-footer {

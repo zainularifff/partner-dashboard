@@ -23,7 +23,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// UUID v5 untuk consistent request ID (optional, tapi bagus untuk tracing)
+// UUID v5 untuk consistent request ID
 const { v5: uuidv5 } = require('uuid');
 const NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 const normalize = (val) =>
@@ -55,7 +55,7 @@ function validateClientFilter(req, res, next) {
 }
 
 /* =====================================================
-    📊 DASHBOARD ROUTES (PROTECTED)
+    📊 DASHBOARD ROUTES (ASAL - TIADA PERUBAHAN)
 ===================================================== */
 
 // 1️⃣ Endpoint Utama Dashboard (Full Ticket Table)
@@ -89,10 +89,6 @@ app.get('/api/dashboard', systemAuthMiddleware, async (req, res) => {
 app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) => {
   try {
     const { uuid } = req.params;
-
-    console.log('===== DEBUG START =====');
-    console.log('Incoming UUID:', uuid);
-
     const query = `
       SELECT user_name, request_no,
              SUBSTRING(user_summary, 1, 8000) AS user_summary,
@@ -101,17 +97,6 @@ app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) =>
       FROM HD_REQUEST`;
 
     let combinedData = await db.queryAllServers('helpdesk', query);
-
-    console.log('Total Records:', combinedData.length);
-
-    if (combinedData.length > 0) {
-      const sampleUuid = uuidv5(normalize(combinedData[0].request_no), NAMESPACE);
-
-      console.log('First request_no:', combinedData[0].request_no);
-      console.log('Generated UUID for first row:', sampleUuid);
-    }
-
-    console.log('===== DEBUG END =====');
 
     const ticket = combinedData.find(
       (row) => uuidv5(normalize(row.request_no), NAMESPACE) === uuid,
@@ -123,7 +108,6 @@ app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) =>
 
     res.json(ticket);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -164,7 +148,7 @@ app.get('/api/dashboard/summary', systemAuthMiddleware, validateClientFilter, as
   }
 });
 
-// 4️⃣ Total Assets (FIXED: UNION TCO & TCO3)
+// 4️⃣ Total Assets
 app.get('/api/assets/total', systemAuthMiddleware, validateClientFilter, async (req, res) => {
   try {
     const selectedClient = req.query.client || '';
@@ -193,7 +177,7 @@ app.get('/api/dashboard/clients', systemAuthMiddleware, (req, res) => {
   );
 });
 
-// 6️⃣ Top Faulty Assets (FIXED: UNION TCO & TCO3)
+// 6️⃣ Top Faulty Assets
 app.get('/api/assets/top-faults', systemAuthMiddleware, validateClientFilter, async (req, res) => {
   try {
     const selectedClient = req.query.client;
@@ -214,7 +198,7 @@ app.get('/api/assets/top-faults', systemAuthMiddleware, validateClientFilter, as
   }
 });
 
-// 7️⃣ Brand Aging Analysis (Logic asal dngn Dynamic Union)
+// 7️⃣ Brand Aging Analysis
 app.get('/api/assets/brand-aging', systemAuthMiddleware, validateClientFilter, async (req, res) => {
   try {
     let selectedClient = req.query.client || '';
@@ -268,54 +252,48 @@ app.get('/api/assets/brand-aging', systemAuthMiddleware, validateClientFilter, a
   }
 });
 
-// 8️⃣ Incident Trend Analysis (FIXED: Dynamic Condition Berdasarkan Type)
+// 8️⃣ Incident Trend Analysis
 app.get('/api/incidents/trend', async (req, res) => {
   try {
     const { type, client, year, month } = req.query;
-
-    // 1. Kumpul semua filter dlm satu array
     let conditions = [];
-
-    // Filter ikut Type
     switch (type) {
-      case 'open': conditions.push("request_status = 0"); break;
-      case 'pending': conditions.push("request_status IN (1, 10, 11, 12, 13)"); break;
-      case 'solved': conditions.push("request_status = 2"); break;
-      case 'lapsed': conditions.push("request_status NOT IN (2, 14) AND DATEDIFF(DAY, DATEADD(SECOND, request_time, '1970-01-01'), GETDATE()) > 7"); break;
-      default: conditions.push("1=1"); // Safety net
+      case 'open':
+        conditions.push('request_status = 0');
+        break;
+      case 'pending':
+        conditions.push('request_status IN (1, 10, 11, 12, 13)');
+        break;
+      case 'solved':
+        conditions.push('request_status = 2');
+        break;
+      case 'lapsed':
+        conditions.push(
+          "request_status NOT IN (2, 14) AND DATEDIFF(DAY, DATEADD(SECOND, request_time, '1970-01-01'), GETDATE()) > 7",
+        );
+        break;
+      default:
+        conditions.push('1=1');
     }
-
-    // 2. Tentukan format Paksi X & Filter Masa
-    let dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'yyyy')"; 
-
+    let dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'yyyy')";
     const isAllYear = !year || year === 'All' || year === 'All Year';
-
     if (!isAllYear) {
       conditions.push(`YEAR(DATEADD(SECOND, request_time, '1970-01-01')) = ${year}`);
-      dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'MMM')"; 
-
-      if (month && month !== 'All' && month !== 'All Months') {
+      dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'MMM')";
+      if (month && month !== 'All') {
         conditions.push(`MONTH(DATEADD(SECOND, request_time, '1970-01-01')) = ${month}`);
-        dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'dd MMM')"; 
+        dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'dd MMM')";
       }
     }
-
-    // ✅ Gabungkan semua condition dngn ' AND ' secara automatik
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : "";
-
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const query = `
-      SELECT 
-        ${dateSelect} AS date, 
-        COUNT(*) AS count, 
-        MIN(DATEADD(SECOND, request_time, '1970-01-01')) as sort_key
+      SELECT ${dateSelect} AS date, COUNT(*) AS count, 
+             MIN(DATEADD(SECOND, request_time, '1970-01-01')) as sort_key
       FROM HD_REQUEST 
       ${whereClause}
       GROUP BY ${dateSelect} 
       ORDER BY sort_key ASC`;
-
     const rawResults = await db.querySpecificServers('helpdesk', query, client || '');
-
-    // 3. AGGREGATION & SORTING
     const aggregated = rawResults.reduce((acc, curr) => {
       const label = curr.date;
       if (!acc[label]) {
@@ -324,56 +302,40 @@ app.get('/api/incidents/trend', async (req, res) => {
       acc[label].count += Number(curr.count || 0);
       return acc;
     }, {});
-
     const finalTrend = Object.values(aggregated).sort((a, b) => a.sortTime - b.sortTime);
     res.json(finalTrend);
-
-  } catch (err) { 
-    console.error("Trend Error:", err.message);
-    res.status(500).json({ error: err.message }); 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// 9️⃣ Endpoint untuk Ambil Senarai Tahun Unik (untuk dropdown filter)
+// 9️⃣ Years Filter
 app.get('/api/incidents/years', async (req, res) => {
   try {
-    const query = `
-      SELECT DISTINCT YEAR(DATEADD(SECOND, request_time, '1970-01-01')) AS year
-      FROM HD_REQUEST
-      ORDER BY year DESC`;
-
+    const query = `SELECT DISTINCT YEAR(DATEADD(SECOND, request_time, '1970-01-01')) AS year FROM HD_REQUEST ORDER BY year DESC`;
     const results = await db.queryAllServers('helpdesk', query);
-    
-    // Ambil tahun unik sahaja dngn Set
-    const uniqueYears = [...new Set(results.map(r => r.year.toString()))];
+    const uniqueYears = [...new Set(results.map((r) => r.year.toString()))];
     res.json(uniqueYears);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// 10️⃣ Asset Summary (DAH FIX: Dynamic Sector Mapping dari .env)
+// 🔟 Asset Summary
 app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
   try {
     const selectedClient = req.query.client || '';
-
-    // 1. Ambil senarai sektor dari .env
     const glcList = (process.env.SECTOR_GLC || '').split(',').map((s) => s.trim());
     const fsiList = (process.env.SECTOR_FSI || '').split(',').map((s) => s.trim());
     const govList = (process.env.SECTOR_GOV || '').split(',').map((s) => s.trim());
     const eduList = (process.env.SECTOR_EDU || '').split(',').map((s) => s.trim());
-
-    // 2. Query Union TCO & TCO3
     const query = `
       DECLARE @sql NVARCHAR(MAX) = '';
       SELECT @sql = @sql + CASE WHEN @sql <> '' THEN ' UNION ALL ' ELSE '' END + 
       'SELECT COUNT(*) AS totalAsset, COUNT(CASE WHEN MachineType = ''Desktop'' THEN 1 END) AS desktop, COUNT(CASE WHEN MachineType = ''Laptop'' THEN 1 END) AS laptop, COUNT(CASE WHEN MachineType = ''Server'' THEN 1 END) AS server, COUNT(CASE WHEN (MachineType NOT IN (''Desktop'',''Laptop'',''Server'') OR MachineType IS NULL) THEN 1 END) AS others FROM ' + QUOTENAME(name) + '.dbo.TS_OBJECT_ROOT a LEFT JOIN ' + QUOTENAME(name) + '.dbo.ts_client_info tci ON a.Object_root_idn = tci.Object_root_idn'
       FROM sys.databases WHERE name IN ('TCO', 'TCO3');
       IF @sql <> '' EXEC sp_executesql @sql;`;
-
     const results = await db.querySpecificServers('tco', query, selectedClient);
-
-    // 3. Gabungkan data mengikut Sektor secara Dinamik
     const combined = results.reduce(
       (acc, curr) => {
         const total = curr.totalAsset || 0;
@@ -382,14 +344,11 @@ app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
         acc.laptop += curr.laptop || 0;
         acc.server += curr.server || 0;
         acc.others += curr.others || 0;
-
-        // ✅ Check serverId dngn list sektor dlm .env
         const sId = curr.serverId;
         if (glcList.includes(sId)) acc.glc += total;
         else if (fsiList.includes(sId)) acc.fsi += total;
         else if (govList.includes(sId)) acc.gov += total;
         else if (eduList.includes(sId)) acc.edu += total;
-
         return acc;
       },
       {
@@ -410,5 +369,22 @@ app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
   }
 });
 
+/* =====================================================
+    🚀 START SERVER WITH HYBRID INITIALIZATION
+===================================================== */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+// Gunakan db.initConfig() untuk load Plan A (.env) atau Plan B (Master DB)
+db.initConfig()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(
+        `📡 Connection Mode: ${process.env.USE_MASTER_DB === 'true' ? 'MASTER DB' : 'STATIC .ENV'}`,
+      );
+    });
+  })
+  .catch((err) => {
+    console.error('❌ Failed to start server:', err.message);
+    process.exit(1);
+  });

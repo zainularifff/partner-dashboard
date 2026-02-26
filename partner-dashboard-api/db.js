@@ -3,17 +3,75 @@ require('dotenv').config();
 
 let projects = [];
 let flatServerList = [];
+const pools = { helpdesk: new Map(), tco: new Map(), master: null };
 
-try {
-  // 1. Ambil data client dari .env
-  projects = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
+/**
+ * 🚀 FUNGSI UTAMA: Inisialisasi Konfigurasi
+ * Dipanggil oleh server.js sebelum app.listen()
+ */
+async function initConfig() {
+  try {
+    // 1️⃣ SEMAK METHOD 2: Guna Master DB jika diaktifkan
+    if (process.env.USE_MASTER_DB === 'true') {
+      console.log('🚀 [DB] Method 2: Fetching from Master Database...');
+      
+      const masterConfig = {
+        user: process.env.DB_MASTER_USER,
+        password: process.env.DB_MASTER_PASS,
+        server: process.env.DB_MASTER_SERVER,
+        database: process.env.DB_MASTER_NAME,
+        options: { encrypt: false, trustServerCertificate: true }
+      };
 
+      const masterPool = await new sql.ConnectionPool(masterConfig).connect();
+      
+      // Tarik data berdasarkan column names yang kau tetapkan
+      const result = await masterPool.request().query(`
+        SELECT 
+          projectName, 
+          projectIp, 
+          clients_json AS clients,
+          db_user AS DB_USER,
+          db_name AS DB_NAME
+        FROM Master_Projects_Table 
+        WHERE status = 'ACTIVE'
+      `);
+
+      projects = result.recordset.map(row => ({
+        projectName: row.projectName,
+        projectIp: row.projectIp,
+        clients: JSON.parse(row.clients || '[]'),
+        dbUser: row.DB_USER,
+        dbName: row.DB_NAME
+      }));
+      
+      await masterPool.close();
+    } 
+    // 2️⃣ FALLBACK KE METHOD 1: .env Static
+    else {
+      console.log('📦 [DB] Method 1: Loading from .env file...');
+      projects = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
+    }
+
+    // 3️⃣ BINA FLAT SERVER LIST (Untuk kegunaan getPool)
+    buildFlatList();
+    
+    console.log(`[DB] ✅ Configuration loaded. Total Projects: ${projects.length}`);
+  } catch (err) {
+    console.error('⚠️ [DB] Master DB Failed, falling back to .env:', err.message);
+    projects = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
+    buildFlatList();
+  }
+}
+
+function buildFlatList() {
+  flatServerList = [];
   projects.forEach(proj => {
     // Masukkan server projek utama
     flatServerList.push({
       name: proj.projectName,
       ip: proj.projectIp,
-      pass: "P@ssw0rd", // 💡 Tips: Sebaiknya letak dlm .env juga
+      pass: "P@ssw0rd", // Boleh juga ditarik dinamik dari column DB_PASS dlm Master DB
       type: 'project'
     });
 
@@ -29,48 +87,33 @@ try {
       });
     }
   });
-} catch (err) {
-  console.error('[DB Config Error] Invalid DB_CLIENTS JSON:', err.message);
-  process.exit(1);
 }
 
-const clients = Object.freeze(flatServerList);
-const pools = { helpdesk: new Map(), tco: new Map() };
-
 /* =====================================================
-   🔌 CREATE / REUSE CONNECTION POOL
+    🔌 CREATE / REUSE CONNECTION POOL
 ===================================================== */
 async function getPool(client, type) {
   const cleanIp = client.ip.trim();
   const poolKey = `${cleanIp}_${type}`;
 
   if (!pools[type].has(poolKey)) {
-    // ✅ OPTIMASI: Kita terus sambung ke DB sasaran tanpa perlu "Double Connect"
     const baseConfig = {
-      user: process.env.DB_USER,
+      user: process.env.DB_USER, // Boleh di-override dengan proj.dbUser jika guna Method 2
       password: client.pass,
       server: cleanIp,
-      // Jika Helpdesk, terus ke DB Helpdesk. Jika TCO, kita guna 'master' supaya SQL boleh scan TCO/TCO3 secara Union
       database: type === 'helpdesk' ? process.env.DB_NAME_HELPDESK : 'master',
       options: {
-        encrypt: false, // Set false jika server lokal Petronas
+        encrypt: false,
         trustServerCertificate: true,
         connectTimeout: 10000,
       },
-      requestTimeout: 60000 // Tingkatkan sikit sbb Union query mungkin berat
+      requestTimeout: 60000
     };
 
     try {
-      console.log(`[DB] 🔄 Connecting to ${client.name} (${cleanIp})...`);
       const pool = new sql.ConnectionPool(baseConfig);
       const connectedPool = await pool.connect();
-
-      connectedPool.on('error', err => {
-        console.error(`[SQL ERROR] ${client.name}:`, err.message);
-      });
-
       pools[type].set(poolKey, connectedPool);
-      console.log(`[DB] ✅ ${client.name} is ready.`);
     } catch (err) {
       console.error(`[DB ERROR] ❌ ${client.name} failed:`, err.message);
       return null;
@@ -83,13 +126,13 @@ async function getPool(client, type) {
 }
 
 /* =====================================================
-   🔎 QUERY MULTIPLE SERVERS (WITH OPTIONAL FILTER)
+    🔎 QUERY ENGINE
 ===================================================== */
 async function querySpecificServers(type, queryStr, filterId = '') {
-  // Filter mengikut nama (Project_A, Client_B, etc.)
+  // Gunakan flatServerList yang sudah di-init dinamik
   const selectedClients = (filterId && filterId.trim() !== '')
-    ? clients.filter(c => filterId.split(',').map(i => i.trim()).includes(c.name))
-    : clients;
+    ? flatServerList.filter(c => filterId.split(',').map(i => i.trim()).includes(c.name))
+    : flatServerList;
 
   const promises = selectedClients.map(async (client) => {
     try {
@@ -97,34 +140,27 @@ async function querySpecificServers(type, queryStr, filterId = '') {
       if (!pool) return [];
 
       const result = await pool.request().query(queryStr);
-      
-      // ✅ Inject serverId & serverType untuk logic mapping sektor dlm server.js
       return result.recordset.map(row => ({
         ...row,
         serverId: client.name,
         serverType: client.type
       }));
-
     } catch (err) {
-      console.error(`   ❌ ${client.name} query failed:`, err.message);
       return [];
     }
   });
 
   const results = await Promise.allSettled(promises);
-
   return results
     .filter(r => r.status === 'fulfilled')
     .map(r => r.value)
     .flat();
 }
 
-/* =====================================================
-   EXPORT
-===================================================== */
 module.exports = {
+  initConfig, // ✅ Wajib panggil dlm server.js
   querySpecificServers,
   queryAllServers: (type, query) => querySpecificServers(type, query, ''),
-  projects,
-  clients
+  get projects() { return projects; },
+  get clients() { return flatServerList; }
 };

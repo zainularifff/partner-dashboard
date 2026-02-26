@@ -6,7 +6,7 @@
   flex-direction: column;
   box-sizing: border-box;
   background: #f8fafc;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 .header {
@@ -14,14 +14,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .header-actions {
   display: flex;
-  flex-direction: column; 
-  align-items: flex-end; 
-  gap: 8px; 
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .btn-group {
@@ -77,10 +77,10 @@
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr; 
+  grid-template-rows: 1fr 1fr;
   gap: 16px;
-  flex: 1; 
-  min-height: 0; 
+  flex: 1;
+  min-height: 0;
 }
 
 .card {
@@ -91,7 +91,7 @@
   flex-direction: column;
   padding: clamp(10px, 2vh, 18px);
   overflow: hidden;
-  min-height: 0; 
+  min-height: 0;
 
   h3 {
     font-size: 14px;
@@ -162,7 +162,11 @@
     font-size: 1.1rem;
     font-weight: 700;
     color: #1e293b;
-    .total-val { color: #2563eb; font-weight: 800; margin-left: 5px; }
+    .total-val {
+      color: #2563eb;
+      font-weight: 800;
+      margin-left: 5px;
+    }
   }
 
   // Barisan Sektor (Atas)
@@ -177,19 +181,49 @@
       align-items: center;
       text-align: center;
 
-      .s-icon { font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; }
-      .s-label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-      .s-val { font-size: 1.1rem; font-weight: 800; margin-top: 2px; }
+      .s-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        margin-bottom: 8px;
+      }
+      .s-label {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .s-val {
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin-top: 2px;
+      }
 
       // Warna mengikut design
-      .glc-color, .glc-text { color: #a855f7; } // Ungu
-      .fsi-color, .fsi-text { color: #2dd4bf; } // Teal
-      .edu-color, .edu-text { color: #f59e0b; } // Oren
-      .gov-color, .gov-text { color: #d946ef; } // Pink
+      .glc-color,
+      .glc-text {
+        color: #a855f7;
+      } // Ungu
+      .fsi-color,
+      .fsi-text {
+        color: #2dd4bf;
+      } // Teal
+      .edu-color,
+      .edu-text {
+        color: #f59e0b;
+      } // Oren
+      .gov-color,
+      .gov-text {
+        color: #d946ef;
+      } // Pink
     }
   }
 
-  .card-divider { height: 1px; background: #f1f5f9; margin-bottom: 20px; }
+  .card-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin-bottom: 20px;
+  }
 
   // Barisan Hardware (Bawah)
   .hardware-row {
@@ -202,58 +236,173 @@
       align-items: center;
       gap: 10px;
 
-      mat-icon { color: #475569; font-size: 22px; width: 22px; height: 22px; }
-      
+      mat-icon {
+        color: #475569;
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+
       .hw-info {
         display: flex;
         flex-direction: column;
         line-height: 1.2;
-        small { color: #3b82f6; font-size: 0.65rem; font-weight: 700; }
-        strong { color: #0f172a; font-size: 1rem; font-weight: 800; }
+        small {
+          color: #3b82f6;
+          font-size: 0.65rem;
+          font-weight: 700;
+        }
+        strong {
+          color: #0f172a;
+          font-size: 1rem;
+          font-weight: 800;
+        }
       }
     }
   }
 }
 
 /* ================= 3. BRAND AGING (FIXED OVERFLOW) ================= */
-.ba-flex {
-  display: flex;
-  gap: 15px;
-  flex: 1;
-  min-height: 0;
-}
+.brand-aging-card {
+  padding: 16px; // Dibesarkan sedikit dari 12px untuk ruang bernafas
 
-.ba-charts {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around; 
-  height: 100%;
-}
+  .ba-main-layout {
+    display: flex;
+    gap: 16px; // Jarak antara chart dan sidebar yang lebih jelas
 
-.ba-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.ba-full-bar {
-  height: 8px;
-  display: flex;
-  border-radius: 5px;
-  overflow: hidden;
-  background: #f1f5f9;
-}
+    .ba-charts-area {
+      flex: 1.7; // Memberi ruang seimbang antara kiri dan kanan
+      .ba-row {
+        margin-bottom: 12px;
+        .ba-info {
+          margin-bottom: 4px;
+          span {
+            font-size: 12px;
+            font-weight: 700;
+          } // Nama brand lebih jelas
+          .unit-count {
+            font-size: 11px;
+            color: #64748b;
+          }
+        }
+        .ba-full-bar {
+          height: 10px; // Bar dinaikkan sedikit ketebalannya
+        }
+      }
+    }
 
-.ba-stats {
-  flex: 1;
-  border-left: 1px solid #f1f5f9;
-  padding-left: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 15px;
+    .ba-stats-sidebar {
+      flex: 1;
+      border-left: 1px solid #f1f5f9;
+      padding-left: 15px; // Padding kiri dilebarkan sikit
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .sidebar-label {
+        color: #94a3b8;
+        font-weight: 800;
+        font-size: 9px; // Saiz label yang lebih standard
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+
+      .stat-card {
+        background: #fafafa;
+        border: 1px solid #f1f5f9;
+        border-radius: 8px;
+        padding: 10px 12px; // Kotak dibesarkan sedikit
+        margin-bottom: 4px;
+
+        .card-head {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: #64748b;
+          font-size: 10px; // Header card lebih mudah dibaca
+          margin-bottom: 6px;
+
+          mat-icon {
+            font-size: 15px; // Ikon dibesarkan sedikit
+            width: 15px;
+            height: 15px;
+          }
+        }
+
+        .card-body {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          strong {
+            font-size: 13px; // Nama Fleet lebih menonjol
+            color: #1e293b;
+            font-weight: 800;
+          }
+
+          .badge {
+            background: #fef2f2;
+            color: #ef4444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 9px; // Badge lebih jelas
+            border: 1px solid #fee2e2;
+          }
+        }
+
+        &.risk mat-icon {
+          color: #ef4444;
+        }
+        &.capex mat-icon {
+          color: #3b82f6;
+        }
+      }
+
+      .reliability-mini {
+        .rel-item {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 6px;
+          font-size: 11px; // Teks Reliability lebih jelas
+          font-weight: 600;
+
+          .stars {
+            display: flex;
+            align-items: center;
+            color: #fbbf24;
+            mat-icon {
+              font-size: 12px;
+              width: 12px;
+              height: 12px;
+            }
+            span {
+              color: #64748b;
+              font-size: 10px;
+              margin-left: 4px;
+              font-weight: 700;
+            }
+          }
+        }
+      }
+
+      .btn-report {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 8px;
+        margin-top: auto; // Tolak butang ke bawah
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #2f6fed;
+        cursor: pointer;
+
+        &:hover {
+          background: #f8fafc;
+        }
+      }
+    }
+  }
 }
 
 /* ================= 4. VENDOR & ASSET (SPINNER FIX) ================= */
@@ -320,34 +469,81 @@
 
 /* ================= 5. COLORS & UTILS ================= */
 ::ng-deep {
-  .green circle { stroke: #22c55e !important; }
-  .orange circle { stroke: #f59e0b !important; }
-  .red circle { stroke: #ef4444 !important; }
+  .green circle {
+    stroke: #22c55e !important;
+  }
+  .orange circle {
+    stroke: #f59e0b !important;
+  }
+  .red circle {
+    stroke: #ef4444 !important;
+  }
 
   .custom-bar {
     height: 8px !important;
     border-radius: 4px;
-    background-color: #f1f5f9 !important; 
+    background-color: #f1f5f9 !important;
 
-    &.green .mdc-linear-progress__bar-inner { border-color: #22c55e !important; }
-    &.orange .mdc-linear-progress__bar-inner { border-color: #f59e0b !important; }
-    &.red .mdc-linear-progress__bar-inner { border-color: #ef4444 !important; }
+    &.green .mdc-linear-progress__bar-inner {
+      border-color: #22c55e !important;
+    }
+    &.orange .mdc-linear-progress__bar-inner {
+      border-color: #f59e0b !important;
+    }
+    &.red .mdc-linear-progress__bar-inner {
+      border-color: #ef4444 !important;
+    }
   }
 }
 
-.green-text { color: #22c55e; }
-.orange-text { color: #f59e0b; }
-.red-text { color: #ef4444; }
+.green-text {
+  color: #22c55e;
+}
+.orange-text {
+  color: #f59e0b;
+}
+.red-text {
+  color: #ef4444;
+}
 
-.iw-blue { background: #eff6ff; color: #1e40af; }
-.iw-yellow { background: #fffbeb; color: #92400e; }
-.iw-green { background: #f0fdf4; color: #166534; }
-.iw-red { background: #fef2f2; color: #991b1b; }
+.iw-blue {
+  background: #eff6ff;
+  color: #1e40af;
+}
+.iw-yellow {
+  background: #fffbeb;
+  color: #92400e;
+}
+.iw-green {
+  background: #f0fdf4;
+  color: #166534;
+}
+.iw-red {
+  background: #fef2f2;
+  color: #991b1b;
+}
 
-.seg.new { background: #3b82f6; }
-.seg.young { background: #10b981; }
-.seg.mid { background: #f59e0b; }
-.seg.legacy { background: #ef4444; }
+.seg.new {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+.seg.aging {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+.seg.critical {
+  background: linear-gradient(90deg, #f87171, #ef4444);
+}
+.seg.standard {
+  background: linear-gradient(90deg, #10b981, #3b82f6); /* Contoh hijau ke biru */
+}
+.ba-row {
+  margin-bottom: 20px;
+}
+.ba-info {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
 
 /* ================= 6. TOTAL ASSET HEALTH (FIXED) ================= */
 .asset-flex {
@@ -369,9 +565,12 @@
 
 .spinner-wrapper {
   position: relative;
-  
+  cursor: pointer; // ✅ Pastikan kursor pointer muncul pada keseluruhan kawasan
+
   canvas {
-    cursor: pointer; // Cursor berubah bila hover pada bahagian warna
+    display: block;
+    position: relative;
+    z-index: 1; // ✅ Carta duduk di lapisan bawah teks
   }
 
   .ah-inner {
@@ -380,11 +579,21 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    pointer-events: none; // ✅ PENTING: Supaya cursor boleh "tembus" ke canvas di belakang
-    
-    .ah-val { font-size: 28px; font-weight: 800; color: #1e293b; }
-    .ah-sub { font-size: 9px; color: #94a3b8; font-weight: 700; }
+    z-index: 2; // ✅ Teks duduk di atas
+    pointer-events: none; // ✅ PENTING: Supaya kursor boleh "tembus" ke graf di belakang
+
+    .ah-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e293b;
+      line-height: 1;
+    }
   }
+}
+.ah-sub {
+  font-size: 9px;
+  color: #94a3b8;
+  font-weight: 700;
 }
 
 .ah-right {
@@ -395,7 +604,9 @@
 .fault-row {
   margin-bottom: 12px;
 
-  &:last-child { margin-bottom: 0; }
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   .fault-info {
     display: flex;
@@ -439,7 +650,7 @@
   font-weight: 700;
   margin-bottom: 25px;
   color: #1e293b;
-  
+
   .blue-text {
     color: #2f6fed;
     font-weight: 800;
@@ -456,7 +667,7 @@
   .icon-item {
     display: flex;
     flex-direction: column;
-    align-items: center; 
+    align-items: center;
     gap: 8px;
 
     span {
@@ -494,7 +705,7 @@
   .footer-stat {
     display: flex;
     flex-direction: column;
-    align-items: center; 
+    align-items: center;
     gap: 6px;
     font-size: 10px;
     font-weight: 700;
@@ -526,7 +737,6 @@
   }
 }
 
-
 /* ================= LEASE LIFECYCLE TIMELINE (ONLY) ================= */
 
 .timeline-list {
@@ -545,7 +755,7 @@
 }
 
 .t-info {
-  width: 180px;      /* Lebar tetap supaya bar sejajar di sebelah kanan */
+  width: 180px; /* Lebar tetap supaya bar sejajar di sebelah kanan */
   flex-shrink: 0;
   line-height: 1.4;
 
@@ -568,14 +778,14 @@
   height: 10px;
   background: #f1f5f9; /* Warna tapak bar (track) */
   border-radius: 10px;
-  position: relative;  /* Penting untuk kedudukan .days-left */
+  position: relative; /* Penting untuk kedudukan .days-left */
 }
 
 .t-bar {
   height: 100%;
   border-radius: 10px;
   /* Warna gradient dari Hijau ke Biru */
-  background: linear-gradient(90deg, #10b981, #3b82f6); 
+  background: linear-gradient(90deg, #10b981, #3b82f6);
   transition: width 0.5s ease-in-out;
 }
 
@@ -593,8 +803,8 @@
   color: #ef4444; /* Warna merah amaran */
   font-weight: 800;
   position: absolute;
-  right: 0;      /* Melekat di hujung kanan bar */
-  top: -22px;    /* Terapung di atas bar */
+  right: 0; /* Melekat di hujung kanan bar */
+  top: -22px; /* Terapung di atas bar */
   font-size: 10px;
   white-space: nowrap;
 }
@@ -607,22 +817,49 @@
   display: flex;
   gap: 15px;
   margin-bottom: 20px;
-  
+
   .legend-item {
-    display: flex; align-items: center; gap: 6px;
-    .dot { width: 10px; height: 10px; border-radius: 2px; }
-    .l-txt { 
-      small { font-size: 9px; color: #666; display: block; line-height: 1; }
-      p { font-size: 11px; margin: 0; font-weight: 600; }
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+    .l-txt {
+      small {
+        font-size: 9px;
+        color: #666;
+        display: block;
+        line-height: 1;
+      }
+      p {
+        font-size: 11px;
+        margin: 0;
+        font-weight: 600;
+      }
     }
   }
 }
 
 /* Warna Ikut Legend */
-.new, .dot.blue { background-color: #007bff; }
-.standard, .dot.green { background-color: #28a745; }
-.aging, .dot.orange { background-color: #fd7e14; }
-.critical, .dot.red { background-color: #dc3545; }
+.new,
+.dot.blue {
+  background-color: #007bff;
+}
+.standard,
+.dot.green {
+  background-color: #28a745;
+}
+.aging,
+.dot.orange {
+  background-color: #fd7e14;
+}
+.critical,
+.dot.red {
+  background-color: #dc3545;
+}
 
 .ba-full-bar {
   display: flex;
@@ -631,10 +868,12 @@
   border-radius: 4px;
   overflow: hidden;
   margin-top: 5px;
-  
-  .seg { height: 100%; transition: width 0.3s ease; }
-}
 
+  .seg {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+}
 
 // ================= CLIENT SELECTOR (FIXED) ================= */
 .client-selector-wrapper {
@@ -688,7 +927,7 @@
 
   .mat-mdc-menu-item {
     height: 44px !important;
-    
+
     &:hover {
       background: #f1f5f9 !important;
     }
@@ -708,22 +947,30 @@
   }
 }
 
-// 
-.loading-wrapper {
-  position: fixed;        /* cover whole screen */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-
+/* ================= 8. LOADING STATE (FIXED) ================= */
+.loading-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-
-  background: #f5f6fa;    /* optional */
-  z-index: 9999;
+  justify-content: center;
+  height: 80vh;
+  color: #64748b;
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 15px;
+    &.spin {
+      animation: rotate 2s linear infinite;
+    }
+  }
 }
 
-.loading-content {
-  text-align: center;
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

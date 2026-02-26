@@ -6,6 +6,7 @@ import { PartnerComponent } from './pages/partner/partner';
 import { BrandBreakdownComponent } from './pages/brand-breakdown/brand-breakdown';
 import { IncidentComponent } from './pages/incident-detail/incident-detail';
 import { BrandSelectorComponent } from './pages/brand-selector/brand-selector'; 
+import { AssetDetailComponent } from './pages/asset-detail/asset-detail'; 
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -15,5 +16,6 @@ export const routes: Routes = [
   { path: 'incident-detail', component: IncidentComponent },
   { path: 'brand-breakdown/:brandName', component: BrandBreakdownComponent },
   { path: 'ticket-view/:uuid', component: IncidentComponent }, 
-  { path: 'brand-selector', component: BrandSelectorComponent }
+  { path: 'brand-selector', component: BrandSelectorComponent }, 
+  { path: 'asset-detail', component: AssetDetailComponent }    
 ];

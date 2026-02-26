@@ -81,4 +81,13 @@ export class IncidentApi {
   getAvailableYears(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/incidents/years`, this.getHeaders());
   }
+  // 10. Individual Asset Details (Endpoint yang kita setelkan tadi)
+  getIndividualDetails(
+    brand: string = 'ASUS',
+    project: string = '',
+    type: string = '',
+  ): Observable<any[]> {
+    const url = `${this.baseUrl}/assets/individual-details?brand=${brand}&project=${project}&type=${type}`;
+    return this.http.get<any[]>(url, this.getHeaders());
+  }
 }

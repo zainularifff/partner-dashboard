@@ -39,14 +39,15 @@ export class IncidentComponent implements OnInit {
   currentPage = 1;
   pageSize = 10;
   totalPages = 0;
-  isLoading = false;
+  
+  // ✅ FIXED: Gunakan isLoading secara konsisten dngn HTML kau
+  isLoading = false; 
+  
   searchTerm = '';
   selectedServers: string[] = [];
 
-  // ================= TREND CONFIG (FIXED) =================
+  // ================= TREND CONFIG =================
   public selectedType: string = 'open';
-  
-  // ✅ Gunakan 'All Year' secara konsisten
   public years: string[] = ['All Year'];
   public selectedYear: string = 'All Year';
   public selectedMonth: string = 'All';
@@ -105,7 +106,6 @@ export class IncidentComponent implements OnInit {
   loadYears() {
     this.api.getAvailableYears().subscribe({
       next: (res: string[]) => {
-        // ✅ Gabungkan dengan 'All Year'
         this.years = ['All Year', ...res];
         this.cdr.detectChanges();
       },
@@ -114,7 +114,8 @@ export class IncidentComponent implements OnInit {
   }
 
   loadData() {
-    this.isLoading = true;
+    // 🚀 Mula Loading
+    this.isLoading = true; 
     this.api.getFullList().subscribe({
       next: (rows: any[]) => {
         const nowInSeconds = Math.floor(Date.now() / 1000);
@@ -138,9 +139,16 @@ export class IncidentComponent implements OnInit {
           };
         });
         this.applyFilter();
-        this.isLoading = false;
+        
+        // ✅ Selesai Loading (Data dari semua server termasuk .70 dah masuk)
+        this.isLoading = false; 
         this.cdr.detectChanges();
       },
+      error: (err) => {
+        console.error('Error loading tickets:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -157,7 +165,6 @@ export class IncidentComponent implements OnInit {
         const labels = res.map((r) => r.date);
         const data = res.map((r) => r.count);
 
-        // ✅ Legend Dinamik yang tepat dngn tajuk dkt image_e902c5.png
         let dynamicLabel = `${this.selectedType.toUpperCase()} Tickets`;
         if (this.selectedYear !== 'All Year') {
           dynamicLabel += ` (${this.selectedYear})`;
@@ -185,13 +192,10 @@ export class IncidentComponent implements OnInit {
   }
 
   onYearChange() {
-    // ✅ Reset bulan setiap kali tahun bertukar
-    // Ini juga akan trigger *ngIf dkt HTML untuk hilangkan dropdown bulan
     this.selectedMonth = 'All'; 
     this.loadTrend();
   }
 
-  // ✅ Getter untuk paparkan nama bulan dkt tajuk dlm HTML
   get selectedMonthName(): string {
     const months = ['None', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const monthIndex = parseInt(this.selectedMonth);
@@ -207,8 +211,6 @@ export class IncidentComponent implements OnInit {
     };
     return colors[type] || `rgba(148, 163, 184, ${alpha})`;
   }
-
-  // ================= FILTER & PAGINATION =================
 
   private checkStatusMatch(ticketStatus: number, filterType: string): boolean {
     if (filterType === 'open') return ticketStatus === 0;

@@ -4,80 +4,124 @@
       <button (click)="goBack()" class="btn-back">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <h2>{{ selectedBrand }} ASSETS HIERARCHY</h2>
-    </div>
-  </div>
-
-  <div class="brand-summary-container">
-    <div class="chart-wrapper">
-      <canvas *ngIf="totalAssetsAll > 0" baseChart 
-              [data]="doughnutChartData" 
-              [options]="doughnutChartOptions" 
-              [type]="'doughnut'"></canvas>
-      <div class="chart-center-info">
-        <small>TOTAL</small>
-        <strong>{{ totalAssetsAll }}</strong>
-      </div>
-    </div>
-
-    <div class="stats-summary-grid">
-      <div class="stat-card-item blue">
-        <div class="icon-circle"><mat-icon>fiber_new</mat-icon></div>
-        <div class="val-group"><small>NEW</small><p>{{ totalNew }}</p></div>
-      </div>
-      <div class="stat-card-item green">
-        <div class="icon-circle"><mat-icon>check_circle</mat-icon></div>
-        <div class="val-group"><small>OPTIMAL</small><p>{{ totalStd }}</p></div>
-      </div>
-      <div class="stat-card-item orange">
-        <div class="icon-circle"><mat-icon>history</mat-icon></div>
-        <div class="val-group"><small>AGING</small><p>{{ totalAging }}</p></div>
-      </div>
-      <div class="stat-card-item red">
-        <div class="icon-circle"><mat-icon>report_problem</mat-icon></div>
-        <div class="val-group"><small>CRITICAL</small><p>{{ totalCrit }}</p></div>
+      <div class="header-text">
+        <small class="sup">BRAND LEVEL OVERSIGHT</small>
+        <h2>{{ selectedBrand }} ASSETS HIERARCHY</h2>
       </div>
     </div>
   </div>
 
-  <div class="project-group-container" *ngFor="let proj of groupedProjects">
-    <div class="project-header">
-      <div class="p-title">
-        <mat-icon>assignment</mat-icon>
-        <span>PROJECT: {{ proj.projectName }}</span>
+  <div class="brand-summary-container executive-card">
+  <div class="bar-chart-section">
+    <div class="chart-header">
+      <div class="title-group">
+        <small class="label">ASSET LIFECYCLE COMPOSITION</small>
+        <div class="total-display">
+          <span class="count">{{ totalAssetsAll | number }}</span>
+          <span class="text">Total Units</span>
+        </div>
       </div>
-      <span class="p-badge">{{ proj.totalInProject }} Assets</span>
     </div>
 
-    <div class="model-grid">
-      <div class="model-card" *ngFor="let m of proj.models">
-        <div class="card-top">
-          <div class="icon-box">
-            <mat-icon>{{ m.machineType.toLowerCase().includes('notebook') ? 'laptop' : 'desktop_windows' }}</mat-icon>
-          </div>
-          <div class="m-info">
-            <div class="client-label">{{ m.clientName }}</div>
-            <div class="machine-label">{{ m.machineType }}</div>
-            <div class="brand-label">{{ m.brandName }}</div>
-          </div>
-          <div class="total-display">
-            <span class="m-count">{{ m.total }}</span>
-            <small>UNITS</small>
-          </div>
-        </div>
-
-        <div class="status-bar-container">
-          <div class="s-bar-segment blue" [style.width.%]="getPercent(m.new, m.total)" matTooltip="New: {{m.new}}"></div>
-          <div class="s-bar-segment green" [style.width.%]="getPercent(m.optimal, m.total)" matTooltip="Optimal: {{m.optimal}}"></div>
-          <div class="s-bar-segment orange" [style.width.%]="getPercent(m.aging, m.total)" matTooltip="Aging: {{m.aging}}"></div>
-          <div class="s-bar-segment red" [style.width.%]="getPercent(m.critical, m.total)" matTooltip="Critical: {{m.critical}}"></div>
-        </div>
+    <div class="custom-stacked-bar">
+      <div class="bar-segment blue" [style.width.%]="(totalNew/totalAssetsAll)*100">
+        <span class="pct-label" *ngIf="totalNew > 0">{{ (totalNew/totalAssetsAll) | percent:'1.0-0' }}</span>
       </div>
+      <div class="bar-segment green" [style.width.%]="(totalStd/totalAssetsAll)*100">
+        <span class="pct-label" *ngIf="totalStd > 0">{{ (totalStd/totalAssetsAll) | percent:'1.0-0' }}</span>
+      </div>
+      <div class="bar-segment orange" [style.width.%]="(totalAging/totalAssetsAll)*100">
+        <span class="pct-label" *ngIf="totalAging > 0">{{ (totalAging/totalAssetsAll) | percent:'1.0-0' }}</span>
+      </div>
+      <div class="bar-segment red pulse-critical" [style.width.%]="(totalCrit/totalAssetsAll)*100">
+        <span class="pct-label" *ngIf="totalCrit > 0">{{ (totalCrit/totalAssetsAll) | percent:'1.0-0' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-summary-grid mini">
+    <div class="stat-card-item b-blue">
+      <small>NEW</small>
+      <p>{{ totalNew | number }}</p>
+    </div>
+    <div class="stat-card-item b-green">
+      <small>OPTIMAL</small>
+      <p>{{ totalStd | number }}</p>
+    </div>
+    <div class="stat-card-item b-orange">
+      <small>AGING</small>
+      <p>{{ totalAging | number }}</p>
+    </div>
+    <div class="stat-card-item b-red">
+      <small>CRITICAL</small>
+      <p>{{ totalCrit | number }}</p>
     </div>
   </div>
 </div>
 
-<div class="loading-container" *ngIf="loading">
-  <mat-icon class="spin">sync</mat-icon>
-  <p>Fetching Assets Hierarchy...</p>
+  <div class="project-group-container" *ngFor="let proj of groupedProjects">
+    <div class="project-header">
+      <div class="p-title">
+        <mat-icon>business</mat-icon>
+        <span>{{ proj.projectName }}</span>
+      </div>
+      <span class="p-count-badge">{{ proj.totalInProject }} Assets</span>
+    </div>
+
+    <div class="table-responsive-wrapper">
+      <table class="executive-table">
+        <thead>
+          <tr>
+            <th>MACHINE TYPE</th>
+            <th>MODEL / BRAND</th>
+            <th>CLIENT</th>
+            <th class="text-center">DISTRIBUTION (NEW - CRIT)</th>
+            <th class="text-right">TOTAL UNITS</th>
+            <th class="text-center">ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of proj.models" (click)="goToLevel3(m)" class="row-hover">
+  <td>
+    <div class="type-cell">
+      <mat-icon>{{ m.machineType.toLowerCase().includes('notebook') ? 'laptop' : 'desktop_windows' }}</mat-icon>
+      <span>{{ m.machineType }}</span>
+    </div>
+  </td>
+  <td>
+    <div class="model-cell">
+      <span class="m-name">{{ m.brandName }}</span>
+      <small>Series: Standard Fleet</small>
+    </div>
+  </td>
+  <td><span class="client-tag">{{ m.clientName }}</span></td>
+  <td>
+    <div class="mini-status-bar">
+      <div class="s-seg blue" 
+           [style.width.%]="getPercent(m.new, m.total)" 
+           [matTooltip]="'New: ' + m.new + ' units '">
+      </div>
+      <div class="s-seg green" 
+           [style.width.%]="getPercent(m.optimal, m.total)" 
+           [matTooltip]="'Optimal: ' + m.optimal + ' units '">
+      </div>
+      <div class="s-seg orange" 
+           [style.width.%]="getPercent(m.aging, m.total)" 
+           [matTooltip]="'Aging: ' + m.aging + ' units '">
+      </div>
+      <div class="s-seg red" 
+           [style.width.%]="getPercent(m.critical, m.total)" 
+           [matTooltip]="'Critical: ' + m.critical + ' units '">
+      </div>
+    </div>
+  </td>
+  <td class="text-right"><strong>{{ m.total }}</strong></td>
+  <td class="text-center">
+    <button class="btn-view-more"><mat-icon>chevron_right</mat-icon></button>
+  </td>
+</tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>

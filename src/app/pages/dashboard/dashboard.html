@@ -42,7 +42,12 @@
     </div>
   </div>
 
-  <div class="grid" *ngIf="!isLoading">
+  <div class="loading-container" *ngIf="loading">
+    <mat-icon class="spin">sync</mat-icon>
+    <p>Syncing Strategic Dashboard...</p>
+  </div>
+
+  <div class="grid" *ngIf="!loading">
     <div class="card designer-card">
       <div class="card-header">
         <h3 class="main-card-title">
@@ -79,38 +84,35 @@
         <div class="hw-item">
           <mat-icon>desktop_windows</mat-icon>
           <div class="hw-info">
-            <small>DESKTOP</small>
-            <strong>{{ assetBreakdown.desktop | number }}</strong>
+            <small>DESKTOP</small><strong>{{ assetBreakdown.desktop | number }}</strong>
           </div>
         </div>
         <div class="hw-item">
           <mat-icon>laptop_mac</mat-icon>
           <div class="hw-info">
-            <small>LAPTOP</small>
-            <strong>{{ assetBreakdown.laptop | number }}</strong>
+            <small>LAPTOP</small><strong>{{ assetBreakdown.laptop | number }}</strong>
           </div>
         </div>
         <div class="hw-item">
           <mat-icon>dns</mat-icon>
           <div class="hw-info">
-            <small>SERVER</small>
-            <strong>{{ assetBreakdown.server | number }}</strong>
+            <small>SERVER</small><strong>{{ assetBreakdown.server | number }}</strong>
           </div>
         </div>
         <div class="hw-item">
           <mat-icon>phonelink_setup</mat-icon>
           <div class="hw-info">
-            <small>OTHERS</small>
-            <strong>{{ assetBreakdown.others | number }}</strong>
+            <small>OTHERS</small><strong>{{ assetBreakdown.others | number }}</strong>
           </div>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="main-card-title">Server & Vendor Health</h3>
+      <h3 class="main-card-title">OS Vulnerability</h3>
+
       <div class="vp-row">
-        <div class="vp-item" *ngFor="let v of vendorHealth">
+        <div class="vp-item" *ngFor="let v of vulnerabilitySummary">
           <div class="spinner-container">
             <mat-progress-spinner
               mode="determinate"
@@ -128,24 +130,24 @@
       <table class="vp-table">
         <thead>
           <tr>
-            <th>PARTNER</th>
-            <th>MTTR (AVG)</th>
-            <th class="right-align">FCR RATE</th>
+            <th>OPERATING SYSTEM</th>
+            <th>DETECTION (AVG)</th>
+            <th class="right-align">RISK LEVEL</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let r of vendorRows">
-            <td>{{ r.partner }}</td>
-            <td [class]="r.color + '-text'">{{ r.mttr }}</td>
+          <tr *ngFor="let r of osRows">
+            <td>{{ r.osName }}</td>
+            <td [class]="r.color + '-text'">{{ r.detectionTime }}</td>
             <td>
               <div class="fcr-flex">
                 <mat-progress-bar
                   mode="determinate"
-                  [value]="r.fcr"
+                  [value]="r.riskScore"
                   [ngClass]="r.color"
                   class="custom-bar"
                 ></mat-progress-bar>
-                <span class="fcr-val">{{ r.fcr }}%</span>
+                <span class="fcr-val">{{ r.riskScore }}%</span>
               </div>
             </td>
           </tr>
@@ -177,7 +179,6 @@
           <div class="section-header">
             <h3 class="main-card-title">TOP 5 FAULT-PRONE MODELS</h3>
           </div>
-
           <div class="fault-row" *ngFor="let m of topFault">
             <div class="fault-info">
               <span class="model-name" [matTooltip]="m.name">{{ m.name }}</span>
@@ -194,7 +195,6 @@
       </div>
     </div>
 
-    <!-- Incident Wall Management -->
     <div class="card">
       <h3 class="main-card-title">Incident Wall Management</h3>
       <div class="iw-grid">
@@ -204,21 +204,18 @@
           <div class="iw-desc">Open / Waiting</div>
           <mat-icon class="iw-icon">history</mat-icon>
         </div>
-
         <div class="iw-item iw-yellow clickable-card" (click)="selectFilter('pending')">
-          <div class="iw-label">PENDING / IN PROGRESS</div>
+          <div class="iw-label">PENDING / PROGRESS</div>
           <div class="iw-value">{{ pendingCount }}</div>
           <div class="iw-desc">3rd Party Wait</div>
           <mat-icon class="iw-icon">pause_circle</mat-icon>
         </div>
-
         <div class="iw-item iw-green clickable-card" (click)="selectFilter('solved')">
           <div class="iw-label">SOLVED WITHIN SLA</div>
           <div class="iw-value">{{ solvedCount }}</div>
           <div class="iw-desc">✔ Compliance OK</div>
           <mat-icon class="iw-icon">verified</mat-icon>
         </div>
-
         <div class="iw-item iw-red clickable-card" (click)="selectFilter('lapsed')">
           <div class="iw-label">SLA LAPSED</div>
           <div class="iw-value">{{ lapsedCount }}</div>
@@ -228,75 +225,95 @@
       </div>
     </div>
 
-    <!-- Brand Aging Analysis -->
-    <div class="card">
+    <div class="card brand-aging-card">
       <h3 class="main-card-title">Brand Aging Analysis</h3>
+
       <div class="ba-legend">
-        <div class="legend-item">
-          <span class="dot blue"></span>
+        <div class="legend-item" *ngFor="let item of ['NEW', 'STANDARD', 'AGING', 'CRITICAL']">
+          <span class="dot" [ngClass]="item.toLowerCase()"></span>
           <div class="l-txt">
-            <small>NEW</small>
-            <p><1 Year</p>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="dot green"></span>
-          <div class="l-txt">
-            <small>STANDARD</small>
-            <p>1-2 Years</p>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="dot orange"></span>
-          <div class="l-txt">
-            <small>AGING</small>
-            <p>2-3 Years</p>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="dot red"></span>
-          <div class="l-txt">
-            <small>CRITICAL</small>
-            <p>>3 Years</p>
+            <small>{{ item }}</small>
+            <span>{{ getLegendLabel(item) }}</span>
           </div>
         </div>
       </div>
 
-      <div class="ba-flex">
-        <div class="ba-charts">
+      <div class="ba-main-layout">
+        <div class="ba-charts-area">
           <div
             class="ba-row"
             *ngFor="let b of brandRows"
+            [routerLink]="['/brand-breakdown', b.name]"
             (click)="handleBrandClick(b.name)"
             style="cursor: pointer"
           >
             <div class="ba-info">
-              <span>{{ b.name }}</span>
-              <span>{{ b.total | number }} units</span>
+              <span class="brand-name">{{ b.name }}</span>
+              <span class="unit-count">{{ b.total | number }} units</span>
             </div>
             <div class="ba-full-bar">
               <div
                 class="seg new"
                 [style.width.%]="b.new"
-                [matTooltip]="'New: ' + b.new + '%'"
+                [matTooltip]="'New: ' + b.new + '%'">
               ></div>
+
               <div
                 class="seg standard"
                 [style.width.%]="b.standard"
-                [matTooltip]="'Standard: ' + b.standard + '%'"
+                [matTooltip]="'Optimal: ' + b.standard + '%'">
               ></div>
+
               <div
                 class="seg aging"
                 [style.width.%]="b.aging"
-                [matTooltip]="'Aging: ' + b.aging + '%'"
+                [matTooltip]="'Aging: ' + b.aging + '%'">
               ></div>
+
               <div
                 class="seg critical"
                 [style.width.%]="b.critical"
-                [matTooltip]="'Critical: ' + b.critical + '%'"
-              ></div>
+                [matTooltip]="'Critical: ' + b.critical + '%'">
+              </div>
             </div>
           </div>
+        </div>
+
+        <div class="ba-stats-sidebar">
+          <section class="qs-section">
+            <label class="sidebar-label">QUICK STATS</label>
+
+            <div class="stat-card risk">
+              <div class="card-head">
+                <mat-icon>error_outline</mat-icon>
+                <span>Critical Attrition</span>
+              </div>
+              <div class="card-body">
+                <strong>{{ highestRiskBrand?.name }} Fleet</strong>
+                <span class="badge">{{ highestRiskBrand?.critical }}% RISK</span>
+              </div>
+            </div>
+
+            <div class="stat-card capex">
+              <div class="card-head">
+                <mat-icon>payments</mat-icon>
+                <span>Refresh CapEx (Est.)</span>
+              </div>
+              <div class="card-body">
+                <strong *ngIf="highestRiskBrand">
+                  RM
+                  {{
+                    highestRiskBrand.total * (highestRiskBrand.critical / 100) * 3000 >= 1000000
+                      ? ((highestRiskBrand.total * (highestRiskBrand.critical / 100) * 3000) /
+                          1000000 | number: '1.1-1') + 'M'
+                      : ((highestRiskBrand.total * (highestRiskBrand.critical / 100) * 3000) / 1000
+                          | number: '1.0-0') + 'K'
+                  }}
+                </strong>
+                <small>EST. REPLACEMENT</small>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -307,30 +324,16 @@
         <div class="t-row" *ngFor="let item of leases">
           <div class="t-info">
             <strong>{{ item.name }}</strong
-            ><br />
-            <small>{{ item.startDate }}</small>
+            ><br /><small>{{ item.startDate }}</small>
           </div>
-
           <div class="t-progress-container">
             <div class="t-bar" [style.width.%]="item.progress"></div>
             <div class="t-labels">
-              <span class="days-left">{{ item.daysLeft }} Days Left</span>
-              <span class="end-date">{{ item.endDate }}</span>
+              <span>{{ item.daysLeft }} Days Left</span><span>{{ item.endDate }}</span>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-  <div class="loading-wrapper" *ngIf="isLoading">
-  <div class="loading-content">
-    <mat-progress-spinner
-      mode="indeterminate"
-      diameter="60">
-    </mat-progress-spinner>
-
-    <p>Syncing Strategic Dashboard...</p>
-  </div>
-</div>
 </div>

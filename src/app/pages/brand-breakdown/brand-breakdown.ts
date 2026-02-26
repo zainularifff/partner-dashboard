@@ -1,12 +1,12 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // Tambah ChangeDetectorRef
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; 
 import { CommonModule, Location } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router, RouterModule } from '@angular/router'; // ✅ Added RouterModule
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, ChartData, ChartConfiguration, registerables } from 'chart.js';
+
 Chart.register(...registerables);
 
 interface ModelDetail {
@@ -29,7 +29,14 @@ interface ProjectGroup {
 @Component({
   selector: 'app-brand-breakdown',
   standalone: true,
-  imports: [CommonModule, MatIconModule, RouterLink, MatTooltipModule, BaseChartDirective],
+  imports: [
+    CommonModule, 
+    MatIconModule, 
+    RouterLink, 
+    RouterModule, // ✅ Essential for router.navigate to work
+    MatTooltipModule, 
+    BaseChartDirective
+  ],
   templateUrl: './brand-breakdown.html',
   styleUrl: './brand-breakdown.scss',
 })
@@ -67,10 +74,12 @@ export class BrandBreakdownComponent implements OnInit {
     private route: ActivatedRoute,
     private http: HttpClient,
     private location: Location,
-    private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
+    private router: Router,
+    private cdr: ChangeDetectorRef 
   ) {}
 
   ngOnInit(): void {
+    // Get brand from URL or default to ASUS
     this.selectedBrand = this.route.snapshot.paramMap.get('brandName') || 'ASUS';
     this.fetchDataFromBackend();
   }
@@ -90,23 +99,25 @@ export class BrandBreakdownComponent implements OnInit {
             this.rawAssets = data.map((item) => ({
               project: item.projectName || 'UNKNOWN',
               machine: item.machineType || 'DEVICES',
-              brand: item.brandGroup || 'ASUS',
+              // ✅ FIXED: Use selectedBrand instead of hardcoded 'ASUS'
+              brand: item.brandGroup || this.selectedBrand, 
               age: item.Age ?? 0,
             }));
             this.processProjectMapping();
           } else {
+            console.warn('⚠️ No data returned for brand:', this.selectedBrand);
             this.groupedProjects = [];
             this.totalAssetsAll = 0;
           }
         } catch (e) {
-          console.error('Logic Error dlm mapping:', e);
+          console.error('❌ Logic Error in mapping:', e);
         } finally {
           this.loading = false;
-          this.cdr.detectChanges(); // Paksa Angular kemaskini view
+          this.cdr.detectChanges(); 
         }
       },
       error: (err) => {
-        console.error('API Error:', err);
+        console.error('❌ API Error:', err);
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -123,7 +134,6 @@ export class BrandBreakdownComponent implements OnInit {
   processProjectMapping() {
     const projectMap = new Map<string, any>();
     
-    // Reset kaunter global
     this.totalAssetsAll = this.rawAssets.length;
     this.totalNew = 0;
     this.totalStd = 0;
@@ -133,13 +143,11 @@ export class BrandBreakdownComponent implements OnInit {
     this.rawAssets.forEach((asset) => {
       const status = this.mapAgeToStatus(asset.age);
 
-      // Statistik Global
       if (status === 'new') this.totalNew++;
       else if (status === 'optimal') this.totalStd++;
       else if (status === 'aging') this.totalAging++;
       else if (status === 'critical') this.totalCrit++;
 
-      // Project Grouping
       if (!projectMap.has(asset.project)) {
         projectMap.set(asset.project, {
           projectName: asset.project,
@@ -151,7 +159,6 @@ export class BrandBreakdownComponent implements OnInit {
       const projectObj = projectMap.get(asset.project);
       projectObj.totalInProject++;
 
-      // Unik Key untuk Kad (Project + Machine + Brand)
       const combinedKey = `${asset.project}-${asset.machine}-${asset.brand}`;
 
       if (!projectObj.models.has(combinedKey)) {
@@ -176,7 +183,6 @@ export class BrandBreakdownComponent implements OnInit {
       else if (status === 'critical') modelObj.critical++;
     });
 
-    // Update Chart dngn referens objek baru
     this.doughnutChartData = {
       labels: ['New', 'Optimal', 'Aging', 'Critical'],
       datasets: [
@@ -192,6 +198,12 @@ export class BrandBreakdownComponent implements OnInit {
       ...p,
       models: Array.from(p.models.values()),
     }));
+  }
+
+  // brand-breakdown.ts
+  goToLevel3(m: any) {
+    console.log('🚀 Klik dikesan!'); // Tengok dkt Console (F12)
+    this.router.navigate(['/asset-detail']); // ✅ Pergi terus ke page detail
   }
 
   getPercent(val: number, total: number): number {

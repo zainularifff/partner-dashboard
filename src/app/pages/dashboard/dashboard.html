@@ -16,7 +16,9 @@
         <button class="btn-client-filter" [matMenuTriggerFor]="clientMenu">
           <mat-icon>lan</mat-icon>
           <span class="label">
-            {{ selectedServers.length === 0 ? 'All Clients' : selectedServers.length + ' Selected' }}
+            {{
+              selectedServers.length === 0 ? 'All Clients' : selectedServers.length + ' Selected'
+            }}
           </span>
           <mat-icon class="arrow">expand_more</mat-icon>
         </button>
@@ -137,7 +139,12 @@
             <td [class]="r.color + '-text'">{{ r.mttr }}</td>
             <td>
               <div class="fcr-flex">
-                <mat-progress-bar mode="determinate" [value]="r.fcr" [ngClass]="r.color" class="custom-bar"></mat-progress-bar>
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="r.fcr"
+                  [ngClass]="r.color"
+                  class="custom-bar"
+                ></mat-progress-bar>
                 <span class="fcr-val">{{ r.fcr }}%</span>
               </div>
             </td>
@@ -152,7 +159,12 @@
         <div class="ah-left">
           <div class="spinner-wrapper">
             <div style="display: block; width: 140px; height: 140px">
-              <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
+              <canvas
+                baseChart
+                [data]="doughnutChartData"
+                [options]="doughnutChartOptions"
+                [type]="'doughnut'"
+              ></canvas>
             </div>
             <div class="ah-inner">
               <div class="ah-val">{{ assetTotal | number }}</div>
@@ -171,12 +183,18 @@
               <span class="model-name" [matTooltip]="m.name">{{ m.name }}</span>
               <span class="fault-percent" [style.color]="m.color">{{ m.rate }}% Fault Rate</span>
             </div>
-            <mat-progress-bar mode="determinate" [value]="m.rate" class="custom-progress-bar" [style.--bar-color]="m.color"></mat-progress-bar>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="m.rate"
+              class="custom-progress-bar"
+              [style.--bar-color]="m.color"
+            ></mat-progress-bar>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Incident Wall Management -->
     <div class="card">
       <h3 class="main-card-title">Incident Wall Management</h3>
       <div class="iw-grid">
@@ -210,39 +228,73 @@
       </div>
     </div>
 
+    <!-- Brand Aging Analysis -->
     <div class="card">
       <h3 class="main-card-title">Brand Aging Analysis</h3>
       <div class="ba-legend">
         <div class="legend-item">
           <span class="dot blue"></span>
-          <div class="l-txt"><small>NEW</small><p><1 Year</p></div>
+          <div class="l-txt">
+            <small>NEW</small>
+            <p><1 Year</p>
+          </div>
         </div>
         <div class="legend-item">
           <span class="dot green"></span>
-          <div class="l-txt"><small>STANDARD</small><p>1-2 Years</p></div>
+          <div class="l-txt">
+            <small>STANDARD</small>
+            <p>1-2 Years</p>
+          </div>
         </div>
         <div class="legend-item">
           <span class="dot orange"></span>
-          <div class="l-txt"><small>AGING</small><p>2-3 Years</p></div>
+          <div class="l-txt">
+            <small>AGING</small>
+            <p>2-3 Years</p>
+          </div>
         </div>
         <div class="legend-item">
           <span class="dot red"></span>
-          <div class="l-txt"><small>CRITICAL</small><p>>3 Years</p></div>
+          <div class="l-txt">
+            <small>CRITICAL</small>
+            <p>>3 Years</p>
+          </div>
         </div>
       </div>
 
       <div class="ba-flex">
         <div class="ba-charts">
-          <div class="ba-row" *ngFor="let b of brandRows" [routerLink]="['/brand-breakdown', b.name]" style="cursor: pointer">
+          <div
+            class="ba-row"
+            *ngFor="let b of brandRows"
+            (click)="handleBrandClick(b.name)"
+            style="cursor: pointer"
+          >
             <div class="ba-info">
               <span>{{ b.name }}</span>
               <span>{{ b.total | number }} units</span>
             </div>
             <div class="ba-full-bar">
-              <div class="seg new" [style.width.%]="b.new" [matTooltip]="'New: ' + b.new + '%'"></div>
-              <div class="seg standard" [style.width.%]="b.standard" [matTooltip]="'Standard: ' + b.standard + '%'"></div>
-              <div class="seg aging" [style.width.%]="b.aging" [matTooltip]="'Aging: ' + b.aging + '%'"></div>
-              <div class="seg critical" [style.width.%]="b.critical" [matTooltip]="'Critical: ' + b.critical + '%'"></div>
+              <div
+                class="seg new"
+                [style.width.%]="b.new"
+                [matTooltip]="'New: ' + b.new + '%'"
+              ></div>
+              <div
+                class="seg standard"
+                [style.width.%]="b.standard"
+                [matTooltip]="'Standard: ' + b.standard + '%'"
+              ></div>
+              <div
+                class="seg aging"
+                [style.width.%]="b.aging"
+                [matTooltip]="'Aging: ' + b.aging + '%'"
+              ></div>
+              <div
+                class="seg critical"
+                [style.width.%]="b.critical"
+                [matTooltip]="'Critical: ' + b.critical + '%'"
+              ></div>
             </div>
           </div>
         </div>
@@ -254,7 +306,8 @@
       <div class="timeline-list">
         <div class="t-row" *ngFor="let item of leases">
           <div class="t-info">
-            <strong>{{ item.name }}</strong><br />
+            <strong>{{ item.name }}</strong
+            ><br />
             <small>{{ item.startDate }}</small>
           </div>
 
@@ -270,8 +323,14 @@
     </div>
   </div>
 
-  <div class="loader-container" *ngIf="isLoading">
-    <mat-progress-spinner mode="indeterminate" [diameter]="50"></mat-progress-spinner>
+  <div class="loading-wrapper" *ngIf="isLoading">
+  <div class="loading-content">
+    <mat-progress-spinner
+      mode="indeterminate"
+      diameter="60">
+    </mat-progress-spinner>
+
     <p>Syncing Strategic Dashboard...</p>
   </div>
+</div>
 </div>

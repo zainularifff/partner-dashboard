@@ -9,6 +9,22 @@ import { BaseChartDirective } from 'ng2-charts';
 import { Chart, ChartData, ChartConfiguration, registerables } from 'chart.js';
 Chart.register(...registerables);
 
+// Interface untuk struktur data baru
+interface ModelDetail {
+  Clientwithmodel: string;
+  total: number;
+  new: number;
+  standard: number;
+  aging: number;
+  critical: number;
+}
+
+interface ProjectGroup {
+  projectName: string;
+  totalInProject: number;
+  models: ModelDetail[];
+}
+
 @Component({
   selector: 'app-brand-breakdown',
   standalone: true,
@@ -19,17 +35,17 @@ Chart.register(...registerables);
 export class BrandBreakdownComponent implements OnInit {
   selectedBrand: string | null = '';
   
-  // DATA SUMBER (Pastikan ada field 'client')
-  clientRows: any[] = [
-    { client: 'Client A', name: 'Asus Vivobook', total: 450, new: 180, standard: 100, aging: 150, critical: 20 },
-    { client: 'Client A', name: 'Asus Zenbook', total: 320, new: 50, standard: 150, aging: 100, critical: 20 },
-    { client: 'Client B', name: 'Asus ExpertBook', total: 110, new: 10, standard: 30, aging: 40, critical: 30 },
-    { client: 'Client C', name: 'Asus ROG', total: 159, new: 60, standard: 70, aging: 29, critical: 0 }
+  // 1. DATA SUMBER (Pastikan ada field 'project' dan 'client')
+  rawAssets: any[] = [
+    { project: 'MBSA', client: 'WSSB', name: 'Vivobook', status: 'new' },
+    { project: 'MBSA', client: 'BSN', name: 'Vivobook', status: 'standard' },
+    { project: 'FGV', client: 'Shell', name: 'Zenbook', status: 'aging' },
+    { project: 'FGV', client: 'Maybank', name: 'ExpertBook', status: 'critical' },
   ];
 
   // VARIABEL UNTUK HTML
-  groupedClients: any[] = [];
-  totalAssetsAllClients = 0;
+  groupedProjects: ProjectGroup[] = [];
+  totalAssetsAll = 0;
   totalNew = 0;
   totalStd = 0;
   totalAging = 0;
@@ -51,33 +67,62 @@ export class BrandBreakdownComponent implements OnInit {
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    this.selectedBrand = this.route.snapshot.paramMap.get('brandName');
-    this.processAllData(); // Panggil fungsi utama
+    this.selectedBrand = this.route.snapshot.paramMap.get('brandName') || 'ASUS';
+    this.processProjectMapping(); 
   }
 
-  processAllData() {
-    // 1. KIRA TOTAL UNTUK GRAF & STATS GRID
-    this.totalNew = this.clientRows.reduce((sum, item) => sum + item.new, 0);
-    this.totalStd = this.clientRows.reduce((sum, item) => sum + item.standard, 0);
-    this.totalAging = this.clientRows.reduce((sum, item) => sum + item.aging, 0);
-    this.totalCrit = this.clientRows.reduce((sum, item) => sum + item.critical, 0);
-    this.totalAssetsAllClients = this.totalNew + this.totalStd + this.totalAging + this.totalCrit;
+  processProjectMapping() {
+    const projectMap = new Map<string, any>();
+
+    // 2. KIRA GLOBAL STATS UNTUK GRAF & SUMMARY
+    this.totalAssetsAll = this.rawAssets.length;
+    this.totalNew = this.rawAssets.filter(a => a.status === 'new').length;
+    this.totalStd = this.rawAssets.filter(a => a.status === 'standard').length;
+    this.totalAging = this.rawAssets.filter(a => a.status === 'aging').length;
+    this.totalCrit = this.rawAssets.filter(a => a.status === 'critical').length;
 
     // Masukkan data ke dalam graf
     this.doughnutChartData.datasets[0].data = [this.totalNew, this.totalStd, this.totalAging, this.totalCrit];
 
-    // 2. PROSES GROUPING UNTUK TABLE
-    const groups = this.clientRows.reduce((acc, obj) => {
-      const key = obj.client;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(obj);
-      return acc;
-    }, {});
+    // 3. LOGIC GROUPING: PROJECT > CLIENT
+    this.rawAssets.forEach(asset => {
+      // Create Project Group if not exists
+      if (!projectMap.has(asset.project)) {
+        projectMap.set(asset.project, {
+          projectName: asset.project,
+          totalInProject: 0,
+          models: new Map<string, any>()
+        });
+      }
+      
+      const projectObj = projectMap.get(asset.project);
+      projectObj.totalInProject++;
 
-    this.groupedClients = Object.keys(groups).map(client => ({
-      clientName: client,
-      models: groups[client],
-      totalInGroup: groups[client].reduce((sum: number, m: any) => sum + m.total, 0)
+      // Combine Model + Client Name (Contoh: "ASUS Vivobook - Petronas")
+      const combinedKey = `${asset.client} - ${this.selectedBrand} ${asset.name}`;
+
+      // Create Model Group inside Project
+      if (!projectObj.models.has(combinedKey)) {
+        projectObj.models.set(combinedKey, {
+          Clientwithmodel: combinedKey,
+          total: 0, new: 0, standard: 0, aging: 0, critical: 0
+        });
+      }
+
+      const modelObj = projectObj.models.get(combinedKey);
+      modelObj.total++;
+
+      // Increment stats dlm card
+      if (asset.status === 'new') modelObj.new++;
+      else if (asset.status === 'standard') modelObj.standard++;
+      else if (asset.status === 'aging') modelObj.aging++;
+      else if (asset.status === 'critical') modelObj.critical++;
+    });
+
+    // 4. TRANSFORMA SI MAP KEPADA ARRAY UNTUK HTML (*ngFor)
+    this.groupedProjects = Array.from(projectMap.values()).map(p => ({
+      ...p,
+      models: Array.from(p.models.values())
     }));
   }
 

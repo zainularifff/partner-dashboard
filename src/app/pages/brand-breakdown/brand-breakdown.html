@@ -1,7 +1,4 @@
-<!-- brand-breakdown.html -->
 <div class="page-container">
-  
-  <!-- 1. HEADER (Title & Back Button) -->
   <div class="top-header">
     <div class="title-section">
       <button [routerLink]="['/dashboard']" class="btn-back">
@@ -11,55 +8,35 @@
     </div>
   </div>
 
-  <!-- 2. BRAND SUMMARY (GRAF + STATS GRID) -->
   <div class="brand-summary-container">
-    <!-- Bahagian Graf Bulat -->
     <div class="chart-wrapper">
-      <canvas baseChart
-        [data]="doughnutChartData"
-        [options]="doughnutChartOptions"
-        [type]="'doughnut'">
-      </canvas>
+      <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
       <div class="chart-center-info">
         <small>Total Assets</small>
-        <strong>{{ totalAssetsAllClients }}</strong>
+        <strong>{{ totalAssetsAll }}</strong>
       </div>
     </div>
 
-    <!-- Bahagian Grid Nombor -->
     <div class="stats-summary-grid">
       <div class="stat-card-item blue">
         <div class="icon-circle"><mat-icon>fiber_new</mat-icon></div>
-        <div class="val-group">
-          <small>NEW</small>
-          <p>{{ totalNew }}</p>
-        </div>
+        <div class="val-group"><small>NEW</small><p>{{ totalNew }}</p></div>
       </div>
       <div class="stat-card-item green">
         <div class="icon-circle"><mat-icon>check_circle</mat-icon></div>
-        <div class="val-group">
-          <small>OPTIMAL</small>
-          <p>{{ totalStd }}</p>
-        </div>
+        <div class="val-group"><small>OPTIMAL</small><p>{{ totalStd }}</p></div>
       </div>
       <div class="stat-card-item orange">
         <div class="icon-circle"><mat-icon>report_problem</mat-icon></div>
-        <div class="val-group">
-          <small>AGING</small>
-          <p>{{ totalAging }}</p>
-        </div>
+        <div class="val-group"><small>AGING</small><p>{{ totalAging }}</p></div>
       </div>
       <div class="stat-card-item red">
         <div class="icon-circle"><mat-icon>dangerous</mat-icon></div>
-        <div class="val-group">
-          <small>CRITICAL</small>
-          <p>{{ totalCrit }}</p>
-        </div>
+        <div class="val-group"><small>CRITICAL</small><p>{{ totalCrit }}</p></div>
       </div>
     </div>
   </div>
 
-  <!-- 3. LEGEND (Penerangan Warna) -->
   <div class="ba-legend">
     <div class="legend-item"><span class="dot blue"></span> <div class="l-txt"><small>NEW</small><p>Warranty Active</p></div></div>
     <div class="legend-item"><span class="dot green"></span> <div class="l-txt"><small>STD</small><p>Optimal</p></div></div>
@@ -67,49 +44,62 @@
     <div class="legend-item"><span class="dot red"></span> <div class="l-txt"><small>CRIT</small><p>Replacement</p></div></div>
   </div>
 
-  <!-- 4. TABLE GROUPING (DATA ANDA KEKAL DI SINI) -->
-  <div class="client-section" *ngFor="let group of groupedClients">
-    
-    <div class="group-header">
-      <div class="client-title">
-        <mat-icon>business</mat-icon>
-        <span>{{ group.clientName }}</span>
+  <div class="project-group-container" *ngFor="let proj of groupedProjects">
+    <div class="project-header">
+      <div class="p-title">
+        <mat-icon>assignment</mat-icon>
+        <span>PROJECT: {{ proj.projectName }}</span>
       </div>
-      <span class="total-badge">{{ group.totalInGroup }} Assets</span>
+      <span class="p-badge">{{ proj.totalInProject }} Assets</span>
     </div>
 
-    <div class="table-card">
-      <table class="custom-table">
-        <thead>
-          <tr>
-            <th>MODEL</th>
-            <th width="250">DISTRIBUTION</th>
-            <th>TOTAL</th>
-            <th class="text-center">ACTION</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let m of group.models">
-            <td><strong>{{ m.name }}</strong></td>
-            <td>
-              <div class="mini-bar">
-                <div class="seg new" [style.width.%]="getPercent(m.new, m.total)" [matTooltip]="m.new + ' New'"></div>
-                <div class="seg standard" [style.width.%]="getPercent(m.standard, m.total)" [matTooltip]="m.standard + ' Standard'"></div>
-                <div class="seg aging" [style.width.%]="getPercent(m.aging, m.total)" [matTooltip]="m.aging + ' Aging'"></div>
-                <div class="seg critical" [style.width.%]="getPercent(m.critical, m.total)" [matTooltip]="m.critical + ' Critical'"></div>
-              </div>
-            </td>
-            <td><strong>{{ m.total }}</strong></td>
-            <td class="text-center">
-              <button class="btn-view" [routerLink]="['/asset-list', group.clientName, m.name]">
-                View Details
-                <mat-icon>chevron_right</mat-icon>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="model-grid">
+      <div class="model-card" *ngFor="let m of proj.models">
+        
+        <div class="card-top">
+          <div class="icon-box"><mat-icon>devices</mat-icon></div>
+          <div class="m-info">
+            <span class="m-name">{{ m.Clientwithmodel }}</span>
+            <div class="total-display">
+               <span class="m-count">{{ m.total }}</span>
+               <small>Units</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini-dist-bar">
+          <div class="seg new" [style.width.%]="getPercent(m.new, m.total)"></div>
+          <div class="seg std" [style.width.%]="getPercent(m.standard, m.total)"></div>
+          <div class="seg aging" [style.width.%]="getPercent(m.aging, m.total)"></div>
+          <div class="seg crit" [style.width.%]="getPercent(m.critical, m.total)"></div>
+        </div>
+
+        <div class="data-status-grid">
+          <div class="status-item blue">
+            <small>NEW</small>
+            <strong>{{ m.new }}</strong>
+          </div>
+          <div class="status-item green">
+            <small>STD</small>
+            <strong>{{ m.standard }}</strong>
+          </div>
+          <div class="status-item orange">
+            <small>AGING</small>
+            <strong>{{ m.aging }}</strong>
+          </div>
+          <div class="status-item red">
+            <small>CRIT</small>
+            <strong>{{ m.critical }}</strong>
+          </div>
+        </div>
+
+        <div class="card-footer" [routerLink]="['/asset-list', proj.projectName, m.Clientwithmodel]">
+          <div class="btn-view-link">
+            <span>View Full Breakdown</span>
+            <mat-icon>chevron_right</mat-icon>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-
 </div>

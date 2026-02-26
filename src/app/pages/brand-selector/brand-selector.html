@@ -1,0 +1,59 @@
+<div class="page-container">
+  
+  <div class="top-header">
+    <div class="title-section">
+      <button routerLink="/dashboard" class="btn-back">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2 class="main-card-title">Select Brand (Others)</h2>
+    </div>
+  </div>
+
+  <div class="search-wrapper">
+    <div class="search-box">
+      <mat-icon>search</mat-icon>
+      <input type="text" 
+             [(ngModel)]="searchTerm" 
+             (input)="onSearchChange()" 
+             placeholder="Search for brand (e.g. Samsung, Apple, Panasonic)...">
+    </div>
+  </div>
+
+  <div class="brand-grid">
+    <div class="brand-tile" 
+         *ngFor="let b of filteredBrands" 
+         (click)="selectBrand(b.name)">
+      
+      <div class="tile-top">
+        <div class="icon-circle">
+          <mat-icon>devices</mat-icon>
+        </div>
+        <span class="brand-name">{{ b.name }}</span>
+      </div>
+      
+      <div class="tile-body">
+        <div class="main-val">
+          <strong>{{ b.total | number }}</strong>
+          <small>Total Units</small>
+        </div>
+        
+        <div class="micro-status-bar">
+          <div class="m-seg blue" [style.width.%]="b.new" matTooltip="New: {{b.new}}%"></div>
+          <div class="m-seg green" [style.width.%]="b.standard" matTooltip="Standard: {{b.standard}}%"></div>
+          <div class="m-seg orange" [style.width.%]="b.aging" matTooltip="Aging: {{b.aging}}%"></div>
+          <div class="m-seg red" [style.width.%]="b.critical" matTooltip="Critical: {{b.critical}}%"></div>
+        </div>
+      </div>
+
+      <div class="tile-footer">
+        <span>View Full Breakdown</span>
+        <mat-icon>chevron_right</mat-icon>
+      </div>
+    </div>
+  </div>
+
+  <div class="no-results" *ngIf="filteredBrands.length === 0">
+    <mat-icon>search_off</mat-icon>
+    <p>No brands found matching "{{ searchTerm }}"</p>
+  </div>
+</div>

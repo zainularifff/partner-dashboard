@@ -3,15 +3,11 @@ require('dotenv').config();
 
 let projects = [];
 let flatServerList = [];
-const pools = { helpdesk: new Map(), tco: new Map(), master: null };
+const pools = { helpdesk: new Map(), tco: new Map() };
+const passwordCache = new Map(); 
 
-/**
- * 🚀 FUNGSI UTAMA: Inisialisasi Konfigurasi
- * Dipanggil oleh server.js sebelum app.listen()
- */
 async function initConfig() {
   try {
-    // 1️⃣ SEMAK METHOD 2: Guna Master DB jika diaktifkan
     if (process.env.USE_MASTER_DB === 'true') {
       console.log('🚀 [DB] Method 2: Fetching from Master Database...');
       
@@ -20,45 +16,34 @@ async function initConfig() {
         password: process.env.DB_MASTER_PASS,
         server: process.env.DB_MASTER_SERVER,
         database: process.env.DB_MASTER_NAME,
-        options: { encrypt: false, trustServerCertificate: true }
+        options: { encrypt: false, trustServerCertificate: true },
+        connectTimeout: 5000
       };
 
       const masterPool = await new sql.ConnectionPool(masterConfig).connect();
-      
-      // Tarik data berdasarkan column names yang kau tetapkan
       const result = await masterPool.request().query(`
-        SELECT 
-          projectName, 
-          projectIp, 
-          clients_json AS clients,
-          db_user AS DB_USER,
-          db_name AS DB_NAME
-        FROM Master_Projects_Table 
-        WHERE status = 'ACTIVE'
+        SELECT projectName, projectIp, clients_json AS clients, db_user, db_name
+        FROM Master_Projects_Table WHERE status = 'ACTIVE'
       `);
 
       projects = result.recordset.map(row => ({
         projectName: row.projectName,
         projectIp: row.projectIp,
-        clients: JSON.parse(row.clients || '[]'),
-        dbUser: row.DB_USER,
-        dbName: row.DB_NAME
+        clients: typeof row.clients === 'string' ? JSON.parse(row.clients) : row.clients,
+        dbUser: row.db_user,
+        dbName: row.db_name
       }));
       
       await masterPool.close();
-    } 
-    // 2️⃣ FALLBACK KE METHOD 1: .env Static
-    else {
+    } else {
       console.log('📦 [DB] Method 1: Loading from .env file...');
       projects = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
     }
 
-    // 3️⃣ BINA FLAT SERVER LIST (Untuk kegunaan getPool)
     buildFlatList();
-    
-    console.log(`[DB] ✅ Configuration loaded. Total Projects: ${projects.length}`);
+    console.log(`[DB] ✅ Loaded. Total: ${projects.length} projects, ${flatServerList.length} servers.`);
   } catch (err) {
-    console.error('⚠️ [DB] Master DB Failed, falling back to .env:', err.message);
+    console.error('⚠️ [DB] Error during init, falling back to .env:', err.message);
     projects = process.env.DB_CLIENTS ? JSON.parse(process.env.DB_CLIENTS) : [];
     buildFlatList();
   }
@@ -67,21 +52,19 @@ async function initConfig() {
 function buildFlatList() {
   flatServerList = [];
   projects.forEach(proj => {
-    // Masukkan server projek utama
     flatServerList.push({
       name: proj.projectName,
       ip: proj.projectIp,
-      pass: "P@ssw0rd", // Boleh juga ditarik dinamik dari column DB_PASS dlm Master DB
+      pass: proj.projectPass || "1W0rldtech",
       type: 'project'
     });
 
-    // Masukkan server client di bawah projek
     if (proj.clients && Array.isArray(proj.clients)) {
       proj.clients.forEach(c => {
         flatServerList.push({
           name: c.name,
           ip: c.ip,
-          pass: "P@ssw0rd",
+          pass: c.pass || "1W0rldtech",
           type: 'client'
         });
       });
@@ -89,47 +72,46 @@ function buildFlatList() {
   });
 }
 
-/* =====================================================
-    🔌 CREATE / REUSE CONNECTION POOL
-===================================================== */
 async function getPool(client, type) {
+  if (!pools[type]) throw new Error(`Invalid pool type: ${type}`);
   const cleanIp = client.ip.trim();
   const poolKey = `${cleanIp}_${type}`;
 
-  if (!pools[type].has(poolKey)) {
-    const baseConfig = {
-      user: process.env.DB_USER, // Boleh di-override dengan proj.dbUser jika guna Method 2
-      password: client.pass,
-      server: cleanIp,
-      database: type === 'helpdesk' ? process.env.DB_NAME_HELPDESK : 'master',
-      options: {
-        encrypt: false,
-        trustServerCertificate: true,
-        connectTimeout: 10000,
-      },
-      requestTimeout: 60000
-    };
-
-    try {
-      const pool = new sql.ConnectionPool(baseConfig);
-      const connectedPool = await pool.connect();
-      pools[type].set(poolKey, connectedPool);
-    } catch (err) {
-      console.error(`[DB ERROR] ❌ ${client.name} failed:`, err.message);
-      return null;
-    }
+  if (pools[type].has(poolKey)) {
+    const existingPool = pools[type].get(poolKey);
+    if (existingPool.connected) return existingPool;
+    try { return await existingPool.connect(); } catch { pools[type].delete(poolKey); }
   }
 
-  const pool = pools[type].get(poolKey);
-  if (!pool.connected) await pool.connect();
-  return pool;
+  const passwordsToTry = [client.pass, "1W0rldtech", "P@ssw0rd"].filter(Boolean);
+  const cachedPass = passwordCache.get(cleanIp);
+  const listToTest = cachedPass ? [cachedPass, ...passwordsToTry.filter(p => p !== cachedPass)] : passwordsToTry;
+
+  for (const pass of listToTest) {
+    const pool = new sql.ConnectionPool({
+      user: process.env.DB_USER || 'sa',
+      password: pass,
+      server: cleanIp,
+      database: type === 'helpdesk' ? (process.env.DB_NAME_HELPDESK || 'HelpdeskDB') : 'master',
+      options: { encrypt: false, trustServerCertificate: true, connectTimeout: 3000 },
+      pool: { max: 10, min: 0, idleTimeoutMillis: 30000 }
+    });
+
+    try {
+      await pool.connect();
+      passwordCache.set(cleanIp, pass);
+      pools[type].set(poolKey, pool);
+      return pool;
+    } catch (err) {
+      await pool.close();
+      continue;
+    }
+  }
+  return null;
 }
 
-/* =====================================================
-    🔎 QUERY ENGINE
-===================================================== */
+// WAJIB ADA: Fungsi engine query kau
 async function querySpecificServers(type, queryStr, filterId = '') {
-  // Gunakan flatServerList yang sudah di-init dinamik
   const selectedClients = (filterId && filterId.trim() !== '')
     ? flatServerList.filter(c => filterId.split(',').map(i => i.trim()).includes(c.name))
     : flatServerList;
@@ -158,7 +140,7 @@ async function querySpecificServers(type, queryStr, filterId = '') {
 }
 
 module.exports = {
-  initConfig, // ✅ Wajib panggil dlm server.js
+  initConfig,
   querySpecificServers,
   queryAllServers: (type, query) => querySpecificServers(type, query, ''),
   get projects() { return projects; },

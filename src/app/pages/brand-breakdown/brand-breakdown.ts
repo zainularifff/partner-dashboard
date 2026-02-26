@@ -1,20 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // Tambah ChangeDetectorRef
+import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-// --- GRAF IMPORTS ---
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, ChartData, ChartConfiguration, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-// Interface untuk struktur data baru
 interface ModelDetail {
-  Clientwithmodel: string;
+  clientName: string;
+  machineType: string;
+  brandName: string;
   total: number;
   new: number;
-  standard: number;
+  optimal: number;
   aging: number;
   critical: number;
 }
@@ -30,99 +31,166 @@ interface ProjectGroup {
   standalone: true,
   imports: [CommonModule, MatIconModule, RouterLink, MatTooltipModule, BaseChartDirective],
   templateUrl: './brand-breakdown.html',
-  styleUrl: './brand-breakdown.scss'
+  styleUrl: './brand-breakdown.scss',
 })
 export class BrandBreakdownComponent implements OnInit {
   selectedBrand: string | null = '';
-  
-  // 1. DATA SUMBER (Pastikan ada field 'project' dan 'client')
-  rawAssets: any[] = [
-    { project: 'MBSA', client: 'WSSB', name: 'Vivobook', status: 'new' },
-    { project: 'MBSA', client: 'BSN', name: 'Vivobook', status: 'standard' },
-    { project: 'FGV', client: 'Shell', name: 'Zenbook', status: 'aging' },
-    { project: 'FGV', client: 'Maybank', name: 'ExpertBook', status: 'critical' },
-  ];
-
-  // VARIABEL UNTUK HTML
+  loading = false;
+  rawAssets: any[] = [];
   groupedProjects: ProjectGroup[] = [];
+
   totalAssetsAll = 0;
   totalNew = 0;
   totalStd = 0;
   totalAging = 0;
   totalCrit = 0;
 
-  // KONFIGURASI GRAF
   public doughnutChartData: ChartData<'doughnut'> = {
-    labels: ['New', 'Standard', 'Aging', 'Critical'],
-    datasets: [{ data: [0, 0, 0, 0], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }]
+    labels: ['New', 'Optimal', 'Aging', 'Critical'],
+    datasets: [
+      {
+        data: [0, 0, 0, 0],
+        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+        borderWidth: 0,
+      },
+    ],
   };
 
   public doughnutChartOptions: ChartConfiguration<'doughnut'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
     cutout: '80%',
-    plugins: { legend: { display: false } }
+    plugins: { legend: { display: false } },
   };
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private location: Location,
+    private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.selectedBrand = this.route.snapshot.paramMap.get('brandName') || 'ASUS';
-    this.processProjectMapping(); 
+    this.fetchDataFromBackend();
+  }
+
+  goBack(): void {
+    this.location.back();
+  }
+
+  fetchDataFromBackend() {
+    this.loading = true;
+    const apiUrl = `http://localhost:3000/api/assets/brand-hierarchy-new?brand=${this.selectedBrand}`;
+
+    this.http.get<any[]>(apiUrl).subscribe({
+      next: (data) => {
+        try {
+          if (data && data.length > 0) {
+            this.rawAssets = data.map((item) => ({
+              project: item.projectName || 'UNKNOWN',
+              machine: item.machineType || 'DEVICES',
+              brand: item.brandGroup || 'ASUS',
+              age: item.Age ?? 0,
+            }));
+            this.processProjectMapping();
+          } else {
+            this.groupedProjects = [];
+            this.totalAssetsAll = 0;
+          }
+        } catch (e) {
+          console.error('Logic Error dlm mapping:', e);
+        } finally {
+          this.loading = false;
+          this.cdr.detectChanges(); // Paksa Angular kemaskini view
+        }
+      },
+      error: (err) => {
+        console.error('API Error:', err);
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  mapAgeToStatus(age: number): string {
+    if (age < 1) return 'new';
+    if (age <= 2) return 'optimal';
+    if (age === 3) return 'aging';
+    return 'critical';
   }
 
   processProjectMapping() {
     const projectMap = new Map<string, any>();
-
-    // 2. KIRA GLOBAL STATS UNTUK GRAF & SUMMARY
+    
+    // Reset kaunter global
     this.totalAssetsAll = this.rawAssets.length;
-    this.totalNew = this.rawAssets.filter(a => a.status === 'new').length;
-    this.totalStd = this.rawAssets.filter(a => a.status === 'standard').length;
-    this.totalAging = this.rawAssets.filter(a => a.status === 'aging').length;
-    this.totalCrit = this.rawAssets.filter(a => a.status === 'critical').length;
+    this.totalNew = 0;
+    this.totalStd = 0;
+    this.totalAging = 0;
+    this.totalCrit = 0;
 
-    // Masukkan data ke dalam graf
-    this.doughnutChartData.datasets[0].data = [this.totalNew, this.totalStd, this.totalAging, this.totalCrit];
+    this.rawAssets.forEach((asset) => {
+      const status = this.mapAgeToStatus(asset.age);
 
-    // 3. LOGIC GROUPING: PROJECT > CLIENT
-    this.rawAssets.forEach(asset => {
-      // Create Project Group if not exists
+      // Statistik Global
+      if (status === 'new') this.totalNew++;
+      else if (status === 'optimal') this.totalStd++;
+      else if (status === 'aging') this.totalAging++;
+      else if (status === 'critical') this.totalCrit++;
+
+      // Project Grouping
       if (!projectMap.has(asset.project)) {
         projectMap.set(asset.project, {
           projectName: asset.project,
           totalInProject: 0,
-          models: new Map<string, any>()
+          models: new Map<string, any>(),
         });
       }
-      
+
       const projectObj = projectMap.get(asset.project);
       projectObj.totalInProject++;
 
-      // Combine Model + Client Name (Contoh: "ASUS Vivobook - Petronas")
-      const combinedKey = `${asset.client} - ${this.selectedBrand} ${asset.name}`;
+      // Unik Key untuk Kad (Project + Machine + Brand)
+      const combinedKey = `${asset.project}-${asset.machine}-${asset.brand}`;
 
-      // Create Model Group inside Project
       if (!projectObj.models.has(combinedKey)) {
         projectObj.models.set(combinedKey, {
-          Clientwithmodel: combinedKey,
-          total: 0, new: 0, standard: 0, aging: 0, critical: 0
+          clientName: asset.project,
+          machineType: asset.machine,
+          brandName: asset.brand,
+          total: 0,
+          new: 0,
+          optimal: 0,
+          aging: 0,
+          critical: 0,
         });
       }
 
       const modelObj = projectObj.models.get(combinedKey);
       modelObj.total++;
 
-      // Increment stats dlm card
-      if (asset.status === 'new') modelObj.new++;
-      else if (asset.status === 'standard') modelObj.standard++;
-      else if (asset.status === 'aging') modelObj.aging++;
-      else if (asset.status === 'critical') modelObj.critical++;
+      if (status === 'new') modelObj.new++;
+      else if (status === 'optimal') modelObj.optimal++;
+      else if (status === 'aging') modelObj.aging++;
+      else if (status === 'critical') modelObj.critical++;
     });
 
-    // 4. TRANSFORMA SI MAP KEPADA ARRAY UNTUK HTML (*ngFor)
-    this.groupedProjects = Array.from(projectMap.values()).map(p => ({
+    // Update Chart dngn referens objek baru
+    this.doughnutChartData = {
+      labels: ['New', 'Optimal', 'Aging', 'Critical'],
+      datasets: [
+        {
+          data: [this.totalNew, this.totalStd, this.totalAging, this.totalCrit],
+          backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+          borderWidth: 0,
+        },
+      ],
+    };
+
+    this.groupedProjects = Array.from(projectMap.values()).map((p) => ({
       ...p,
-      models: Array.from(p.models.values())
+      models: Array.from(p.models.values()),
     }));
   }
 

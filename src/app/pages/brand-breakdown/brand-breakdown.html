@@ -1,18 +1,21 @@
-<div class="page-container">
+<div class="page-container" *ngIf="!loading">
   <div class="top-header">
     <div class="title-section">
-      <button [routerLink]="['/dashboard']" class="btn-back">
+      <button (click)="goBack()" class="btn-back">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <h2>{{ selectedBrand }} Breakdown</h2>
+      <h2>{{ selectedBrand }} ASSETS HIERARCHY</h2>
     </div>
   </div>
 
   <div class="brand-summary-container">
     <div class="chart-wrapper">
-      <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
+      <canvas *ngIf="totalAssetsAll > 0" baseChart 
+              [data]="doughnutChartData" 
+              [options]="doughnutChartOptions" 
+              [type]="'doughnut'"></canvas>
       <div class="chart-center-info">
-        <small>Total Assets</small>
+        <small>TOTAL</small>
         <strong>{{ totalAssetsAll }}</strong>
       </div>
     </div>
@@ -27,21 +30,14 @@
         <div class="val-group"><small>OPTIMAL</small><p>{{ totalStd }}</p></div>
       </div>
       <div class="stat-card-item orange">
-        <div class="icon-circle"><mat-icon>report_problem</mat-icon></div>
+        <div class="icon-circle"><mat-icon>history</mat-icon></div>
         <div class="val-group"><small>AGING</small><p>{{ totalAging }}</p></div>
       </div>
       <div class="stat-card-item red">
-        <div class="icon-circle"><mat-icon>dangerous</mat-icon></div>
+        <div class="icon-circle"><mat-icon>report_problem</mat-icon></div>
         <div class="val-group"><small>CRITICAL</small><p>{{ totalCrit }}</p></div>
       </div>
     </div>
-  </div>
-
-  <div class="ba-legend">
-    <div class="legend-item"><span class="dot blue"></span> <div class="l-txt"><small>NEW</small><p>Warranty Active</p></div></div>
-    <div class="legend-item"><span class="dot green"></span> <div class="l-txt"><small>STD</small><p>Optimal</p></div></div>
-    <div class="legend-item"><span class="dot orange"></span> <div class="l-txt"><small>AGING</small><p>Review Needed</p></div></div>
-    <div class="legend-item"><span class="dot red"></span> <div class="l-txt"><small>CRIT</small><p>Replacement</p></div></div>
   </div>
 
   <div class="project-group-container" *ngFor="let proj of groupedProjects">
@@ -55,51 +51,33 @@
 
     <div class="model-grid">
       <div class="model-card" *ngFor="let m of proj.models">
-        
         <div class="card-top">
-          <div class="icon-box"><mat-icon>devices</mat-icon></div>
+          <div class="icon-box">
+            <mat-icon>{{ m.machineType.toLowerCase().includes('notebook') ? 'laptop' : 'desktop_windows' }}</mat-icon>
+          </div>
           <div class="m-info">
-            <span class="m-name">{{ m.Clientwithmodel }}</span>
-            <div class="total-display">
-               <span class="m-count">{{ m.total }}</span>
-               <small>Units</small>
-            </div>
+            <div class="client-label">{{ m.clientName }}</div>
+            <div class="machine-label">{{ m.machineType }}</div>
+            <div class="brand-label">{{ m.brandName }}</div>
+          </div>
+          <div class="total-display">
+            <span class="m-count">{{ m.total }}</span>
+            <small>UNITS</small>
           </div>
         </div>
 
-        <div class="mini-dist-bar">
-          <div class="seg new" [style.width.%]="getPercent(m.new, m.total)"></div>
-          <div class="seg std" [style.width.%]="getPercent(m.standard, m.total)"></div>
-          <div class="seg aging" [style.width.%]="getPercent(m.aging, m.total)"></div>
-          <div class="seg crit" [style.width.%]="getPercent(m.critical, m.total)"></div>
-        </div>
-
-        <div class="data-status-grid">
-          <div class="status-item blue">
-            <small>NEW</small>
-            <strong>{{ m.new }}</strong>
-          </div>
-          <div class="status-item green">
-            <small>STD</small>
-            <strong>{{ m.standard }}</strong>
-          </div>
-          <div class="status-item orange">
-            <small>AGING</small>
-            <strong>{{ m.aging }}</strong>
-          </div>
-          <div class="status-item red">
-            <small>CRIT</small>
-            <strong>{{ m.critical }}</strong>
-          </div>
-        </div>
-
-        <div class="card-footer" [routerLink]="['/asset-list', proj.projectName, m.Clientwithmodel]">
-          <div class="btn-view-link">
-            <span>View Full Breakdown</span>
-            <mat-icon>chevron_right</mat-icon>
-          </div>
+        <div class="status-bar-container">
+          <div class="s-bar-segment blue" [style.width.%]="getPercent(m.new, m.total)" matTooltip="New: {{m.new}}"></div>
+          <div class="s-bar-segment green" [style.width.%]="getPercent(m.optimal, m.total)" matTooltip="Optimal: {{m.optimal}}"></div>
+          <div class="s-bar-segment orange" [style.width.%]="getPercent(m.aging, m.total)" matTooltip="Aging: {{m.aging}}"></div>
+          <div class="s-bar-segment red" [style.width.%]="getPercent(m.critical, m.total)" matTooltip="Critical: {{m.critical}}"></div>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<div class="loading-container" *ngIf="loading">
+  <mat-icon class="spin">sync</mat-icon>
+  <p>Fetching Assets Hierarchy...</p>
 </div>

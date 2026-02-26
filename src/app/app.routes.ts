@@ -14,6 +14,6 @@ export const routes: Routes = [
   { path: 'partner', component: PartnerComponent },
   { path: 'incident-detail', component: IncidentComponent },
   { path: 'brand-breakdown/:brandName', component: BrandBreakdownComponent },
-  { path: 'ticket-view/:uuid', component: IncidentComponent }, // ✅ Pastikan ada koma dkt sini
-  { path: 'brand-selector', component: BrandSelectorComponent }  // ✅ Baris ni dah OK
+  { path: 'ticket-view/:uuid', component: IncidentComponent }, 
+  { path: 'brand-selector', component: BrandSelectorComponent }
 ];

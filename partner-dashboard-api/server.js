@@ -369,6 +369,118 @@ app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
   }
 });
 
+// 1️⃣1️⃣ Brand Hierarchy (Versi Baru)
+app.get('/api/assets/brand-hierarchy-new', async (req, res) => {
+  try {
+    const brand = req.query.brand || 'ASUS';
+    
+    const query = `
+      DECLARE @sql NVARCHAR(MAX) = '';
+
+      -- Cari dlm semua database yang ada dlm senarai IN ('TCO', 'TCO3')
+      SELECT @sql = @sql + CASE WHEN @sql <> '' THEN ' UNION ALL ' ELSE '' END + 
+      'SELECT 
+          c.MachineType AS machineType,
+          a.MadeCompany AS modelName,
+          CASE 
+            WHEN UPPER(a.MadeCompany) LIKE ''%HP%'' OR UPPER(a.MadeCompany) LIKE ''%HEWLETT%'' OR UPPER(a.MadeCompany) LIKE ''%COMPAQ%'' THEN ''HP''
+            WHEN UPPER(a.MadeCompany) LIKE ''%DELL%'' THEN ''DELL''
+            WHEN UPPER(a.MadeCompany) LIKE ''%LENOVO%'' OR UPPER(a.MadeCompany) LIKE ''%THINKPAD%'' THEN ''LENOVO''
+            WHEN UPPER(a.MadeCompany) LIKE ''%ASUS%'' THEN ''ASUS''
+            WHEN UPPER(a.MadeCompany) LIKE ''%ACER%'' OR UPPER(a.MadeCompany) LIKE ''%PREDATOR%'' THEN ''ACER''
+            WHEN UPPER(a.MadeCompany) LIKE ''%APPLE%'' OR UPPER(a.MadeCompany) LIKE ''%MACBOOK%'' THEN ''APPLE''
+            WHEN UPPER(a.MadeCompany) LIKE ''%MSI%'' THEN ''MSI''
+            WHEN UPPER(a.MadeCompany) LIKE ''%RAZER%'' THEN ''RAZER''
+            WHEN UPPER(a.MadeCompany) LIKE ''%GIGABYTE%'' OR UPPER(a.MadeCompany) LIKE ''%AORUS%'' THEN ''GIGABYTE''
+            WHEN UPPER(a.MadeCompany) LIKE ''%SAMSUNG%'' THEN ''SAMSUNG''
+            WHEN UPPER(a.MadeCompany) LIKE ''%MICROSOFT%'' OR UPPER(a.MadeCompany) LIKE ''%SURFACE%'' THEN ''MICROSOFT''
+            WHEN UPPER(a.MadeCompany) LIKE ''%HUAWEI%'' OR UPPER(a.MadeCompany) LIKE ''%MATEBOOK%'' THEN ''HUAWEI''
+            ELSE ''OTHERS'' 
+          END AS brandGroup,
+          ISNULL(DATEDIFF(year, TRY_CAST(v.Object_Value_Str AS DATETIME), GETDATE()), 3) AS Age
+       FROM ' + QUOTENAME(name) + '.dbo.TS_OBJECT_ROOT a
+       JOIN ' + QUOTENAME(name) + '.dbo.TS_CLIENT_INFO c ON a.Object_Root_Idn = c.Object_Root_Idn
+       LEFT JOIN (
+          SELECT Object_Root_Idn, MAX(Object_Value_Idn) as MaxValId 
+          FROM ' + QUOTENAME(name) + '.dbo.TSHI_OBJECT_CURRENT 
+          WHERE Object_Field_Idn = 14 
+          GROUP BY Object_Root_Idn
+       ) cf ON a.Object_Root_Idn = cf.Object_Root_Idn
+       LEFT JOIN ' + QUOTENAME(name) + '.dbo.TSHI_OBJECT_VALUE v ON cf.MaxValId = v.Object_Value_Idn
+       WHERE UPPER(a.MadeCompany) LIKE UPPER(''%${brand}%'')'
+      FROM sys.databases 
+      WHERE name IN ('TCO', 'TCO3'); -- Tarik dua-dua database dlm satu query
+
+      IF @sql <> '' EXEC sp_executesql @sql;
+    `;
+
+    // db.querySpecificServers akan suntik projectName & serverId secara automatik
+    const results = await db.querySpecificServers('tco', query, '');
+    res.json(results);
+  } catch (err) {
+    console.error('❌ [API ERROR]:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 1️⃣2️⃣ Individual Asset Details (Versi Standard & Konsisten)
+// 1️⃣2️⃣ Individual Asset Details (Versi Full Fix)
+app.get('/api/assets/individual-details', async (req, res) => {
+  try {
+    const { project, type, brand } = req.query;
+
+    console.log(`🔍 API CALL: Project=${project}, Brand=${brand}, Type=${type}`);
+
+    const query = `
+      SELECT 
+          a.ComputerName,
+          a.Object_Client_Name AS [Owner_Name],
+          b.Object_Full_Name AS [Location_Department],
+          ISNULL(c.MachineType, 'DEVICES') AS [Machine_Type],
+          a.IP, 
+          a.RAM, 
+          a.CPU AS [Full_CPU_Name],
+          a.MadeCompany AS [Manufacturer],
+          DATEDIFF(day, a.ConnectionTime, GETDATE()) AS [Agent_Age_Days],
+          CASE 
+              WHEN DATEDIFF(day, a.ConnectionTime, GETDATE()) <= 90 THEN 'Active' 
+              ELSE 'Inactive' 
+          END AS [Agent_Status]
+      FROM TS_OBJECT_ROOT a
+      LEFT JOIN ts_object_relation b ON a.Object_rel_idn = b.Object_rel_idn
+      LEFT JOIN ts_client_info c ON c.Object_root_idn = a.Object_root_idn
+      WHERE 1=1
+        ${brand ? `AND a.MadeCompany LIKE '%${brand}%'` : ''}
+    `;
+
+    // 🚀 Tarik dari semua server dlu untuk elakkan isu mapping serverId
+    const allResults = await db.queryAllServers('tco', query);
+
+    // 🛠️ Filter manual dlm Node.js (Lebih tepat & tak kacau SQL syntax)
+    const filtered = allResults.filter(item => {
+      // Filter Type (Desktop/Notebook/etc)
+      const matchType = type ? 
+        item.Machine_Type.toLowerCase().includes(type.toLowerCase()) : true;
+      
+      // Filter Project (FELDA/PETRONAS/etc)
+      const matchProject = project ? 
+        (item.projectName?.toUpperCase().includes(project.toUpperCase()) || 
+         item.serverId?.toUpperCase().includes(project.toUpperCase())) : true;
+
+      return matchType && matchProject;
+    });
+
+    console.log(`✅ Berjaya hantar ${filtered.length} baris data ke client.`);
+    res.json(filtered);
+
+  } catch (err) {
+    console.error('❌ Individual Details Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  }
+});
+
+
+
 /* =====================================================
     🚀 START SERVER WITH HYBRID INITIALIZATION
 ===================================================== */

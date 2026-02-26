@@ -139,6 +139,34 @@ async function querySpecificServers(type, queryStr, filterId = '') {
     .flat();
 }
 
+// WAJIB ADA: Fungsi untuk build flat list dari projects dan clients
+function buildFlatList() {
+  flatServerList = [];
+  projects.forEach(proj => {
+    // 1. Masukkan Server Project Utama
+    flatServerList.push({
+      name: proj.projectName,
+      projectName: proj.projectName, // <--- TAMBAH NI: Supaya dia tahu dia parent
+      ip: proj.projectIp,
+      pass: proj.projectPass || "1W0rldtech",
+      type: 'project'
+    });
+
+    // 2. Masukkan Server Client di bawah projek
+    if (proj.clients && Array.isArray(proj.clients)) {
+      proj.clients.forEach(c => {
+        flatServerList.push({
+          name: c.name,
+          projectName: proj.projectName, // <--- TAMBAH NI: Supaya client ni tahu bapa dia siapa
+          ip: c.ip,
+          pass: c.pass || "1W0rldtech",
+          type: 'client'
+        });
+      });
+    }
+  });
+}
+
 module.exports = {
   initConfig,
   querySpecificServers,

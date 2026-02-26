@@ -1,5 +1,4 @@
 <div class="page">
-  <!-- HEADER -->
   <div class="header">
     <div class="header-left">
       <div class="sup">SERVICE DESK OPERATIONS</div>
@@ -16,13 +15,12 @@
         <mat-icon>search</mat-icon>
         <input
           type="text"
-          placeholder="Search ID, Title or Client Name..."
+          placeholder="Search ID..."
           [(ngModel)]="searchTerm"
           (input)="onSearchChange()"
           (focus)="isFocused = true"
           (blur)="isFocused = false"
         />
-
         <button *ngIf="searchTerm" class="clear-btn" (click)="searchTerm = ''; onSearchChange()">
           <mat-icon>close</mat-icon>
         </button>
@@ -30,7 +28,6 @@
     </div>
   </div>
 
-  <!-- DYNAMIC PILL INDICATORS -->
   <div class="server-status-bar" *ngIf="!isLoading">
     <div
       class="status-pill"
@@ -39,83 +36,106 @@
       [class.active-pill]="selectedServers.includes(s.sourceKey)"
       [ngClass]="s.color"
     >
-      <!-- Tambah ngClass untuk warna -->
       <span class="dot"></span>
       <span class="label">{{ s.label }}</span>
       <span class="value">{{ s.count }}</span>
     </div>
   </div>
 
-  <!-- THE WHITE CARD -->
-  <div class="card table-card-main">
-    <!-- LOADING STATE -->
-    <div class="loader-container" *ngIf="isLoading">
-      <div class="spinner"></div>
-      <div class="loader-text">
-        <span>Retrieving Live Data</span>
+  <div class="trend-card">
+    <div
+      class="trend-header"
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      "
+    >
+      <h3 style="font-size: 14px; font-weight: 700; color: #1e293b; margin: 0">
+        {{ type | uppercase }} TREND:
+        <span style="color: #2563eb">
+          {{
+            selectedYear === 'All Year'
+              ? 'Yearly Overview'
+              : selectedMonth === 'All'
+                ? 'Monthly ' + selectedYear
+                : 'Daily ' + selectedMonthName + ' ' + selectedYear
+          }}
+        </span>
+      </h3>
+
+      <div class="trend-actions" style="display: flex; gap: 8px">
+        <select [(ngModel)]="selectedYear" (change)="onYearChange()" class="modern-select">
+          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        </select>
+
+        <select
+          *ngIf="selectedYear !== 'All Year'"
+          [(ngModel)]="selectedMonth"
+          (change)="loadTrend()"
+          class="modern-select"
+        >
+          <option value="All">All Months</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
       </div>
     </div>
 
-    <!-- TABLE STATE -->
+    <div class="trend-container" style="height: 240px; position: relative">
+      <canvas
+        baseChart
+        [data]="lineChartData"
+        [options]="lineChartOptions"
+        [type]="lineChartType"
+      ></canvas>
+    </div>
+  </div>
+
+  <div class="card table-card-main">
+    <div class="loader-container" *ngIf="isLoading"><div class="spinner"></div></div>
+
     <ng-container *ngIf="!isLoading">
       <div class="table-scroll">
         <table class="detail-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>ID</th>
+              <th>Ticket ID</th>
               <th>Request By</th>
-              <th>TITLE / DESCRIPTION</th>
-              <th>CLIENT SOURCE</th>
-              <th>SUBMITTED ON</th>
-              <!-- Muncul untuk Pending, Solved, atau Lapsed -->
-              <th *ngIf="type === 'lapsed' || type === 'solved' || type === 'pending'">
-                {{
-                  type === 'lapsed'
-                    ? 'DAYS LAPSED'
-                    : type === 'pending'
-                      ? 'DAYS PENDING'
-                      : 'TOTAL DAYS'
-                }}
-              </th>
+              <th>TITLE</th>
+              <th>CLIENT</th>
+              <th>DATE</th>
+              <th *ngIf="type !== 'open'">DAYS</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let t of tickets; let i = index">
               <td class="bold">{{ (currentPage - 1) * pageSize + (i + 1) }}</td>
-              <td class="bold">
-                <a
-                  [routerLink]="['/ticket-view', t.uuid]"
-                  style="cursor: pointer; text-decoration: none; color: #1e3a8a"
-                >
-                  #{{ t.id }}
-                </a>
-              </td>
+
+              <td class="bold" style="color: #1e3a8a">#{{ t.id }}</td>
+
               <td class="bold">{{ t.requestBy }}</td>
-              <td style="padding: 16px 24px; vertical-align: top; min-width: 500px !important">
-                <div
-                  style="
-                    white-space: pre-line !important;
-                    word-break: break-word !important;
-                    display: block !important;
-                    overflow: visible !important;
-                    text-overflow: clip !important;
-                    line-height: 1.6 !important;
-                    color: #475569;
-                  "
-                >
-                  {{ t.title }}
-                </div>
+              <td style="min-width: 500px">
+                <div style="white-space: pre-line; color: #475569">{{ t.title }}</div>
               </td>
               <td class="bold">{{ t.source }}</td>
               <td class="date-text">{{ t.date }}</td>
-              <!-- Show days elapsed with special styling -->
               <td
-                *ngIf="type === 'lapsed' || type === 'solved' || type === 'pending'"
-                [style.color]="
-                  type === 'lapsed' ? '#ef4444' : type === 'pending' ? '#f59e0b' : '#10b981'
-                "
-                style="font-weight: 800; text-align: center"
+                *ngIf="type !== 'open'"
+                [style.color]="getChartColor(type)"
+                style="font-weight: 800"
               >
                 {{ t.daysElapsed }} Days
               </td>
@@ -124,41 +144,23 @@
         </table>
       </div>
 
-      <!-- PAGINATION FOOTER -->
       <div class="pagination-footer">
         <div class="footer-left">
-          <div class="page-info">
-            Showing <b>{{ tickets.length }}</b> of <b>{{ filteredData.length }}</b> entries
-          </div>
-
-          <div class="page-size-filter">
-            <span>Show</span>
-            <select (change)="onPageSizeChange($event)">
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
-          </div>
+          Showing <b>{{ tickets.length }}</b> of <b>{{ filteredData.length }}</b> entries
         </div>
-
-        <!-- PAGINATION CONTROLS -->
         <div class="btn-group-nav">
           <button class="btn-nav" [disabled]="currentPage === 1" (click)="firstPage()">
             <mat-icon>first_page</mat-icon>
           </button>
-
           <button class="btn-nav" [disabled]="currentPage === 1" (click)="prevPage()">
             <mat-icon>chevron_left</mat-icon>
           </button>
-
           <span class="page-num"
             >Page <b>{{ currentPage }}</b> of <b>{{ totalPages }}</b></span
           >
-
           <button class="btn-nav" [disabled]="currentPage === totalPages" (click)="nextPage()">
             <mat-icon>chevron_right</mat-icon>
           </button>
-
           <button class="btn-nav" [disabled]="currentPage === totalPages" (click)="lastPage()">
             <mat-icon>last_page</mat-icon>
           </button>

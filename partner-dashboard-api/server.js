@@ -31,7 +31,6 @@ const normalize = (val) =>
     .trim()
     .toUpperCase();
 
-
 /* =====================================================
     🔐 SYSTEM-TO-SYSTEM AUTH MIDDLEWARE
 ===================================================== */
@@ -71,19 +70,18 @@ app.get('/api/dashboard', systemAuthMiddleware, async (req, res) => {
 
     let combinedData = await db.queryAllServers('helpdesk', query);
 
-    combinedData = combinedData.map(row => ({
+    combinedData = combinedData.map((row) => ({
       ...row,
-      uuid: uuidv5(normalize(row.request_no), NAMESPACE)
+      uuid: uuidv5(normalize(row.request_no), NAMESPACE),
     }));
 
     combinedData.sort((a, b) => Number(b.request_time) - Number(a.request_time));
 
     res.json(combinedData);
-
   } catch (err) {
     res.status(500).json({
       message: 'Data Retrieval Failed',
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -92,8 +90,8 @@ app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) =>
   try {
     const { uuid } = req.params;
 
-    console.log("===== DEBUG START =====");
-    console.log("Incoming UUID:", uuid);
+    console.log('===== DEBUG START =====');
+    console.log('Incoming UUID:', uuid);
 
     const query = `
       SELECT user_name, request_no,
@@ -104,22 +102,19 @@ app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) =>
 
     let combinedData = await db.queryAllServers('helpdesk', query);
 
-    console.log("Total Records:", combinedData.length);
+    console.log('Total Records:', combinedData.length);
 
     if (combinedData.length > 0) {
-      const sampleUuid = uuidv5(
-        normalize(combinedData[0].request_no),
-        NAMESPACE
-      );
+      const sampleUuid = uuidv5(normalize(combinedData[0].request_no), NAMESPACE);
 
-      console.log("First request_no:", combinedData[0].request_no);
-      console.log("Generated UUID for first row:", sampleUuid);
+      console.log('First request_no:', combinedData[0].request_no);
+      console.log('Generated UUID for first row:', sampleUuid);
     }
 
-    console.log("===== DEBUG END =====");
+    console.log('===== DEBUG END =====');
 
-    const ticket = combinedData.find(row =>
-      uuidv5(normalize(row.request_no), NAMESPACE) === uuid
+    const ticket = combinedData.find(
+      (row) => uuidv5(normalize(row.request_no), NAMESPACE) === uuid,
     );
 
     if (!ticket) {
@@ -127,7 +122,6 @@ app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) =>
     }
 
     res.json(ticket);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
@@ -261,7 +255,8 @@ app.get('/api/assets/brand-aging', systemAuthMiddleware, validateClientFilter, a
       .sort((a, b) => b.total - a.total)
       .slice(0, 10)
       .map((b) => ({
-        name: b.name, total: b.total,
+        name: b.name,
+        total: b.total,
         new: Math.round((b.n * 100) / b.total),
         standard: Math.round((b.s * 100) / b.total),
         aging: Math.round((b.ag * 100) / b.total),
@@ -273,16 +268,100 @@ app.get('/api/assets/brand-aging', systemAuthMiddleware, validateClientFilter, a
   }
 });
 
-// 8️⃣ Asset Summary (DAH FIX: Dynamic Sector Mapping dari .env)
+// 8️⃣ Incident Trend Analysis (FIXED: Dynamic Condition Berdasarkan Type)
+app.get('/api/incidents/trend', async (req, res) => {
+  try {
+    const { type, client, year, month } = req.query;
+
+    // 1. Kumpul semua filter dlm satu array
+    let conditions = [];
+
+    // Filter ikut Type
+    switch (type) {
+      case 'open': conditions.push("request_status = 0"); break;
+      case 'pending': conditions.push("request_status IN (1, 10, 11, 12, 13)"); break;
+      case 'solved': conditions.push("request_status = 2"); break;
+      case 'lapsed': conditions.push("request_status NOT IN (2, 14) AND DATEDIFF(DAY, DATEADD(SECOND, request_time, '1970-01-01'), GETDATE()) > 7"); break;
+      default: conditions.push("1=1"); // Safety net
+    }
+
+    // 2. Tentukan format Paksi X & Filter Masa
+    let dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'yyyy')"; 
+
+    const isAllYear = !year || year === 'All' || year === 'All Year';
+
+    if (!isAllYear) {
+      conditions.push(`YEAR(DATEADD(SECOND, request_time, '1970-01-01')) = ${year}`);
+      dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'MMM')"; 
+
+      if (month && month !== 'All' && month !== 'All Months') {
+        conditions.push(`MONTH(DATEADD(SECOND, request_time, '1970-01-01')) = ${month}`);
+        dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'dd MMM')"; 
+      }
+    }
+
+    // ✅ Gabungkan semua condition dngn ' AND ' secara automatik
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : "";
+
+    const query = `
+      SELECT 
+        ${dateSelect} AS date, 
+        COUNT(*) AS count, 
+        MIN(DATEADD(SECOND, request_time, '1970-01-01')) as sort_key
+      FROM HD_REQUEST 
+      ${whereClause}
+      GROUP BY ${dateSelect} 
+      ORDER BY sort_key ASC`;
+
+    const rawResults = await db.querySpecificServers('helpdesk', query, client || '');
+
+    // 3. AGGREGATION & SORTING
+    const aggregated = rawResults.reduce((acc, curr) => {
+      const label = curr.date;
+      if (!acc[label]) {
+        acc[label] = { date: label, count: 0, sortTime: new Date(curr.sort_key).getTime() };
+      }
+      acc[label].count += Number(curr.count || 0);
+      return acc;
+    }, {});
+
+    const finalTrend = Object.values(aggregated).sort((a, b) => a.sortTime - b.sortTime);
+    res.json(finalTrend);
+
+  } catch (err) { 
+    console.error("Trend Error:", err.message);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+// 9️⃣ Endpoint untuk Ambil Senarai Tahun Unik (untuk dropdown filter)
+app.get('/api/incidents/years', async (req, res) => {
+  try {
+    const query = `
+      SELECT DISTINCT YEAR(DATEADD(SECOND, request_time, '1970-01-01')) AS year
+      FROM HD_REQUEST
+      ORDER BY year DESC`;
+
+    const results = await db.queryAllServers('helpdesk', query);
+    
+    // Ambil tahun unik sahaja dngn Set
+    const uniqueYears = [...new Set(results.map(r => r.year.toString()))];
+    res.json(uniqueYears);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 10️⃣ Asset Summary (DAH FIX: Dynamic Sector Mapping dari .env)
 app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
   try {
     const selectedClient = req.query.client || '';
-    
+
     // 1. Ambil senarai sektor dari .env
-    const glcList = (process.env.SECTOR_GLC || '').split(',').map(s => s.trim());
-    const fsiList = (process.env.SECTOR_FSI || '').split(',').map(s => s.trim());
-    const govList = (process.env.SECTOR_GOV || '').split(',').map(s => s.trim());
-    const eduList = (process.env.SECTOR_EDU || '').split(',').map(s => s.trim());
+    const glcList = (process.env.SECTOR_GLC || '').split(',').map((s) => s.trim());
+    const fsiList = (process.env.SECTOR_FSI || '').split(',').map((s) => s.trim());
+    const govList = (process.env.SECTOR_GOV || '').split(',').map((s) => s.trim());
+    const eduList = (process.env.SECTOR_EDU || '').split(',').map((s) => s.trim());
 
     // 2. Query Union TCO & TCO3
     const query = `
@@ -305,7 +384,7 @@ app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
         acc.others += curr.others || 0;
 
         // ✅ Check serverId dngn list sektor dlm .env
-        const sId = curr.serverId; 
+        const sId = curr.serverId;
         if (glcList.includes(sId)) acc.glc += total;
         else if (fsiList.includes(sId)) acc.fsi += total;
         else if (govList.includes(sId)) acc.gov += total;
@@ -313,7 +392,17 @@ app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
 
         return acc;
       },
-      { totalAsset: 0, desktop: 0, laptop: 0, server: 0, others: 0, glc: 0, fsi: 0, gov: 0, edu: 0 },
+      {
+        totalAsset: 0,
+        desktop: 0,
+        laptop: 0,
+        server: 0,
+        others: 0,
+        glc: 0,
+        fsi: 0,
+        gov: 0,
+        edu: 0,
+      },
     );
     res.json(combined);
   } catch (err) {

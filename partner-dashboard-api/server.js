@@ -325,47 +325,67 @@ app.get('/api/incidents/years', async (req, res) => {
 app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
   try {
     const selectedClient = req.query.client || '';
-    const glcList = (process.env.SECTOR_GLC || '').split(',').map((s) => s.trim());
-    const fsiList = (process.env.SECTOR_FSI || '').split(',').map((s) => s.trim());
-    const govList = (process.env.SECTOR_GOV || '').split(',').map((s) => s.trim());
-    const eduList = (process.env.SECTOR_EDU || '').split(',').map((s) => s.trim());
+    
+    // 1. Ambil list sektor dari .env
+    const glcList = (process.env.SECTOR_GLC || '').toUpperCase().split(',').map(s => s.trim());
+    const fsiList = (process.env.SECTOR_FSI || '').toUpperCase().split(',').map(s => s.trim());
+    const govList = (process.env.SECTOR_GOV || '').toUpperCase().split(',').map(s => s.trim());
+    const eduList = (process.env.SECTOR_EDU || '').toUpperCase().split(',').map(s => s.trim());
+
+    // 2. Query Mentah: Tarik status MachineType sahaja dari semua server
     const query = `
-      DECLARE @sql NVARCHAR(MAX) = '';
-      SELECT @sql = @sql + CASE WHEN @sql <> '' THEN ' UNION ALL ' ELSE '' END + 
-      'SELECT COUNT(*) AS totalAsset, COUNT(CASE WHEN MachineType = ''Desktop'' THEN 1 END) AS desktop, COUNT(CASE WHEN MachineType = ''Laptop'' THEN 1 END) AS laptop, COUNT(CASE WHEN MachineType = ''Server'' THEN 1 END) AS server, COUNT(CASE WHEN (MachineType NOT IN (''Desktop'',''Laptop'',''Server'') OR MachineType IS NULL) THEN 1 END) AS others FROM ' + QUOTENAME(name) + '.dbo.TS_OBJECT_ROOT a LEFT JOIN ' + QUOTENAME(name) + '.dbo.ts_client_info tci ON a.Object_root_idn = tci.Object_root_idn'
-      FROM sys.databases WHERE name IN ('TCO', 'TCO3');
-      IF @sql <> '' EXEC sp_executesql @sql;`;
-    const results = await db.querySpecificServers('tco', query, selectedClient);
-    const combined = results.reduce(
+      SELECT 
+        a.MadeCompany,
+        ISNULL(c.MachineType, 'DEVICES') AS Machine_Type
+      FROM TS_OBJECT_ROOT a 
+      LEFT JOIN ts_client_info c ON a.Object_root_idn = c.Object_root_idn`;
+
+    // 🚀 Tarik dari SEMUA server dulu (TCO & TCO3)
+    const allResults = await db.queryAllServers('tco', query);
+    
+    console.log(`📡 [DEBUG] Memproses ${allResults.length} data mentah dari semua database.`);
+
+    // 3. Logik Penapisan Manual (Sama mcm individual-details)
+    const combined = allResults.reduce(
       (acc, curr) => {
-        const total = curr.totalAsset || 0;
-        acc.totalAsset += total;
-        acc.desktop += curr.desktop || 0;
-        acc.laptop += curr.laptop || 0;
-        acc.server += curr.server || 0;
-        acc.others += curr.others || 0;
-        const sId = curr.serverId;
-        if (glcList.includes(sId)) acc.glc += total;
-        else if (fsiList.includes(sId)) acc.fsi += total;
-        else if (govList.includes(sId)) acc.gov += total;
-        else if (eduList.includes(sId)) acc.edu += total;
+        // Tapis berdasarkan client filter kalau ada
+        if (selectedClient) {
+            const requested = selectedClient.split(',').map(c => c.trim().toUpperCase());
+            const isMatch = requested.includes(curr.serverId?.toUpperCase()) || 
+                            requested.includes(curr.projectName?.toUpperCase());
+            if (!isMatch) return acc; 
+        }
+
+        // Kira jumlah keseluruhan
+        acc.totalAsset++;
+
+        // Kira Machine Type
+        const type = (curr.Machine_Type || '').toUpperCase();
+        if (type.includes('DESKTOP')) acc.desktop++;
+        else if (type.includes('LAPTOP') || type.includes('NOTEBOOK')) acc.laptop++;
+        else if (type.includes('SERVER')) acc.server++;
+        else acc.others++;
+
+        // Kira Sektor (Mapping berdasarkan serverId atau projectName)
+        const sId = (curr.serverId || '').toUpperCase();
+        const pName = (curr.projectName || '').toUpperCase();
+
+        if (glcList.includes(sId) || glcList.includes(pName)) acc.glc++;
+        else if (fsiList.includes(sId) || fsiList.includes(pName)) acc.fsi++;
+        else if (govList.includes(sId) || govList.includes(pName)) acc.gov++;
+        else if (eduList.includes(sId) || eduList.includes(pName)) acc.edu++;
+        
         return acc;
       },
-      {
-        totalAsset: 0,
-        desktop: 0,
-        laptop: 0,
-        server: 0,
-        others: 0,
-        glc: 0,
-        fsi: 0,
-        gov: 0,
-        edu: 0,
-      },
+      { totalAsset: 0, desktop: 0, laptop: 0, server: 0, others: 0, glc: 0, fsi: 0, gov: 0, edu: 0 }
     );
+
+    console.log(`✅ Summary berjaya dijana: ${combined.totalAsset} Assets.`);
     res.json(combined);
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('❌ Summary Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 });
 
@@ -423,7 +443,6 @@ app.get('/api/assets/brand-hierarchy-new', async (req, res) => {
   }
 });
 
-// 1️⃣2️⃣ Individual Asset Details (Versi Standard & Konsisten)
 // 1️⃣2️⃣ Individual Asset Details (Versi Full Fix)
 app.get('/api/assets/individual-details', async (req, res) => {
   try {

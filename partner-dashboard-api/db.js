@@ -80,51 +80,69 @@ async function getPool(client, type) {
   if (pools[type].has(poolKey)) {
     const existingPool = pools[type].get(poolKey);
     if (existingPool.connected) return existingPool;
-    try { return await existingPool.connect(); } catch { pools[type].delete(poolKey); }
+    pools[type].delete(poolKey);
   }
 
   const passwordsToTry = [client.pass, "1W0rldtech", "P@ssw0rd"].filter(Boolean);
-  const cachedPass = passwordCache.get(cleanIp);
-  const listToTest = cachedPass ? [cachedPass, ...passwordsToTry.filter(p => p !== cachedPass)] : passwordsToTry;
+  
+  // 🔥 Kita senaraikan semua kemungkinan nama database
+  const dbsToTry = type === 'helpdesk' 
+    ? [process.env.DB_NAME_HELPDESK || 'HelpdeskDB'] 
+    : ['TCO', 'TCO3', 'TCO_LIVE'];
 
-  for (const pass of listToTest) {
-    const pool = new sql.ConnectionPool({
-      user: process.env.DB_USER || 'sa',
-      password: pass,
-      server: cleanIp,
-      database: type === 'helpdesk' ? (process.env.DB_NAME_HELPDESK || 'HelpdeskDB') : 'master',
-      options: { encrypt: false, trustServerCertificate: true, connectTimeout: 3000 },
-      pool: { max: 10, min: 0, idleTimeoutMillis: 30000 }
-    });
+  for (const pass of passwordsToTry) {
+    for (const dbName of dbsToTry) {
+      const pool = new sql.ConnectionPool({
+        user: process.env.DB_USER || 'sa',
+        password: pass,
+        server: cleanIp,
+        database: dbName, // 🔥 Dia pusing dngn TCO, pastu TCO3
+        options: { 
+          encrypt: false, 
+          trustServerCertificate: true, 
+          connectTimeout: 10000 
+        },
+        pool: { max: 10, min: 0, idleTimeoutMillis: 30000 }
+      });
 
-    try {
-      await pool.connect();
-      passwordCache.set(cleanIp, pass);
-      pools[type].set(poolKey, pool);
-      return pool;
-    } catch (err) {
-      await pool.close();
-      continue;
+      try {
+        await pool.connect();
+        console.log(`✅ [DB] Connected to ${cleanIp} using Database: ${dbName}`);
+        pools[type].set(poolKey, pool);
+        return pool;
+      } catch (err) {
+        // Kita tutup pool dlu sebelum cuba dbName seterusnya dlm loop
+        try { await pool.close(); } catch(e) {}
+        continue; 
+      }
     }
   }
   return null;
 }
 
 // WAJIB ADA: Fungsi engine query kau
+// Gantikan fungsi ini dlm db.js kau
 async function querySpecificServers(type, queryStr, filterId = '') {
   const selectedClients = (filterId && filterId.trim() !== '')
     ? flatServerList.filter(c => filterId.split(',').map(i => i.trim()).includes(c.name))
     : flatServerList;
 
+  // DEBUG: Tengok berapa server yang Node.js cuba panggil
+  console.log(`📡 [DB DEBUG] Mencari dlm ${selectedClients.length} server:`, selectedClients.map(c => c.name));
+
   const promises = selectedClients.map(async (client) => {
     try {
       const pool = await getPool(client, type);
-      if (!pool) return [];
+      if (!pool) {
+        console.error(`❌ [DB DEBUG] Gagal connect ke server: ${client.name}`);
+        return [];
+      }
 
       const result = await pool.request().query(queryStr);
       return result.recordset.map(row => ({
         ...row,
         serverId: client.name,
+        projectName: client.projectName, // 🔥 WAJIB ADA UNTUK MAPPING SEKTOR
         serverType: client.type
       }));
     } catch (err) {

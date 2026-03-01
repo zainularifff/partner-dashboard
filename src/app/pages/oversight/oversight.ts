@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon'; // Ensure this is here
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-oversight',
@@ -9,32 +9,27 @@ import { MatIconModule } from '@angular/material/icon'; // Ensure this is here
   templateUrl: './oversight.html',
   styleUrl: './oversight.scss'
 })
-export class OversightComponent {
+export class OversightComponent implements OnInit {
   
-  // ADD THIS ARRAY: This is what the HTML is looking for
-  leases = [
-    { 
-      name: 'KPM JKR HRPZ II (SI-HRPZ-II-001)', 
-      startDate: '01/01/2024', 
-      endDate: '01/01/2027', 
-      progress: 45, 
-      daysLeft: 420 
-    },
-    { 
-      name: 'KKM JKR HSNZ (SI-HSNZ-002)', 
-      startDate: '15/03/2024', 
-      endDate: '15/03/2027', 
-      progress: 30, 
-      daysLeft: 610 
-    },
-    { 
-      name: 'MOE SK TAMAN MELATI', 
-      startDate: '10/06/2023', 
-      endDate: '10/06/2026', 
-      progress: 85, 
-      daysLeft: 112 
-    }
+  // --- EXECUTIVE SCORECARDS DATA ---
+  totalAssets = 13989;
+  activeProjects = 12;
+  systemHealth = 95;
+  slaCompliance = 98;
+  criticalIssues = 2;
+
+  // --- AI OPERATIONAL INSIGHT ---
+  aiSummary = "Operasi hari ini stabil dengan 95% aset berada dalam keadaan sihat. Tindakan Diperlukan: Sektor EDU memerlukan perhatian segera kerana terdapat 2 isu kritikal dan SLA pembaikan telah melepasi 24 jam.";
+
+  // --- SECTOR HEALTH (TRAFFIC LIGHT SYSTEM) ---
+  sectorHealth = [
+    { name: 'GOV (Government)', status: 'Healthy', color: 'green', icon: 'check_circle', desc: 'SLA > 98% | No aging risk' },
+    { name: 'GLC (Gov Linked)', status: 'Attention', color: 'orange', icon: 'warning', desc: '5 units reaching critical aging' },
+    { name: 'EDU (Education)', status: 'Critical', color: 'red', icon: 'error', desc: '2 Critical tickets overdue' },
+    { name: 'FSI (Financial)', status: 'Healthy', color: 'green', icon: 'check_circle', desc: 'All systems operational' }
   ];
 
   constructor() {}
+
+  ngOnInit(): void {}
 }

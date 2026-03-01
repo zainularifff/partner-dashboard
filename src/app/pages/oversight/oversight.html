@@ -1,88 +1,94 @@
 <div class="page">
   <div class="header">
-    <h1>Dashboard Overview</h1>
+    <div class="sup">LEVEL 1 - EXECUTIVE OVERVIEW</div>
+    <h1>Strategic Operational Dashboard</h1>
+  </div>
+
+  <div class="ai-summary-card">
+    <div class="ai-icon-wrapper">
+      <mat-icon>auto_awesome</mat-icon>
+    </div>
+    <div class="ai-content">
+      <h4>AI Operational Insight</h4>
+      <p>{{ aiSummary }}</p>
+    </div>
+  </div>
+
+  <div class="scorecard-grid">
+    <div class="scorecard">
+      <div class="sc-icon blue-bg"><mat-icon>folder_special</mat-icon></div>
+      <div class="sc-data">
+        <p>Active Projects</p>
+        <h3>{{ activeProjects }}</h3>
+      </div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-icon green-bg"><mat-icon>health_and_safety</mat-icon></div>
+      <div class="sc-data">
+        <p>Overall System Health</p>
+        <h3>{{ systemHealth }}%</h3>
+      </div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-icon purple-bg"><mat-icon>verified</mat-icon></div>
+      <div class="sc-data">
+        <p>SLA Compliance Rate</p>
+        <h3>{{ slaCompliance }}%</h3>
+      </div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-icon red-bg"><mat-icon>warning_amber</mat-icon></div>
+      <div class="sc-data">
+        <p>Pending Critical Issues</p>
+        <h3 class="text-red">{{ criticalIssues }}</h3>
+      </div>
+    </div>
   </div>
 
   <div class="grid">
-    <!-- PANEL 1: TOTAL ASSETS -->
     <div class="card">
-      <h3 class="card-title">Total Asset : <span class="blue-text">13,989</span></h3>
-      
-      <div class="asset-icons">
-        <div class="icon-item">
-          <span><mat-icon>business</mat-icon> GLC</span>
-          <strong>1090</strong>
+      <h3 class="card-title">Sector Health & Compliance</h3>
+      <div class="sector-list">
+        <div class="sector-row" *ngFor="let s of sectorHealth">
+          <div class="s-info">
+            <strong>{{ s.name }}</strong>
+            <small>{{ s.desc }}</small>
+          </div>
+          <div class="s-status" [ngClass]="s.color">
+            <mat-icon>{{ s.icon }}</mat-icon>
+            <span>{{ s.status }}</span>
+          </div>
         </div>
-        <div class="icon-item">
-          <span><mat-icon>account_balance</mat-icon> FSI</span>
-          <strong>8800</strong>
-        </div>
-        <div class="icon-item">
-          <span><mat-icon>school</mat-icon> EDU</span>
-          <strong>100</strong>
-        </div>
-        <div class="icon-item">
-          <span><mat-icon>government_up</mat-icon> GOV</span>
-          <strong>3999</strong>
-        </div>
-      </div>
-
-      <div class="asset-footer">
-        <div class="footer-stat">DESKTOP <strong>11,789</strong></div>
-        <div class="footer-stat">LAPTOP <strong>2,000</strong></div>
-        <div class="footer-stat">SERVER <strong>200</strong></div>
-        <div class="footer-stat">OTHERS <strong>0</strong></div>
       </div>
     </div>
 
-    <!-- PANEL 2: INCIDENT WALL -->
     <div class="card">
-      <h3 class="card-title">Incident Wall Management</h3>
-      <div class="status-banner">
-        <div class="status-box open">Open <div>2</div></div>
-        <div class="status-box prog">In Progress <div>0</div></div>
-        <div class="status-box solved">Solved <div>0</div></div>
-        <div class="status-box closed">Closed <div>0</div></div>
-      </div>
-
-      <div class="iw-body">
-        <div class="donut-placeholder">2</div>
-        <div class="donut-labels">
-          <div><i class="dot blue"></i> GLC (1)</div>
-          <div><i class="dot yellow"></i> EDU (1)</div>
+      <h3 class="card-title">Total Deployed Assets : <span class="blue-text">{{ totalAssets | number }}</span></h3>
+      
+      <div class="asset-icons" style="margin-top: 30px;">
+        <div class="icon-item">
+          <span><mat-icon>desktop_windows</mat-icon> DESKTOP</span>
+          <strong>11,789</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>laptop_mac</mat-icon> LAPTOP</span>
+          <strong>2,000</strong>
+        </div>
+        <div class="icon-item">
+          <span><mat-icon>dns</mat-icon> SERVER</span>
+          <strong>200</strong>
         </div>
       </div>
 
-      <div class="priority-section">
-        <div class="sup">PRIORITY DISTRIBUTION</div>
+      <div class="priority-section" style="margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+        <div class="sup">CRITICAL TICKET PRIORITY (ACROSS ALL CLIENTS)</div>
         <div class="priority-bar-container">
-          <div class="priority-bar-fill orange" style="width: 50%"></div>
+          <div class="priority-bar-fill red" style="width: 20%"></div>
+          <div class="priority-bar-fill orange" style="width: 30%"></div>
           <div class="priority-bar-fill yellow" style="width: 50%"></div>
         </div>
         <div class="priority-legend">
-          <span>Crit (0)</span><span>High (1)</span><span>Med (1)</span><span>Low (0)</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- PANEL 3: LEASE TIMELINE (FULL WIDTH) -->
-    <div class="card full-width">
-      <h3 class="card-title">Lease Lifecycle Timeline</h3>
-      <div class="timeline-list">
-        <div class="t-row" *ngFor="let item of leases">
-          <div class="t-info">
-            <strong>{{ item.name }}</strong><br>
-            <small>{{ item.startDate }}</small>
-          </div>
-          
-          <!-- RE-ADDED THE PROGRESS BAR CODE -->
-          <div class="t-progress-container">
-            <div class="t-bar" [style.width.%]="item.progress"></div>
-            <div class="t-labels">
-              <span class="days-left">{{ item.daysLeft }} Days Left</span>
-              <span class="end-date">{{ item.endDate }}</span>
-            </div>
-          </div>
+          <span>Crit (2)</span><span>High (3)</span><span>Med (5)</span>
         </div>
       </div>
     </div>

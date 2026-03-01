@@ -19,7 +19,7 @@ export class LoginComponent {
   onLogin() {
     // Mockup logik: Untuk pembentangan, asalkan ada isi, terus bawa ke Level 1 (Oversight)
     if (this.username && this.password) {
-      this.router.navigate(['/oversight']);
+      this.router.navigate(['/management']);
     } else {
       alert('Sila masukkan ID Pengguna dan Kata Laluan anda.');
     }

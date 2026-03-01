@@ -1,49 +1,67 @@
-<div class="app-layout" [ngClass]="{'login-layout': isLoginPage}">
-  
+<div class="app-layout" [ngClass]="{ 'login-layout': isLoginPage }">
   <aside class="sidebar" *ngIf="!isLoginPage">
     <div class="sidebar-header">
       <div class="logo">
+        <mat-icon>shield</mat-icon>
         <span>AISM 2.0</span>
       </div>
     </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/oversight" routerLinkActive="active">
-        <mat-icon>analytics</mat-icon>
-        <span>Executive Overview</span>
+      <div class="nav-label">STRATEGIC</div>
+      <a routerLink="/management" routerLinkActive="active">
+        <mat-icon>space_dashboard</mat-icon>
+        <span>Management View</span>
       </a>
 
+      <div class="nav-label">OPERATIONAL</div>
+      <a routerLink="/oversight" routerLinkActive="active">
+        <mat-icon>analytics</mat-icon>
+        <span>Executive Oversight</span>
+      </a>
+
+      <div class="nav-label">TACTICAL</div>
       <a routerLink="/dashboard" routerLinkActive="active">
         <mat-icon>inventory_2</mat-icon>
-        <span>Hardware Analytics</span>
+        <span>Asset Dashboard</span>
       </a>
 
       <a routerLink="/partner" routerLinkActive="active">
         <mat-icon>handshake</mat-icon>
-        <span>Dashboard Reports</span>
+        <span>Partner Reports</span>
       </a>
 
       <div class="nav-spacer"></div>
     </nav>
 
     <div class="sidebar-footer">
+      <!-- <a (click)="toggleTheme()" class="footer-link theme-toggle">
+        <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+      </a> -->
+
       <a routerLink="/settings" routerLinkActive="active" class="footer-link">
         <mat-icon>settings</mat-icon>
-        <span>Setting</span>
+        <span>Settings</span>
+      </a>
+      
+      <a (click)="logout()" class="footer-link logout-item">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
       </a>
     </div>
   </aside>
 
   <main class="main-body">
-    
     <div class="main-content-area">
       <router-outlet></router-outlet>
     </div>
 
     <footer class="main-footer" *ngIf="!isLoginPage">
       <div class="footer-left">© 2026 AISM IT Systems</div>
-      <div class="footer-right">Version 1.0 | Servers: <span class="status-online">Online</span></div>
+      <div class="footer-right">
+        Version 1.0 | Status: <span class="status-online">Operational</span>
+      </div>
     </footer>
-    
   </main>
 </div>

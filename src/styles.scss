@@ -1,9 +1,4 @@
-
 // Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
 html {
@@ -19,36 +14,63 @@ html {
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
   color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
   margin: 0;
   height: 100%;
 }
+
+/* =========================================================
+   GLOBAL RESET FIX (Ini akan selesaikan isu kad terkeluar!)
+========================================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 /* Kill default browser margins and force the shell to 100% height */
 html, body {
   margin: 0;
   padding: 0;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden; /* This stops the browser from ever showing a scrollbar */
+  height: 100%;
+  width: 100%; /* ✅ Guna 100% (bukan 100vw) untuk elak isu scrollbar Windows */
+  overflow: hidden; /* This stops the browser from ever showing a scrollbar at root */
   background: #f8fafc; /* Matches your dashboard theme */
 }
 
 /* Ensure the Angular root tag fills the entire screen */
 app-root {
   display: block;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%; /* ✅ Guna 100% */
   overflow: hidden;
+}
+
+/* fail: src/styles.scss */
+
+/* 1. LIGHT MODE VARIABLES (Lalai) */
+:root {
+  --bg-app: #f8fafc;        /* Latar belakang kelabu cair */
+  --bg-card: #ffffff;       /* Latar belakang kotak putih */
+  --text-main: #0f172a;     /* Teks utama (hitam/navy gelap) */
+  --text-muted: #64748b;    /* Teks label (kelabu) */
+  --border-color: #e2e8f0;  /* Garisan (kelabu cair) */
+}
+
+/* 2. DARK MODE VARIABLES (Bila body ada class .dark-theme) */
+body.dark-theme {
+  --bg-app: #0b1120;        /* Latar belakang gelap (Midnight) */
+  --bg-card: #1e293b;       /* Latar belakang kotak (Slate Dark) */
+  --text-main: #f8fafc;     /* Teks utama jadi putih */
+  --text-muted: #94a3b8;    /* Teks label jadi kelabu cerah */
+  --border-color: #334155;  /* Garisan jadi kelabu gelap */
+}
+
+/* Base Body Style */
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  margin: 0;
+  transition: background-color 0.3s, color 0.3s;
 }

@@ -1,0 +1,331 @@
+/* =========================================================
+   1. GLOBAL VARIABLES & LAYOUT SCALING
+========================================================= */
+:root {
+  --navy-900: #0f172a;
+  --navy-800: #1e293b;
+  --slate-500: #64748b;
+  --slate-200: #e2e8f0;
+  --primary-blue: #2563eb;
+}
+
+.management-page {
+  padding: 24px; // Kekal 24px untuk breathing room yang cukup
+  background: #f8fafc;
+  
+  /* 1. BUANG 'min-height: 100vh;' dan ganti dengan ini: */
+  height: 100%;
+  box-sizing: border-box;
+
+  /* 2. KOD MAGIK: Sembunyikan rupa scrollbar tapi masih boleh scroll guna mouse wheel kalau skrin sempit */
+  overflow-y: auto;
+  -ms-overflow-style: none;  /* Untuk Internet Explorer & Edge */
+  scrollbar-width: none;  /* Untuk Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Untuk Chrome, Safari, dan Opera */
+  }
+
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--navy-900);
+
+  /* --- HEADER SECTION --- */
+  .mgmt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--slate-200);
+    padding-bottom: 16px;
+
+    .mgmt-title {
+      small {
+        font-size: 11px;
+        color: var(--slate-500);
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 26px;
+        font-weight: 900;
+        margin: 4px 0 0 0;
+        letter-spacing: -0.5px;
+      }
+    }
+
+    .update-pill {
+      background: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--slate-200);
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      .pulse {
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: blink 1.5s infinite;
+      }
+    }
+  }
+
+  /* --- PILLAR 1: BIG 4 (Kompak) --- */
+  .big-4-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .metric-box {
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+    }
+
+    .box-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      &.blue { background: #eff6ff; color: #3b82f6; }
+      &.purple { background: #faf5ff; color: #a855f7; }
+      &.navy { background: #f1f5f9; color: #1e293b; }
+      &.red { background: #fef2f2; color: #ef4444; }
+      &.green { background: #dcfce7; color: #16a34a; } // Tambahan untuk kotak ke-4
+      mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    }
+
+    .box-data {
+      label {
+        display: block;
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+      .value-row {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        .value {
+          font-size: 24px;
+          font-weight: 900;
+          letter-spacing: -0.5px;
+        }
+      }
+      .asset-details-row {
+        margin-top: 6px;
+        font-size: 10px;
+        color: var(--slate-500);
+        font-weight: 500;
+        strong { color: var(--navy-900); font-weight: 700; }
+        .text-red { color: #dc2626; }
+      }
+    }
+  }
+
+  .trend-badge {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    &.up { background: #dcfce7; color: #166534; }
+    &.down { background: #fee2e2; color: #991b1b; }
+    &.stable { background: #f1f5f9; color: #475569; }
+    &.warning { background: #ffedd5; color: #c2410c; }
+  }
+
+  /* --- PILLAR 2: STRATEGIC CARDS --- */
+  .strategic-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .value-card {
+    border-radius: 12px;
+    padding: 24px 32px;
+    color: white;
+    position: relative;
+    overflow: hidden; /* Pastikan benda terkeluar disorok */
+    &.orange-gradient { background: linear-gradient(135deg, #f97316, #ea580c); box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.2); }
+    &.green-gradient { background: linear-gradient(135deg, #16a34a, #15803d); box-shadow: 0 10px 15px -3px rgba(22, 163, 74, 0.2); }
+
+    .v-content {
+      display: flex;
+      flex-wrap: wrap; /* BENARKAN MELIPAT KE BAWAH BILA SEMPIT */
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+
+      .v-info {
+        flex: 1 1 180px; /* TOLAK ELEMEN KANAN, BENARKAN MELIPAT BILA KURANG 180PX */
+        
+        h3 { font-size: 14px; margin: 0; font-weight: 800; text-transform: uppercase; opacity: 0.9; letter-spacing: 0.5px; }
+        
+        .v-price { 
+          font-size: clamp(24px, 3vw, 36px); /* FONT MENGECUT AUTOMATIK (MIN 24PX, MAX 36PX) */
+          font-weight: 900; 
+          margin: 6px 0; 
+          letter-spacing: -1px; 
+          line-height: 1.1; 
+          word-break: break-word; /* PATAHKAN PERKATAAN JIKA TERLALU PANJANG */
+        }
+        
+        p { margin: 4px 0 0 0; font-size: 12px; opacity: 0.85; font-weight: 500; }
+      }
+    }
+
+    .v-sub-data {
+      text-align: right;
+      border-left: 1px solid rgba(255, 255, 255, 0.3);
+      padding-left: 20px;
+      flex: 0 0 auto; /* PASTIKAN KOTAK INI TAK DIPENYEK */
+      small { display: block; font-size: 11px; font-weight: 700; opacity: 0.9; margin-bottom: 4px; }
+      strong { font-size: 20px; font-weight: 900; }
+    }
+
+    .v-status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      margin-top: 12px;
+      flex: 0 0 auto; /* PASTIKAN KOTAK INI TAK DIPENYEK */
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+  }
+
+  /* --- PILLAR 3: INSIGHT GRID --- */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .insight-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+
+    .card-header-sm {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--primary-blue); }
+      span { font-size: 11px; font-weight: 800; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.5px; }
+    }
+
+    .forecast-data {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      small { font-size: 11px; color: var(--slate-500); font-weight: 700; }
+      strong { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+    }
+
+    p {
+      margin: 12px 0 0 0;
+      font-size: 11px;
+      color: var(--slate-500);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .trend-indicator {
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 10px;
+      &.up { color: #16a34a; }
+      &.down { color: #dc2626; }
+      &.stable { color: var(--slate-500); }
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+  }
+
+  /* --- PILLAR 4: AI BRIEFING --- */
+  .ai-brief-section {
+    background: #1e293b; /* Paksa warna gelap (Dark Navy) */
+    border-radius: 12px;
+    padding: 24px;
+    color: #ffffff; /* Paksa teks warna putih */
+    box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.3);
+
+    .ai-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      mat-icon { color: #a855f7; font-size: 20px; width: 20px; height: 20px; }
+      span { font-weight: 900; letter-spacing: 1px; font-size: 13px; color: #ffffff; }
+    }
+
+    .ai-body p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #e2e8f0; /* Kelabu cair supaya mata bos tak silau */
+      font-weight: 400;
+    }
+
+    .ai-action-box {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.1); /* Effect kaca/lutsinar sikit */
+      border-left: 4px solid #818cf8;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #ffffff;
+      strong { color: #a5b4fc; margin-right: 4px; }
+    }
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 1024px) {
+    padding: 16px;
+    .big-4-container, .insight-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .mgmt-header .mgmt-title h1 { font-size: 20px; }
+    .big-4-container, .strategic-grid, .insight-grid { grid-template-columns: 1fr; }
+  }
+}
+
+@keyframes blink { 50% { opacity: 0.3; } }

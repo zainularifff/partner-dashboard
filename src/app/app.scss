@@ -1,10 +1,18 @@
+/* =========================================================
+   0. GLOBAL RESET & BOX-SIZING FIX
+   (Penting: Elakkan elemen terkeluar dari skrin)
+========================================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 /* ================= 1. RESET & BASE ================= */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Prevents the whole browser window from bouncing/scrolling */
+  overflow: hidden; 
   font-family: 'Inter', -apple-system, sans-serif;
   background: #f8fafc;
 }
@@ -13,7 +21,7 @@ html, body {
 .app-layout {
   display: flex;
   height: 100vh;
-  width: 100vw; 
+  width: 100%; 
   overflow: hidden;
 }
 
@@ -24,7 +32,7 @@ html, body {
   color: white;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0; /* Prevents sidebar from squishing when dashboard is full */
+  flex-shrink: 0; 
   height: 100vh;
   border-right: 1px solid rgba(255,255,255,0.1);
   z-index: 10;
@@ -36,25 +44,22 @@ html, body {
   display: flex;
   flex-direction: column; 
   background: #f8fafc;
-  min-width: 0; /* CRITICAL: Allows flex children to shrink/wrap correctly */
+  min-width: 0; 
   height: 100vh;
   position: relative;
 }
 
-/* CONTENT AREA: This is where your Dashboard Component loads */
-/* CONTENT AREA: Tempat Dashboard Component loads */
-/* CONTENT AREA: Reset balik supaya tak kacau dashboard utama */
+/* CONTENT AREA: Navigasi Page Utama */
 .main-content-area {
   flex: 1;                
   display: flex;
   flex-direction: column;
   min-height: 0; 
-  overflow: hidden; /* Tukar balik ke hidden */
+  overflow-y: auto; 
+  overflow-x: hidden; 
 }
 
-
-
-/* FOOTER: Pinned to the bottom of main-body */
+/* FOOTER: Bawah skrin utama */
 .main-footer {
   height: 40px;           
   background: white;
@@ -71,14 +76,36 @@ html, body {
 /* ================= 3. SIDEBAR NAVIGATION ================= */
 .sidebar-header {
   padding: 32px 24px;
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #2f6fed;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    
+    mat-icon { font-size: 24px; width: 24px; height: 24px; }
+  }
+}
+
+/* Label Kategori untuk C-Level Grouping */
+.nav-label {
+  font-size: 10px;
   font-weight: 800;
-  color: #2f6fed;
+  color: rgba(255, 255, 255, 0.3);
+  padding: 24px 24px 8px 24px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 10px 16px;
+  padding: 0 16px;
   overflow-y: auto;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
@@ -90,60 +117,79 @@ html, body {
     color: #a3acbf;
     text-decoration: none;
     border-radius: 8px;       
-    margin-bottom: 6px;       
+    margin-bottom: 4px;       
     transition: all 0.2s ease;
     gap: 12px;
+    cursor: pointer;
 
     mat-icon { 
       font-size: 20px;
       width: 20px;
       height: 20px;
       flex-shrink: 0;
+      color: #64748b;
     }
 
     span {
       font-size: 13px;         
       font-weight: 600;
-      letter-spacing: 0.3px;
     }
 
     &:hover { 
       background: rgba(255, 255, 255, 0.05); 
       color: white; 
+      mat-icon { color: white; }
     }
 
     &.active { 
       background: #2f6fed; 
       color: white; 
       box-shadow: 0 4px 12px rgba(47, 111, 237, 0.25);
+      mat-icon { color: white; }
     }
   }
 }
 
+/* SIDEBAR FOOTER: Lokasi Settings & Logout */
 .sidebar-footer {
   padding: 16px;              
-  background: rgba(0, 0, 0, 0.2); 
+  background: rgba(0, 0, 0, 0.15); 
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
   flex-shrink: 0;
 
   .footer-link {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 12px 16px;
     color: #a3acbf;
     text-decoration: none;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
     transition: 0.2s;
+    cursor: pointer;
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
 
     &:hover { 
       background: rgba(255, 255, 255, 0.05); 
       color: white; 
+    }
+
+    /* Gaya Khusus untuk Butang Logout */
+    &.logout-item {
+      margin-top: 4px;
+      color: #94a3b8;
+      
+      &:hover {
+        background: rgba(239, 68, 68, 0.1); /* Background Merah Nipis */
+        color: #fca5a5; /* Teks Merah Lembut */
+        mat-icon { color: #ef4444; }
+      }
     }
   }
 
@@ -151,10 +197,12 @@ html, body {
     display: flex; 
     align-items: center; 
     gap: 12px; 
-    padding: 4px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #cbd5e1;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 8px;
   }
 }
 
@@ -163,6 +211,20 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.status-online {
+  color: #22c55e;
+  font-weight: 700;
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #22c55e;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
 }
 
 .nav-spacer {

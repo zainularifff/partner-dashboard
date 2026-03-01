@@ -252,29 +252,31 @@
               <span class="unit-count">{{ b.total | number }} units</span>
             </div>
             <div class="ba-full-bar">
-              <div
-                class="seg new"
-                [style.width.%]="b.new"
-                [matTooltip]="'New: ' + b.new + '%'">
-              ></div>
+              <div class="seg new" [style.width.%]="b.new" [matTooltip]="'New: ' + b.new + '%'">
+                >
+              </div>
 
               <div
                 class="seg standard"
                 [style.width.%]="b.standard"
-                [matTooltip]="'Optimal: ' + b.standard + '%'">
-              ></div>
+                [matTooltip]="'Optimal: ' + b.standard + '%'"
+              >
+                >
+              </div>
 
               <div
                 class="seg aging"
                 [style.width.%]="b.aging"
-                [matTooltip]="'Aging: ' + b.aging + '%'">
-              ></div>
+                [matTooltip]="'Aging: ' + b.aging + '%'"
+              >
+                >
+              </div>
 
               <div
                 class="seg critical"
                 [style.width.%]="b.critical"
-                [matTooltip]="'Critical: ' + b.critical + '%'">
-              </div>
+                [matTooltip]="'Critical: ' + b.critical + '%'"
+              ></div>
             </div>
           </div>
         </div>
@@ -285,7 +287,13 @@
 
             <div class="stat-card risk">
               <div class="card-head">
-                <mat-icon>error_outline</mat-icon>
+                <mat-icon
+                  class="info-icon"
+                  matTooltip="This critical asset status is based on usage frequency, lifecycle age, and current maintenance logs which indicate a 95% probability of failure."
+                  matTooltipPosition="above"
+                >
+                  info_outline
+                </mat-icon>
                 <span>Critical Attrition</span>
               </div>
               <div class="card-body">

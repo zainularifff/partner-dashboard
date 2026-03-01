@@ -2,7 +2,9 @@
 .page {
   padding: 24px;
   background: #f8fafc;
-  min-height: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
 }
 
 .header {
@@ -47,71 +49,39 @@
 }
 
 /* ================= GRID SYSTEM ================= */
-/* --- SHARED GRID CONFIGURATION --- */
-/* This ensures the top cards and bottom cards always align their edges */
-.grid-2x2, .report-grid {
+.grid-2x2 {
   display: grid;
-  grid-template-columns: 1fr 1.2fr; /* EXACT same ratio for both rows */
-  gap: 24px;                        /* EXACT same spacing */
+  grid-template-columns: 1fr 1.2fr;
+  gap: 24px;
   width: 100%;
   margin-bottom: 24px;
 }
 
-/* --- SUMMARY REPORT CARD REFINEMENT --- */
-.report-card {
-  /* Resetting flex to handle internal horizontal layout */
-  flex-direction: row !important; 
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px !important;
-  background: white;
-  border: 1px solid #eef2f6;
-  border-radius: 12px;
-  height: 80px; /* Optional: Give them a fixed height to look uniform */
+/* --- HORIZONTAL SCROLL FOR REPORTS --- */
+.report-grid {
+  display: flex;            /* Tukar ke flex untuk enable scrolling */
+  gap: 24px;
+  width: 100%;
+  margin-bottom: 24px;
+  overflow-x: auto;         /* Enable scroll mendatar */
+  padding-bottom: 15px;     /* Ruang untuk scrollbar */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 
-  .report-main {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    min-width: 0; /* Prevents text from pushing the card wider */
+  /* Gaya Scrollbar (Nampak lebih clean) */
+  &::-webkit-scrollbar {
+    height: 6px;
   }
-
-  .rep-details {
-    display: flex;
-    flex-direction: column; /* Title on top, Status below */
-    overflow: hidden;
-
-    .rep-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: #1e293b;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis; /* Adds "..." if name is too long */
-    }
-
-    .rep-status {
-      font-size: 10px;
-      color: #94a3b8;
-      font-weight: 600;
-      margin-top: 2px;
-    }
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    &:hover { background: #94a3b8; }
   }
 }
-
-/* --- BUTTON ALIGNMENT --- */
-.btn-dl {
-  flex-shrink: 0; /* Prevents the download button from getting squashed */
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 
 /* ================= 1. MULTI-CLIENT OVERVIEW ================= */
 .vp-row {
@@ -160,23 +130,23 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 120px; /* Match or slightly exceed your spinner diameter */
+  width: 120px;
   flex-shrink: 0;
 }
 
 .spinner-wrapper {
-  position: relative; // This is the anchor
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 110px; // Match your [diameter]
+  height: 110px;
   width: 110px;
 
   .ah-inner {
-    position: absolute; // Puts text "on top" of the spinner
+    position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); // Force dead-center
+    transform: translate(-50%, -50%);
     text-align: center;
     width: 100%;
 
@@ -205,7 +175,7 @@
   margin-bottom: 16px;
   .fault-info {
     display: flex;
-    justify-content: space-between; /* Fixes label and % overlap */
+    justify-content: space-between;
     font-size: 12px;
     font-weight: 700;
     color: #475569;
@@ -213,37 +183,55 @@
   }
 }
 
-/* ================= 3. SUMMARY REPORTS ================= */
-/* --- SUMMARY REPORT CARD REFINEMENT --- */
+/* ================= SUMMARY REPORTS (BACK TO GRID) ================= */
+.report-grid {
+  display: grid;
+  /* Kita gunakan grid 2-kolum supaya 1 baris ada 2 kad (macam asal) */
+  grid-template-columns: 1fr 1fr; 
+  gap: 24px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
 .report-card {
-  flex-direction: row !important; /* Icon and text on the left, button on the right */
+  /* Kita buang flex-basis supaya dia ikut saiz grid */
+  flex-direction: row !important; 
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px !important;
+  height: 80px;
+  background: white;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
   transition: all 0.2s ease;
 
   &:hover {
     border-color: #2f6fed;
     background: #fcfdfe;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   .report-main {
     display: flex;
     align-items: center;
     gap: 16px;
+    min-width: 0;
   }
 
-  /* THIS PREVENTS THE TEXT JOINING */
   .rep-details {
     display: flex;
-    flex-direction: column; /* Forces status BELOW title */
+    flex-direction: column;
     text-align: left;
+    overflow: hidden;
 
     .rep-title {
       font-size: 13px;
       font-weight: 700;
       color: #1e293b;
-      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .rep-status {
@@ -263,50 +251,112 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
-  mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-  }
+  flex-shrink: 0;
 }
 
-.btn-dl {
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  
-  &:hover {
-    background: #e2e8f0;
-    color: #2f6fed;
+/* ================= 4. CUSTOM ANALYSIS BUILDER ================= */
+.custom-report-card {
+  background: linear-gradient(to bottom right, #ffffff, #f8faff);
+  border: 2px solid #e2e8f0;
+  margin-top: 24px;
+
+  .report-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    
+    mat-icon { color: #3b82f6; }
+    h3 { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
   }
 
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+  .builder-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .custom-select {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: white;
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.2s;
+
+        &:focus { border-color: #3b82f6; }
+      }
+    }
   }
-}
 
+  .format-toggle {
+    display: flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 8px;
+    gap: 4px;
 
-.btn-dl {
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    .btn-toggle {
+      flex: 1;
+      border: none;
+      padding: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      color: #64748b;
+      transition: all 0.2s;
 
-  mat-icon { font-size: 20px; width: 20px; height: 20px; }
-  &:hover { background: #e2e8f0; color: #2f6fed; }
+      &.active {
+        background: white;
+        color: #1e293b;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      }
+    }
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 14px;
+    background: #1e293b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+    &:hover {
+      background: #3b82f6;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+  }
 }
 
 /* ================= BUTTONS & BARS ================= */
@@ -326,6 +376,26 @@
   
   mat-icon { font-size: 18px; width: 18px; height: 18px; }
   &:hover { background: #334155; }
+}
+
+.btn-dl {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  &:hover { 
+    background: #e2e8f0; 
+    color: #2f6fed; 
+    transform: scale(1.1);
+  }
 }
 
 .custom-bar {

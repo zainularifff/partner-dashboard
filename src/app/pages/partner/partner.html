@@ -1,31 +1,37 @@
-<div class="page">
+<div class="page" *ngIf="stockData">
   <div class="header">
     <div class="header-left">
       <div class="sup">nPoints™ AISM PLATFORM</div>
-      <h1>Partner Operations</h1>
+      <h1>Summary Report</h1>
     </div>
-    <button class="btn-export">
-      <mat-icon>summarize</mat-icon> Partner Full Analysis
+    <button class="btn-export" (click)="generateReport()" [disabled]="isAnalyzing">
+      <mat-icon *ngIf="!isAnalyzing">auto_awesome</mat-icon>
+      <mat-icon *ngIf="isAnalyzing" class="spin">sync</mat-icon>
+      {{ isAnalyzing ? 'AI IS ANALYZING...' : 'Full Gemini AI Report Analysis' }}
     </button>
   </div>
 
   <div class="grid-2x2">
-    <!-- Card 1 -->
-    <div class="card">
+    <!-- <div class="card">
       <h3>Multi-Client Operation Overview</h3>
       <div class="vp-row">
         <div class="vp-item" *ngFor="let v of vendorHealth">
           <div class="spinner-container">
-            <mat-progress-spinner mode="determinate" [value]="v.percent" [diameter]="45" [strokeWidth]="5"></mat-progress-spinner>
+            <mat-progress-spinner 
+              mode="determinate" 
+              [value]="v.percent" 
+              [diameter]="45" 
+              [strokeWidth]="5"
+              [color]="v.matColor">
+            </mat-progress-spinner>
             <div class="spinner-text">{{ v.percent }}%</div>
           </div>
           <div class="vp-label">{{ v.label }}</div>
         </div>
       </div>
-    </div>
+    </div> -->
 
-    <!-- Card 2 -->
-    <div class="card">
+    <!-- <div class="card">
       <h3>Inventory & Logistic Overview</h3>
       <div class="asset-flex">
         <div class="ah-left">
@@ -39,36 +45,81 @@
         </div>
         <div class="ah-right">
           <div class="fault-row">
-            <div class="fault-info"><span>Logistic Compliance</span><span>{{stockData.logisticCompliance}}%</span></div>
+            <div class="fault-info">
+              <span>Logistic Compliance</span>
+              <strong>{{stockData.logisticCompliance}}%</strong>
+            </div>
             <mat-progress-bar mode="determinate" [value]="stockData.logisticCompliance" class="custom-bar blue"></mat-progress-bar>
           </div>
           <div class="fault-row">
-            <div class="fault-info"><span>Fulfillment Rate</span><span>{{stockData.fulfillmentRate}}%</span></div>
+            <div class="fault-info">
+              <span>Fulfillment Rate</span>
+              <strong>{{stockData.fulfillmentRate}}%</strong>
+            </div>
             <mat-progress-bar mode="determinate" [value]="stockData.fulfillmentRate" class="custom-bar blue"></mat-progress-bar>
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 
   <div class="section-label">Summary Report</div>
-
-  <!-- SUMMARY REPORT SECTION -->
-    <div class="report-grid">
-      <div class="card report-card" *ngFor="let r of reports">
-        <div class="report-main">
-          <div class="icon-box">
-            <mat-icon>description</mat-icon>
-          </div>
-          <!-- This container keeps the text from merging -->
-          <div class="rep-details">
-            <span class="rep-title">{{ r.name }}</span>
-            <span class="rep-status">{{ r.status }}</span>
-          </div>
+  <div class="report-grid">
+    <div class="card report-card" *ngFor="let r of reports">
+      <div class="report-main">
+        <div class="icon-box">
+          <mat-icon>{{ r.icon }}</mat-icon> 
         </div>
-        <button class="btn-dl">
-          <mat-icon>download</mat-icon>
-        </button>
+        <div class="rep-details">
+          <span class="rep-title">{{ r.name }}</span>
+          <span class="rep-status">{{ r.status }}</span>
+        </div>
+      </div>
+      <button class="btn-dl" (click)="downloadReport(r.name)" [title]="'Download ' + r.name">
+        <mat-icon>download</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="card custom-report-card">
+    <div class="report-header">
+      <mat-icon>settings_suggest</mat-icon>
+      <h3>Custom Analysis Builder</h3>
+    </div>
+
+    <div class="builder-grid">
+      <div class="input-group">
+        <label>Select Brand</label>
+        <select class="custom-select" #brandSelect>
+          <option value="All Brands">All Brands</option>
+          <option value="ASUS Fleet">ASUS Fleet</option>
+          <option value="HP Fleet">HP Fleet</option>
+          <option value="Lenovo Fleet">Lenovo Fleet</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Analysis Period</label>
+        <select class="custom-select" #periodSelect>
+          <option value="Q1 2026">Q1 2026 (Jan - Mar)</option>
+          <option value="Q2 2026">Q2 2026 (Apr - Jun)</option>
+          <option value="Current Month">Current Month</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Output Format</label>
+        <div class="format-toggle">
+          <button class="btn-toggle active">PDF</button>
+          <button class="btn-toggle">Excel (XLSX)</button>
+        </div>
       </div>
     </div>
+
+    <div class="builder-actions">
+      <button class="btn-generate" (click)="onGenerateCustomReport(brandSelect.value, periodSelect.value)">
+        <mat-icon>auto_awesome</mat-icon> Generate Custom Insight
+      </button>
+    </div>
+  </div>
 </div>

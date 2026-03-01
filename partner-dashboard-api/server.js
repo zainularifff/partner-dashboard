@@ -450,14 +450,66 @@ app.get('/api/assets/individual-details', async (req, res) => {
 
     console.log(`🔍 API CALL: Project=${project}, Brand=${brand}, Type=${type}`);
 
-    // 1. SQL Query - Kita ambil semua data brand dlu, tapi kita tapis dngn brandGroup dlm Node.js
+    let conditions = [];
+    let params = [];
+
+    // ✅ BRAND FILTER (guna logic sama tapi dalam SQL)
+    if (brand) {
+      conditions.push(`
+        (
+          CASE 
+            WHEN UPPER(a.MadeCompany) LIKE '%ASUS%' THEN 'ASUS'
+            WHEN UPPER(a.MadeCompany) LIKE '%HP%' 
+              OR UPPER(a.MadeCompany) LIKE '%HEWLETT%' THEN 'HP'
+            WHEN UPPER(a.MadeCompany) LIKE '%DELL%' THEN 'DELL'
+            WHEN UPPER(a.MadeCompany) LIKE '%LENOVO%' THEN 'LENOVO'
+            WHEN UPPER(a.MadeCompany) LIKE '%ACER%' THEN 'ACER'
+            ELSE 'OTHERS'
+          END
+        ) = @brand
+      `);
+      params.push({ name: 'brand', value: brand.toUpperCase() });
+    }
+
+    // ✅ TYPE FILTER
+    if (type) {
+      if (type.toLowerCase() === 'notebook' || type.toLowerCase() === 'laptop') {
+        conditions.push(`
+          LOWER(ISNULL(c.MachineType, 'devices')) LIKE '%laptop%'
+          OR LOWER(ISNULL(c.MachineType, 'devices')) LIKE '%notebook%'
+        `);
+      } else {
+        conditions.push(`
+          LOWER(ISNULL(c.MachineType, 'devices')) LIKE @type
+        `);
+        params.push({ name: 'type', value: `%${type.toLowerCase()}%` });
+      }
+    }
+
+    // ✅ PROJECT FILTER
+    if (project) {
+      conditions.push(`
+        (
+          UPPER(a.projectName) LIKE @project
+          OR UPPER(a.serverId) LIKE @project
+        )
+      `);
+      params.push({ name: 'project', value: `%${project.toUpperCase()}%` });
+    }
+
+    const whereClause = conditions.length
+      ? `WHERE ` + conditions.join(' AND ')
+      : '';
+
     const query = `
       SELECT 
           a.ComputerName,
           a.Object_Client_Name AS [Owner_Name],
           b.Object_Full_Name AS [Location_Department],
           ISNULL(c.MachineType, 'DEVICES') AS [Machine_Type],
-          a.IP, a.RAM, a.CPU AS [Full_CPU_Name],
+          a.IP,
+          a.RAM,
+          a.CPU AS [Full_CPU_Name],
           a.MadeCompany AS [Manufacturer],
           DATEDIFF(day, a.ConnectionTime, GETDATE()) AS [Agent_Age_Days],
           CASE 
@@ -465,50 +517,17 @@ app.get('/api/assets/individual-details', async (req, res) => {
               ELSE 'Inactive' 
           END AS [Agent_Status]
       FROM TS_OBJECT_ROOT a
-      LEFT JOIN ts_object_relation b ON a.Object_rel_idn = b.Object_rel_idn
-      LEFT JOIN ts_client_info c ON c.Object_root_idn = a.Object_root_idn
+      LEFT JOIN ts_object_relation b 
+        ON a.Object_rel_idn = b.Object_rel_idn
+      LEFT JOIN ts_client_info c 
+        ON c.Object_root_idn = a.Object_root_idn
+      ${whereClause}
     `;
 
-    const allResults = await db.queryAllServers('tco', query);
+    const result = await db.queryAllServers('tco', query, params);
 
-    // 2. 🛠️ STRICT FILTERING (Checking Level 3)
-    const filtered = allResults.filter(item => {
-      
-      // ✅ A. Checking Brand (Sangat Penting!)
-      // Kita guna logik yang sama mcm Brand Aging Analysis kau
-      const manufacturer = item.Manufacturer ? item.Manufacturer.toUpperCase() : '';
-      let currentBrandGroup = 'OTHERS';
-
-      if (manufacturer.includes('ASUS')) currentBrandGroup = 'ASUS';
-      else if (manufacturer.includes('HP') || manufacturer.includes('HEWLETT')) currentBrandGroup = 'HP';
-      else if (manufacturer.includes('DELL')) currentBrandGroup = 'DELL';
-      else if (manufacturer.includes('LENOVO')) currentBrandGroup = 'LENOVO';
-      else if (manufacturer.includes('ACER')) currentBrandGroup = 'ACER';
-
-      const matchBrand = brand ? (currentBrandGroup === brand.toUpperCase()) : true;
-
-      // ✅ B. Checking Type (Desktop/Notebook/Laptop)
-      const mType = item.Machine_Type.toLowerCase();
-      const searchType = type ? type.toLowerCase() : '';
-      
-      // Handle 'Notebook' & 'Laptop' sebagai kategori yang sama dlm checking
-      let matchType = true;
-      if (searchType === 'notebook' || searchType === 'laptop') {
-        matchType = mType.includes('notebook') || mType.includes('laptop');
-      } else if (searchType) {
-        matchType = mType.includes(searchType);
-      }
-
-      // ✅ C. Checking Project (FELDA/PETRONAS)
-      const matchProject = project ? 
-        (item.projectName?.toUpperCase().includes(project.toUpperCase()) || 
-         item.serverId?.toUpperCase().includes(project.toUpperCase())) : true;
-
-      return matchBrand && matchType && matchProject;
-    });
-
-    console.log(`✅ Filtered Result: ${filtered.length} rows (Brand Check Passed)`);
-    res.json(filtered);
+    console.log(`✅ Filtered Result: ${result.length} rows`);
+    res.json(result);
 
   } catch (err) {
     console.error('❌ Individual Details Error:', err.message);

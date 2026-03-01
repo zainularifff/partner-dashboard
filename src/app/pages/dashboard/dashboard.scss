@@ -974,3 +974,39 @@
     transform: rotate(360deg);
   }
 }
+
+.client-dropdown-menu {
+  min-width: 280px !important;
+
+  .project-header-item {
+    padding: 8px 16px;
+    background: #f8fafc; // Warna latar beza sikit untuk Mother
+    
+    .project-label {
+      font-weight: 800;
+      color: #1e293b;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+  }
+
+  .client-sub-list {
+    padding-left: 20px; // Ini yang buat dia masuk ke dalam
+    
+    button[mat-menu-item] {
+      height: 40px;
+      line-height: 40px;
+      
+      ::ng-deep .mdc-label {
+        font-size: 13px;
+        color: #475569;
+      }
+    }
+  }
+
+  .divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 4px 0;
+  }
+}

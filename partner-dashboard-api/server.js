@@ -86,28 +86,36 @@ app.get('/api/dashboard', systemAuthMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) => {
+// 1️⃣1️⃣ Endpoint Detail Tiket (Versi Pantas)
+app.get('/api/dashboard/detail/:request_no', systemAuthMiddleware, async (req, res) => {
   try {
-    const { uuid } = req.params;
+    // 1. Sanitasi asas untuk request_no (hanya benarkan huruf, nombor dan sengkang)
+    const safeRequestNo = req.params.request_no.replace(/[^a-zA-Z0-9-]/g, '');
+
+    if (!safeRequestNo) {
+      return res.status(400).json({ message: 'Invalid Request No' });
+    }
+
+    console.log(`Mencari tiket: ${safeRequestNo}`);
+
+    // 2. Query terus ke DB menggunakan klausa WHERE (Sangat pantas)
     const query = `
       SELECT user_name, request_no,
              SUBSTRING(user_summary, 1, 8000) AS user_summary,
              request_status, request_time,
              ISNULL(completed_time, 0) AS completed_time
-      FROM HD_REQUEST`;
+      FROM HD_REQUEST
+      WHERE request_no = '${safeRequestNo}'`; // Guna parameter yang disanitasi
 
-    let combinedData = await db.queryAllServers('helpdesk', query);
+    const combinedData = await db.queryAllServers('helpdesk', query);
 
-    const ticket = combinedData.find(
-      (row) => uuidv5(normalize(row.request_no), NAMESPACE) === uuid,
-    );
-
-    if (!ticket) {
+    if (combinedData.length === 0) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
 
-    res.json(ticket);
+    res.json(combinedData[0]); // Terus pulangkan rekod pertama yang dijumpai
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -257,43 +265,51 @@ app.get('/api/incidents/trend', async (req, res) => {
   try {
     const { type, client, year, month } = req.query;
     let conditions = [];
+
+    // Filter ikut Type
     switch (type) {
-      case 'open':
-        conditions.push('request_status = 0');
-        break;
-      case 'pending':
-        conditions.push('request_status IN (1, 10, 11, 12, 13)');
-        break;
-      case 'solved':
-        conditions.push('request_status = 2');
-        break;
-      case 'lapsed':
-        conditions.push(
-          "request_status NOT IN (2, 14) AND DATEDIFF(DAY, DATEADD(SECOND, request_time, '1970-01-01'), GETDATE()) > 7",
-        );
-        break;
-      default:
-        conditions.push('1=1');
+      case 'open': conditions.push("request_status = 0"); break;
+      case 'pending': conditions.push("request_status IN (1, 10, 11, 12, 13)"); break;
+      case 'solved': conditions.push("request_status = 2"); break;
+      case 'lapsed': conditions.push("request_status NOT IN (2, 14) AND DATEDIFF(DAY, DATEADD(SECOND, request_time, '1970-01-01'), GETDATE()) > 7"); break;
+      default: conditions.push("1=1");
     }
-    let dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'yyyy')";
+
+    let dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'yyyy')"; 
     const isAllYear = !year || year === 'All' || year === 'All Year';
+
     if (!isAllYear) {
-      conditions.push(`YEAR(DATEADD(SECOND, request_time, '1970-01-01')) = ${year}`);
-      dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'MMM')";
-      if (month && month !== 'All') {
-        conditions.push(`MONTH(DATEADD(SECOND, request_time, '1970-01-01')) = ${month}`);
-        dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'dd MMM')";
+      // ✅ FIX: Sanitasi (Parse) input tahun dan bulan kepada integer yang selamat
+      const safeYear = parseInt(year, 10);
+      
+      if (!isNaN(safeYear)) {
+        conditions.push(`YEAR(DATEADD(SECOND, request_time, '1970-01-01')) = ${safeYear}`);
+        dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'MMM')"; 
+
+        if (month && month !== 'All' && month !== 'All Months') {
+          const safeMonth = parseInt(month, 10);
+          if (!isNaN(safeMonth)) {
+             conditions.push(`MONTH(DATEADD(SECOND, request_time, '1970-01-01')) = ${safeMonth}`);
+             dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'dd MMM')"; 
+          }
+        }
       }
     }
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : "";
+
     const query = `
-      SELECT ${dateSelect} AS date, COUNT(*) AS count, 
-             MIN(DATEADD(SECOND, request_time, '1970-01-01')) as sort_key
+      SELECT 
+        ${dateSelect} AS date, 
+        COUNT(*) AS count, 
+        MIN(DATEADD(SECOND, request_time, '1970-01-01')) as sort_key
       FROM HD_REQUEST 
       ${whereClause}
       GROUP BY ${dateSelect} 
       ORDER BY sort_key ASC`;
+
     const rawResults = await db.querySpecificServers('helpdesk', query, client || '');
+
     const aggregated = rawResults.reduce((acc, curr) => {
       const label = curr.date;
       if (!acc[label]) {
@@ -302,10 +318,13 @@ app.get('/api/incidents/trend', async (req, res) => {
       acc[label].count += Number(curr.count || 0);
       return acc;
     }, {});
+
     const finalTrend = Object.values(aggregated).sort((a, b) => a.sortTime - b.sortTime);
     res.json(finalTrend);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+
+  } catch (err) { 
+    console.error("Trend Error:", err.message);
+    res.status(500).json({ error: err.message }); 
   }
 });
 

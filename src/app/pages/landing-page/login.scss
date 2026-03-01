@@ -1,0 +1,97 @@
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); /* Latar belakang gelap korporat */
+  font-family: 'Inter', sans-serif;
+}
+
+.login-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+.brand-section {
+  text-align: center;
+  margin-bottom: 32px;
+
+  .logo-placeholder {
+    width: 60px;
+    height: 60px;
+    background: #2f6fed;
+    color: white;
+    font-weight: 900;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    margin: 0 auto 16px auto;
+  }
+
+  h2 { margin: 0; color: #0f172a; font-size: 24px; font-weight: 800; }
+  p { margin: 4px 0 0 0; color: #64748b; font-size: 13px; }
+}
+
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 8px;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+    box-sizing: border-box;
+
+    &:focus { border-color: #2f6fed; box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.1); }
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  font-size: 12px;
+
+  .remember-me { color: #475569; display: flex; align-items: center; gap: 6px; }
+  .forgot-pass { color: #2f6fed; text-decoration: none; font-weight: 600; }
+}
+
+.btn-login {
+  width: 100%;
+  background: #2f6fed;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover { background: #1e40af; }
+}
+
+.footer-note {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+}

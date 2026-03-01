@@ -7,9 +7,10 @@ import { BrandBreakdownComponent } from './pages/brand-breakdown/brand-breakdown
 import { IncidentComponent } from './pages/incident-detail/incident-detail';
 import { BrandSelectorComponent } from './pages/brand-selector/brand-selector'; 
 import { AssetDetailComponent } from './pages/asset-detail/asset-detail'; 
+import { LoginComponent } from './pages/landing-page/login';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'oversight', component: OversightComponent },
   { path: 'partner', component: PartnerComponent },
@@ -17,5 +18,6 @@ export const routes: Routes = [
   { path: 'brand-breakdown/:brandName', component: BrandBreakdownComponent },
   { path: 'ticket-view/:uuid', component: IncidentComponent }, 
   { path: 'brand-selector', component: BrandSelectorComponent }, 
-  { path: 'asset-detail', component: AssetDetailComponent }    
+  { path: 'asset-detail', component: AssetDetailComponent },
+  { path: 'login', component: LoginComponent }  
 ];

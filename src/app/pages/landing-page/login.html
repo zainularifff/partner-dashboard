@@ -1,0 +1,45 @@
+<div class="login-page">
+  <div class="login-card">
+    
+    <div class="brand-section">
+      <div class="logo-placeholder">AISM</div>
+      <h2>nPoints™ AISM</h2>
+      <p>Unified Partner Management Portal</p>
+    </div>
+
+    <form (ngSubmit)="onLogin()" class="login-form">
+      <div class="form-group">
+        <label>ID Pengguna / Emel</label>
+        <input 
+          type="text" 
+          [(ngModel)]="username" 
+          name="username" 
+          placeholder="admin@partner.com" 
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Kata Laluan</label>
+        <input 
+          type="password" 
+          [(ngModel)]="password" 
+          name="password" 
+          placeholder="••••••••" 
+          required>
+      </div>
+
+      <div class="form-actions">
+        <label class="remember-me">
+          <input type="checkbox"> Ingat saya
+        </label>
+        <a href="#" class="forgot-pass">Lupa Kata Laluan?</a>
+      </div>
+
+      <button type="submit" class="btn-login">Log Masuk</button>
+    </form>
+
+    <div class="footer-note">
+      <p>Protected by AISM Security Gateway. © 2026</p>
+    </div>
+  </div>
+</div>

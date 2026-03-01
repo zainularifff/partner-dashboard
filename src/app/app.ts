@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { CommonModule } from '@angular/common'; // Added for basic directives
-import { MatIconModule } from '@angular/material/icon'; // 1. Import the Icon Module
+import { Component, OnInit } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { CommonModule } from '@angular/common'; 
+import { MatIconModule } from '@angular/material/icon'; 
 
 @Component({
   selector: 'app-root',
@@ -11,11 +11,24 @@ import { MatIconModule } from '@angular/material/icon'; // 1. Import the Icon Mo
     RouterLink, 
     RouterLinkActive, 
     CommonModule,
-    MatIconModule // 2. Add it here to fix NG8001
+    MatIconModule 
   ], 
   templateUrl: './app.html', 
   styleUrl: './app.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'partner-dashboard';
+  isLoginPage = false;
+
+  constructor(private router: Router) {}
+
+  ngOnInit() {
+    // Fungsi ini akan sentiasa memantau pertukaran URL
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        // Semak jika URL sekarang adalah '/login' atau path asal '/' yang redirect ke login
+        this.isLoginPage = event.urlAfterRedirects.includes('/login') || event.urlAfterRedirects === '/';
+      }
+    });
+  }
 }

@@ -1,1012 +1,222 @@
-/* ================= 1. GLOBAL LAYOUT LOCK ================= */
+/* =========================================================
+   1. GLOBAL COMPACT LAYOUT (NGAM-NGAM MASUK SKRIN)
+========================================================= */
 .page {
-  padding: 15px 24px;
-  height: calc(100vh - 40px);
+  padding: 10px 16px; 
+  /* PENTING: Tolak saiz header & footer supaya tak terpotong di bawah */
+  height: calc(100vh - 90px); 
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   background: #f8fafc;
-  overflow: hidden;
+  overflow: hidden; 
+  font-family: 'Inter', sans-serif;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  flex-shrink: 0;
+  margin-bottom: 12px; /* Gap dikurangkan */
+  flex-shrink: 0; 
 }
 
-.header-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.btn-group {
-  display: flex;
-  background: #f1f5f9;
-  padding: 2px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-
-  button {
-    border: none;
-    background: none;
-    padding: 4px 12px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    color: #64748b;
-
-    &.active {
-      background: white;
-      border-radius: 6px;
-      color: #2f6fed;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-  }
-}
-
-.btn-export {
-  background: #2f6fed;
-  color: white;
-  border: none;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    background: #1e5ad4;
-  }
-}
-
+/* =========================================================
+   2. COMPACT GRID SYSTEM
+========================================================= */
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 16px;
-  flex: 1;
-  min-height: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); 
+  grid-template-rows: repeat(2, minmax(0, 1fr));    
+  gap: 12px; /* Gap dikurangkan dari 20px ke 12px */
+  flex: 1; 
+  min-height: 0; 
+  min-width: 0;
 }
 
 .card {
   background: white;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #eef2f6;
+  padding: 12px; /* Padding dalam dikurangkan dari 20px ke 12px */
   display: flex;
   flex-direction: column;
-  padding: clamp(10px, 2vh, 18px);
-  overflow: hidden;
-  min-height: 0;
-
-  h3 {
-    font-size: 14px;
-    margin-bottom: clamp(8px, 1.5vh, 12px);
-    font-weight: 700;
-    color: #1e293b;
-    flex-shrink: 0;
-  }
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-    border-color: #e2e8f0;
-  }
-}
-
-/* ================= 2. INCIDENT WALL (FIXED SQUASH) ================= */
-.iw-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 10px;
-  flex: 1;
-  min-height: 0;
-}
-
-.iw-item {
-  padding: 12px;
-  border-radius: 10px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  .iw-value {
-    font-size: clamp(24px, 3vh, 28px);
-    font-weight: 800;
-    line-height: 1;
-    z-index: 1;
-  }
-  .iw-label,
-  .iw-desc {
-    font-size: 10px;
-    z-index: 1;
-    font-weight: 700;
-  }
-
-  .iw-icon {
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
-    font-size: 45px !important;
-    width: 45px !important;
-    height: 45px !important;
-    opacity: 0.1;
-    transform: rotate(-10deg);
-  }
-}
-
-/* ================= 3. DESIGNER CARD (FIXED SQUASH) ================= */
-.designer-card {
-  padding: 24px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-
-  .card-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1e293b;
-    .total-val {
-      color: #2563eb;
-      font-weight: 800;
-      margin-left: 5px;
-    }
-  }
-
-  // Barisan Sektor (Atas)
-  .sector-row {
-    display: flex;
-    justify-content: space-around;
-    margin: 25px 0;
-
-    .sector-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-
-      .s-icon {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-        margin-bottom: 8px;
-      }
-      .s-label {
-        font-size: 0.7rem;
-        color: #94a3b8;
-        font-weight: 600;
-        text-transform: uppercase;
-      }
-      .s-val {
-        font-size: 1.1rem;
-        font-weight: 800;
-        margin-top: 2px;
-      }
-
-      // Warna mengikut design
-      .glc-color,
-      .glc-text {
-        color: #a855f7;
-      } // Ungu
-      .fsi-color,
-      .fsi-text {
-        color: #2dd4bf;
-      } // Teal
-      .edu-color,
-      .edu-text {
-        color: #f59e0b;
-      } // Oren
-      .gov-color,
-      .gov-text {
-        color: #d946ef;
-      } // Pink
-    }
-  }
-
-  .card-divider {
-    height: 1px;
-    background: #f1f5f9;
-    margin-bottom: 20px;
-  }
-
-  // Barisan Hardware (Bawah)
-  .hardware-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .hw-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-
-      mat-icon {
-        color: #475569;
-        font-size: 22px;
-        width: 22px;
-        height: 22px;
-      }
-
-      .hw-info {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.2;
-        small {
-          color: #3b82f6;
-          font-size: 0.65rem;
-          font-weight: 700;
-        }
-        strong {
-          color: #0f172a;
-          font-size: 1rem;
-          font-weight: 800;
-        }
-      }
-    }
-  }
-}
-
-/* ================= 3. BRAND AGING (FIXED OVERFLOW) ================= */
-.brand-aging-card {
-  padding: 16px; // Dibesarkan sedikit dari 12px untuk ruang bernafas
-
-  .ba-main-layout {
-    display: flex;
-    gap: 16px; // Jarak antara chart dan sidebar yang lebih jelas
-
-    .ba-charts-area {
-      flex: 1.7; // Memberi ruang seimbang antara kiri dan kanan
-      .ba-row {
-        margin-bottom: 12px;
-        .ba-info {
-          margin-bottom: 4px;
-          span {
-            font-size: 12px;
-            font-weight: 700;
-          } // Nama brand lebih jelas
-          .unit-count {
-            font-size: 11px;
-            color: #64748b;
-          }
-        }
-        .ba-full-bar {
-          height: 10px; // Bar dinaikkan sedikit ketebalannya
-        }
-      }
-    }
-
-    .ba-stats-sidebar {
-      flex: 1;
-      border-left: 1px solid #f1f5f9;
-      padding-left: 15px; // Padding kiri dilebarkan sikit
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-
-      .sidebar-label {
-        color: #94a3b8;
-        font-weight: 800;
-        font-size: 9px; // Saiz label yang lebih standard
-        letter-spacing: 0.5px;
-        margin-bottom: 4px;
-      }
-
-      .stat-card {
-        background: #fafafa;
-        border: 1px solid #f1f5f9;
-        border-radius: 8px;
-        padding: 10px 12px; // Kotak dibesarkan sedikit
-        margin-bottom: 4px;
-
-        .card-head {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: #64748b;
-          font-size: 10px; // Header card lebih mudah dibaca
-          margin-bottom: 6px;
-
-          mat-icon {
-            font-size: 15px; // Ikon dibesarkan sedikit
-            width: 15px;
-            height: 15px;
-          }
-        }
-
-        .card-body {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-
-          strong {
-            font-size: 13px; // Nama Fleet lebih menonjol
-            color: #1e293b;
-            font-weight: 800;
-          }
-
-          .badge {
-            background: #fef2f2;
-            color: #ef4444;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 800;
-            font-size: 9px; // Badge lebih jelas
-            border: 1px solid #fee2e2;
-          }
-        }
-
-        &.risk mat-icon {
-          color: #ef4444;
-        }
-        &.capex mat-icon {
-          color: #3b82f6;
-        }
-      }
-
-      .reliability-mini {
-        .rel-item {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 6px;
-          font-size: 11px; // Teks Reliability lebih jelas
-          font-weight: 600;
-
-          .stars {
-            display: flex;
-            align-items: center;
-            color: #fbbf24;
-            mat-icon {
-              font-size: 12px;
-              width: 12px;
-              height: 12px;
-            }
-            span {
-              color: #64748b;
-              font-size: 10px;
-              margin-left: 4px;
-              font-weight: 700;
-            }
-          }
-        }
-      }
-
-      .btn-report {
-        font-size: 10px;
-        font-weight: 700;
-        padding: 8px;
-        margin-top: auto; // Tolak butang ke bawah
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
-        background: white;
-        color: #2f6fed;
-        cursor: pointer;
-
-        &:hover {
-          background: #f8fafc;
-        }
-      }
-    }
-  }
-}
-
-/* ================= 4. VENDOR & ASSET (SPINNER FIX) ================= */
-.vp-row {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 25px;
-  padding-top: 10px;
-}
-
-.spinner-container {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  .spinner-text {
-    position: absolute;
-    font-weight: 800;
-    font-size: 14px;
-    color: #1e293b;
-  }
-}
-
-.vp-label {
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: #94a3b8;
-  margin-top: 10px;
-  text-transform: uppercase;
-}
-
-.vp-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th {
-    font-size: 10px;
-    color: #cbd5e1;
-    text-align: left;
-    padding-bottom: 12px;
-  }
-
-  td {
-    padding: 12px 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #334155;
-    border-bottom: 1px solid #f8fafc;
-  }
-}
-
-.fcr-flex {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  .fcr-val {
-    min-width: 30px;
-    text-align: right;
-  }
-}
-
-/* ================= 5. COLORS & UTILS ================= */
-::ng-deep {
-  .green circle {
-    stroke: #22c55e !important;
-  }
-  .orange circle {
-    stroke: #f59e0b !important;
-  }
-  .red circle {
-    stroke: #ef4444 !important;
-  }
-
-  .custom-bar {
-    height: 8px !important;
-    border-radius: 4px;
-    background-color: #f1f5f9 !important;
-
-    &.green .mdc-linear-progress__bar-inner {
-      border-color: #22c55e !important;
-    }
-    &.orange .mdc-linear-progress__bar-inner {
-      border-color: #f59e0b !important;
-    }
-    &.red .mdc-linear-progress__bar-inner {
-      border-color: #ef4444 !important;
-    }
-  }
-}
-
-.green-text {
-  color: #22c55e;
-}
-.orange-text {
-  color: #f59e0b;
-}
-.red-text {
-  color: #ef4444;
-}
-
-.iw-blue {
-  background: #eff6ff;
-  color: #1e40af;
-}
-.iw-yellow {
-  background: #fffbeb;
-  color: #92400e;
-}
-.iw-green {
-  background: #f0fdf4;
-  color: #166534;
-}
-.iw-red {
-  background: #fef2f2;
-  color: #991b1b;
-}
-
-.seg.new {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
-}
-.seg.aging {
-  background: linear-gradient(90deg, #fbbf24, #f59e0b);
-}
-.seg.critical {
-  background: linear-gradient(90deg, #f87171, #ef4444);
-}
-.seg.standard {
-  background: linear-gradient(90deg, #10b981, #3b82f6); /* Contoh hijau ke biru */
-}
-.ba-row {
-  margin-bottom: 20px;
-}
-.ba-info {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-/* ================= 6. TOTAL ASSET HEALTH (FIXED) ================= */
-.asset-flex {
-  display: flex;
-  gap: 30px;
-  align-items: center;
-  flex: 1;
-  min-height: 0;
-  padding: 10px;
-}
-
-.ah-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 140px;
-  flex-shrink: 0;
-}
-
-.spinner-wrapper {
-  position: relative;
-  cursor: pointer; // ✅ Pastikan kursor pointer muncul pada keseluruhan kawasan
-
-  canvas {
-    display: block;
-    position: relative;
-    z-index: 1; // ✅ Carta duduk di lapisan bawah teks
-  }
-
-  .ah-inner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 2; // ✅ Teks duduk di atas
-    pointer-events: none; // ✅ PENTING: Supaya kursor boleh "tembus" ke graf di belakang
-
-    .ah-val {
-      font-size: 20px;
-      font-weight: 800;
-      color: #1e293b;
-      line-height: 1;
-    }
-  }
-}
-.ah-sub {
-  font-size: 9px;
-  color: #94a3b8;
-  font-weight: 700;
-}
-
-.ah-right {
-  flex: 1;
-  min-width: 0;
-}
-
-.fault-row {
-  margin-bottom: 12px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  .fault-info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    font-weight: 700;
-    margin-bottom: 6px;
-
-    .model-name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
-      padding-right: 12px;
-      color: #334155;
-    }
-
-    .fault-percent {
-      font-weight: 800;
-    }
-  }
-
-  // Progress bar yang dinamik warnanya
-  ::ng-deep .custom-progress-bar {
-    height: 6px !important;
-    border-radius: 10px;
-    background-color: #f1f5f9 !important; // Track color
-
-    // Gunakan CSS variable dari HTML untuk warna bar
-    --mdc-linear-progress-active-indicator-color: var(--bar-color) !important;
-    --mdc-linear-progress-track-color: #f1f5f9 !important;
-
-    .mdc-linear-progress__bar-inner {
-      border-color: var(--bar-color) !important;
-    }
-  }
-}
-/* ================= 7. MISC & RESPONSIVE TWEAKS ================= */
-.card-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 25px;
-  color: #1e293b;
-
-  .blue-text {
-    color: #2f6fed;
-    font-weight: 800;
-    margin-left: 5px;
-  }
-}
-
-.asset-icons {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 25px;
-  padding: 0 5px;
-
-  .icon-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-
-    span {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10px;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        color: #2f6fed;
-      }
-    }
-
-    strong {
-      font-size: 18px;
-      color: #1e293b;
-      font-weight: 800;
-    }
-  }
-}
-
-.asset-footer {
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 20px;
-  margin-top: 10px;
-
-  .footer-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-
-    strong {
-      font-size: 17px;
-      color: #2f6fed;
-      font-weight: 800;
-    }
-  }
-}
-
-.no-data {
-  font-size: 11px;
-  color: #94a3b8;
-  font-style: italic;
-  text-align: center;
-  padding: 10px;
-}
-
-.clickable-card {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-}
-
-/* ================= LEASE LIFECYCLE TIMELINE (ONLY) ================= */
-
-.timeline-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px; /* Jarak antara setiap baris lease */
-  padding: 5px 0;
-}
-
-.t-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 30px; /* Ruang extra di bawah untuk label 'Days Left' */
-  gap: 20px;
-  width: 100%;
-}
-
-.t-info {
-  width: 180px; /* Lebar tetap supaya bar sejajar di sebelah kanan */
-  flex-shrink: 0;
-  line-height: 1.4;
-
-  strong {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e293b;
-    text-transform: uppercase;
-  }
-
-  small {
-    font-size: 11px;
-    color: #64748b;
-    font-weight: 500;
-  }
-}
-
-.t-progress-container {
-  flex: 1;
-  height: 10px;
-  background: #f1f5f9; /* Warna tapak bar (track) */
-  border-radius: 10px;
-  position: relative; /* Penting untuk kedudukan .days-left */
-}
-
-.t-bar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  
   height: 100%;
-  border-radius: 10px;
-  /* Warna gradient dari Hijau ke Biru */
-  background: linear-gradient(90deg, #10b981, #3b82f6);
-  transition: width 0.5s ease-in-out;
-}
+  min-height: 0; 
+  min-width: 0; 
+  
+  overflow-y: auto; 
+  overflow-x: hidden;
+  box-sizing: border-box;
 
-.t-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  font-weight: 700;
-  margin-top: 8px;
-  color: #94a3b8;
-  text-transform: uppercase;
-}
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-.days-left {
-  color: #ef4444; /* Warna merah amaran */
-  font-weight: 800;
-  position: absolute;
-  right: 0; /* Melekat di hujung kanan bar */
-  top: -22px; /* Terapung di atas bar */
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-.end-date {
-  /* Secara default, t-labels justify-between akan tolak tarikh ni ke kanan */
-}
-
-.ba-legend {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-    }
-    .l-txt {
-      small {
-        font-size: 9px;
-        color: #666;
-        display: block;
-        line-height: 1;
-      }
-      p {
-        font-size: 11px;
-        margin: 0;
-        font-weight: 600;
-      }
-    }
-  }
-}
-
-/* Warna Ikut Legend */
-.new,
-.dot.blue {
-  background-color: #007bff;
-}
-.standard,
-.dot.green {
-  background-color: #28a745;
-}
-.aging,
-.dot.orange {
-  background-color: #fd7e14;
-}
-.critical,
-.dot.red {
-  background-color: #dc3545;
-}
-
-.ba-full-bar {
-  display: flex;
-  height: 8px;
-  background: #eee;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 5px;
-
-  .seg {
-    height: 100%;
-    transition: width 0.3s ease;
-  }
-}
-
-// ================= CLIENT SELECTOR (FIXED) ================= */
-.client-selector-wrapper {
-  .btn-client-filter {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 16px;
-    height: 40px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+  .main-card-title {
+    font-size: 13px; /* Tajuk dikecilkan sikit */
+    margin-bottom: 12px;
+    font-weight: 800;
     color: #1e293b;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: #64748b;
-    }
-
-    .label {
-      max-width: 150px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .arrow {
-      color: #94a3b8;
-      margin-left: 4px;
-    }
-
-    &:hover {
-      border-color: #2f6fed;
-      background: #f8fafc;
-    }
+    flex-shrink: 0; 
+    .total-val { color: #2563eb; margin-left: 5px; }
   }
 }
 
-/* Style untuk Dropdown List */
-::ng-deep .client-dropdown-menu {
-  border-radius: 12px !important;
-  margin-top: 8px;
-  min-width: 220px !important;
-  padding: 8px 0 !important;
+.full-width { grid-column: auto; }
 
-  .mat-mdc-menu-item {
-    height: 44px !important;
+/* =========================================================
+   3. KANDUNGAN DALAMAN (DIKECILKAN SIKIT SUPAYA MUAT)
+========================================================= */
 
-    &:hover {
-      background: #f1f5f9 !important;
-    }
-  }
+/* --- Header Actions --- */
+.header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.btn-group { display: flex; background: #f1f5f9; padding: 2px; border-radius: 6px; border: 1px solid #e2e8f0; button { border: none; background: none; padding: 4px 10px; font-size: 10px; font-weight: 700; cursor: pointer; color: #64748b; &.active { background: white; border-radius: 4px; color: #2f6fed; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); } } }
+.client-selector-wrapper .btn-client-filter { display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 32px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; color: #1e293b; font-weight: 700; font-size: 11px; cursor: pointer; mat-icon { font-size: 14px; width: 14px; height: 14px; color: #64748b; } .label { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
 
-  .divider {
-    height: 1px;
-    background: #f1f5f9;
-    margin: 4px 0;
-  }
-
-  /* Style Checkbox dalam menu */
-  mat-checkbox {
-    pointer-events: none; /* Biar click event handled by menu-item */
-    font-weight: 600;
-    color: #475569;
-  }
+/* --- Designer Card (Total Asset) --- */
+.designer-card {
+  .sector-row { display: flex; justify-content: space-around; margin-bottom: 10px; .sector-item { display: flex; flex-direction: column; align-items: center; text-align: center; .s-icon { font-size: 24px; width: 24px; height: 24px; margin-bottom: 4px; } .s-label { font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; } .s-val { font-size: 14px; font-weight: 800; margin-top: 2px; } .glc-color, .glc-text { color: #a855f7; } .fsi-color, .fsi-text { color: #2dd4bf; } .edu-color, .edu-text { color: #f59e0b; } .gov-color, .gov-text { color: #d946ef; } } }
+  .card-divider { height: 1px; background: #f1f5f9; margin-bottom: 10px; }
+  .hardware-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; .hw-item { display: flex; align-items: center; gap: 6px; mat-icon { color: #475569; font-size: 18px; width: 18px; height: 18px; } .hw-info { display: flex; flex-direction: column; line-height: 1.1; small { color: #3b82f6; font-size: 8px; font-weight: 700; } strong { color: #0f172a; font-size: 12px; font-weight: 800; } } } }
 }
 
-/* ================= 8. LOADING STATE (FIXED) ================= */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 80vh;
-  color: #64748b;
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 15px;
-    &.spin {
-      animation: rotate 2s linear infinite;
-    }
-  }
-}
+/* --- Incident Wall --- */
+.iw-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; flex: 1; min-height: 0; }
+.iw-item { padding: 10px; border-radius: 8px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; cursor: pointer; .iw-value { font-size: 20px; font-weight: 800; line-height: 1; z-index: 1; margin: 4px 0; } .iw-label, .iw-desc { font-size: 9px; z-index: 1; font-weight: 700; } .iw-icon { position: absolute; bottom: -5px; right: -5px; font-size: 40px !important; width: 40px !important; height: 40px !important; opacity: 0.1; transform: rotate(-10deg); } }
+.iw-blue { background: #eff6ff; color: #1e40af; } .iw-yellow { background: #fffbeb; color: #92400e; } .iw-green { background: #f0fdf4; color: #166534; } .iw-red { background: #fef2f2; color: #991b1b; }
 
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* --- OS Vulnerability / Vendor Health --- */
+.vp-row { display: flex; justify-content: space-around; margin-bottom: 10px; padding-top: 4px; }
+.spinner-container { position: relative; display: flex; justify-content: center; align-items: center; .spinner-text { position: absolute; font-weight: 800; font-size: 11px; color: #1e293b; } }
+.vp-label { text-align: center; font-size: 9px; font-weight: 700; color: #94a3b8; margin-top: 6px; text-transform: uppercase; }
+.vp-table { width: 100%; border-collapse: collapse; th { font-size: 9px; color: #cbd5e1; text-align: left; padding-bottom: 6px; } td { padding: 8px 0; font-size: 11px; font-weight: 700; color: #334155; border-bottom: 1px solid #f8fafc; } }
+.fcr-flex { display: flex; align-items: center; gap: 8px; .fcr-val { min-width: 25px; text-align: right; } }
 
-.client-dropdown-menu {
-  min-width: 280px !important;
+/* --- Asset Health --- */
+.asset-flex { display: flex; gap: 12px; align-items: center; flex: 1; min-height: 0; }
+.ah-left { display: flex; flex-direction: column; align-items: center; width: 110px; flex-shrink: 0; }
+.spinner-wrapper { position: relative; cursor: pointer; canvas { display: block; position: relative; z-index: 1; } .ah-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 2; pointer-events: none; .ah-val { font-size: 16px; font-weight: 800; color: #1e293b; line-height: 1; } } }
+.ah-sub { font-size: 8px; color: #94a3b8; font-weight: 700; }
+.ah-right { flex: 1; min-width: 0; }
+.fault-row { margin-bottom: 8px; .fault-info { display: flex; justify-content: space-between; font-size: 9px; font-weight: 700; margin-bottom: 4px; .model-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; padding-right: 8px; color: #334155; } .fault-percent { font-weight: 800; } } }
 
-  .project-header-item {
-    padding: 8px 16px;
-    background: #f8fafc; // Warna latar beza sikit untuk Mother
+/* --- Brand Aging --- */
+.brand-aging-card {
+  /* TUKAR: Wajib jadikan 'row' supaya ia duduk sebelah-sebelah */
+  .ba-main-layout { display: flex; flex-direction: row; gap: 16px; } 
+
+  /* 1. CARTA DI BELAH KANAN */
+  .ba-charts-area { 
+    flex: 1.5; 
+    order: 2; /* PAKSA carta duduk di kanan */
+    .ba-row { margin-bottom: 8px; .ba-info { display: flex; justify-content: space-between; margin-bottom: 4px; span { font-size: 10px; font-weight: 700; } .unit-count { font-size: 9px; color: #64748b; } } .ba-full-bar { height: 6px; display: flex; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 4px; .seg { height: 100%; transition: width 0.3s ease; } } } 
+  }
+
+  /* 2. QUICK STATS DI BELAH KIRI */
+  .ba-stats-sidebar { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; /* Kad stat tetap memanjang ke bawah */
+    gap: 12px; 
+    order: 1; /* PAKSA quick stat duduk di kiri */
     
-    .project-label {
-      font-weight: 800;
-      color: #1e293b;
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-  }
-
-  .client-sub-list {
-    padding-left: 20px; // Ini yang buat dia masuk ke dalam
+    /* Ubah border supaya jadi dinding pemisah di sebelah kanan */
+    border-top: none; 
+    border-right: 1px solid #f1f5f9; 
+    padding-top: 0; 
+    padding-right: 16px; /* Jarakkan dari graf */
     
-    button[mat-menu-item] {
-      height: 40px;
-      line-height: 40px;
-      
-      ::ng-deep .mdc-label {
-        font-size: 13px;
-        color: #475569;
-      }
-    }
+    .qs-section { display: flex; flex-direction: column; width: 100%; gap: 10px; } 
+    .stat-card { 
+      flex: 1; background: #fafafa; border: 1px solid #f1f5f9; border-radius: 6px; padding: 10px; 
+      .card-head { display: flex; align-items: center; gap: 4px; color: #64748b; font-size: 9px; margin-bottom: 6px; mat-icon { font-size: 14px; width: 14px; height: 14px; } } 
+      .card-body { display: flex; justify-content: space-between; align-items: center; strong { font-size: 11px; color: #1e293b; font-weight: 800; } .badge { background: #fef2f2; color: #ef4444; padding: 2px 4px; border-radius: 4px; font-weight: 800; font-size: 8px; border: 1px solid #fee2e2; } small { font-size: 8px; color: #94a3b8; font-weight: 700; } } 
+      &.risk mat-icon { color: #ef4444; } &.capex mat-icon { color: #3b82f6; } 
+    } 
+  }
+}
+.ba-legend { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; .legend-item { display: flex; align-items: center; gap: 4px; .dot { width: 8px; height: 8px; border-radius: 2px; } .l-txt { small { font-size: 7px; color: #666; display: block; line-height: 1; } span { font-size: 9px; margin: 0; font-weight: 600; } } } }
+
+/* --- Lease Timeline --- */
+.timeline-list { display: flex; flex-direction: column; gap: 12px; padding: 5px 0; }
+.t-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; width: 100%; }
+.t-info { display: flex; justify-content: space-between; align-items: center; width: 100%; strong { font-size: 11px; font-weight: 700; color: #1e293b; text-transform: uppercase; } small { font-size: 9px; color: #64748b; font-weight: 600; } }
+.t-progress-container { width: 100%; height: 6px; background: #f1f5f9; border-radius: 10px; position: relative; }
+.t-bar { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #10b981, #3b82f6); transition: width 0.5s ease-in-out; }
+.t-labels { display: flex; justify-content: space-between; font-size: 8px; font-weight: 700; margin-top: 4px; color: #94a3b8; text-transform: uppercase; }
+.days-left { color: #ef4444; font-weight: 800; }
+
+/* --- Utility Colors & Overrides --- */
+.new, .dot.blue { background-color: #007bff; } .standard, .dot.green { background-color: #28a745; } .aging, .dot.orange { background-color: #fd7e14; } .critical, .dot.red { background-color: #dc3545; }
+.green-text { color: #22c55e; } .orange-text { color: #f59e0b; } .red-text { color: #ef4444; }
+.seg.new { background: linear-gradient(90deg, #60a5fa, #3b82f6); } .seg.aging { background: linear-gradient(90deg, #fbbf24, #f59e0b); } .seg.critical { background: linear-gradient(90deg, #f87171, #ef4444); } .seg.standard { background: linear-gradient(90deg, #10b981, #3b82f6); }
+
+::ng-deep {
+  .green circle { stroke: #22c55e !important; } .orange circle { stroke: #f59e0b !important; } .red circle { stroke: #ef4444 !important; }
+  .custom-bar { height: 4px !important; border-radius: 2px; background-color: #f1f5f9 !important; &.green .mdc-linear-progress__bar-inner { border-color: #22c55e !important; } &.orange .mdc-linear-progress__bar-inner { border-color: #f59e0b !important; } &.red .mdc-linear-progress__bar-inner { border-color: #ef4444 !important; } }
+  .custom-progress-bar { height: 4px !important; border-radius: 2px; background-color: #f1f5f9 !important; --mdc-linear-progress-active-indicator-color: var(--bar-color) !important; --mdc-linear-progress-track-color: #f1f5f9 !important; .mdc-linear-progress__bar-inner { border-color: var(--bar-color) !important; } }
+  .client-dropdown-menu { border-radius: 12px !important; margin-top: 8px; min-width: 250px !important; padding: 8px 0 !important; .mat-mdc-menu-item { height: 44px !important; } .divider { height: 1px; background: #f1f5f9; margin: 4px 0; } mat-checkbox { pointer-events: none; font-weight: 600; color: #475569; } }
+}
+
+.loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; color: #64748b; mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 15px; &.spin { animation: rotate 2s linear infinite; } } }
+@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* =========================================================
+   4. RESPONSIVE DESIGN (SKRIN KECIL / TABLET / PHONE)
+========================================================= */
+
+/* Untuk Skrin Sederhana / Tablet (View 2 Lajur x 3 Baris) */
+@media (max-width: 1200px) {
+  .page {
+    /* Buka kunci skrin supaya boleh skrol ke bawah */
+    height: auto; 
+    min-height: 100vh;
+    overflow-y: auto; 
   }
 
-  .divider {
-    height: 1px;
-    background: #e2e8f0;
-    margin: 4px 0;
+  .grid {
+    /* Tukar kepada 2 Lajur */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); 
+    /* Buang limit 2 baris, biar ia auto tambah baris ke-3 */
+    grid-template-rows: auto; 
+    /* Tetapkan ketinggian minima kotak supaya graf tak terpenyek */
+    grid-auto-rows: minmax(400px, auto); 
+  }
+}
+
+/* Untuk Skrin Telefon Pintar (View 1 Lajur memanjang ke bawah) */
+@media (max-width: 768px) {
+  .grid {
+    /* Tukar kepada 1 Lajur */
+    grid-template-columns: 1fr; 
+    grid-auto-rows: minmax(380px, auto);
+  }
+
+  /* Susun semula butang di atas supaya muat di phone */
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    align-items: stretch;
+    .btn-group { justify-content: center; }
+    .client-selector-wrapper .btn-client-filter { justify-content: space-between; }
+  }
+
+  /* Susun graf Brand Aging supaya quick stat turun ke bawah */
+  .brand-aging-card .ba-main-layout {
+    flex-direction: column;
+  }
+  .brand-aging-card .ba-stats-sidebar {
+    border-right: none;
+    border-top: 1px solid #f1f5f9;
+    padding-right: 0;
+    padding-top: 16px;
+    order: 3; /* Turunkan quick stat ke bawah graf semula pada phone */
   }
 }

@@ -4,15 +4,15 @@
       <div class="sup">nPoints™ AISM PLATFORM</div>
       <h1>Summary Report</h1>
     </div>
-    <button class="btn-export" (click)="generateReport()" [disabled]="isAnalyzing">
-      <mat-icon *ngIf="!isAnalyzing">auto_awesome</mat-icon>
+    <button class="btn-export" (click)="generateAIAnalysis()" [disabled]="isAnalyzing">
+      <mat-icon *ngIf="!isAnalyzing">psychology</mat-icon>
       <mat-icon *ngIf="isAnalyzing" class="spin">sync</mat-icon>
       {{ isAnalyzing ? 'AI IS ANALYZING...' : 'Full Gemini AI Report Analysis' }}
     </button>
   </div>
 
-  <div class="grid-2x2">
-    <!-- <div class="card">
+  <!-- <div class="grid-2x2">
+    <div class="card">
       <h3>Multi-Client Operation Overview</h3>
       <div class="vp-row">
         <div class="vp-item" *ngFor="let v of vendorHealth">
@@ -29,9 +29,9 @@
           <div class="vp-label">{{ v.label }}</div>
         </div>
       </div>
-    </div> -->
+    </div>
 
-    <!-- <div class="card">
+    <div class="card">
       <h3>Inventory & Logistic Overview</h3>
       <div class="asset-flex">
         <div class="ah-left">
@@ -60,7 +60,20 @@
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
+  </div> -->
+
+  <div class="ai-result-card card" *ngIf="aiResult">
+    <div class="ai-header">
+      <mat-icon>auto_awesome</mat-icon>
+      <h3>STRATEGIC AI INSIGHTS</h3>
+    </div>
+    <div class="ai-content">
+      <p>{{ aiResult }}</p>
+    </div>
+    <div class="ai-footer">
+      <small>Analysis powered by Gemini 1.5 Flash • Based on Real-time SQL Data</small>
+    </div>
   </div>
 
   <div class="section-label">Summary Report</div>

@@ -112,7 +112,7 @@ async function getPool(client, type) {
         return pool;
       } catch (err) {
         // Kita tutup pool dlu sebelum cuba dbName seterusnya dlm loop
-        try { await pool.close(); } catch(e) {}
+        await pool.close().catch(() => {});
         continue; 
       }
     }

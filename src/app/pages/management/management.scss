@@ -329,3 +329,43 @@
 }
 
 @keyframes blink { 50% { opacity: 0.3; } }
+
+.v-status-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85rem;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+
+  &.warning {
+    background: #dc2626; // Merah jika ada inactive/expiring
+    color: white;
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.os-breakdown-box {
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; // Bagi ada jarak antara Win 7, 8 & 10
+  border-left: 3px solid #ef4444; // Garis merah tepi bagi nampak "alert"
+  padding-left: 12px;
+}
+
+.os-breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  
+  span { color: #94a3b8; } // Warna kelabu lembut
+  strong { color: #f8fafc; font-family: 'Courier New', monospace; }
+}

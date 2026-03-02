@@ -46,4 +46,8 @@ export class IncidentApi {
   getAvailableYears(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/incidents/years`);
   }
+
+  getManagementStats(clientId: string = ''): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/dashboard/stats-summary?client=${clientId}`);
+  }
 }

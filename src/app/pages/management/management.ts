@@ -1,74 +1,111 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { IncidentApi } from '../../services/dashboard.api';
 
 @Component({
   selector: 'app-management',
   standalone: true,
   imports: [CommonModule, MatIconModule],
-  templateUrl: './management.html', 
-  styleUrls: ['./management.scss']
+  templateUrl: './management.html',
+  styleUrls: ['./management.scss'],
 })
 export class ManagementComponent implements OnInit {
-
-  // --- THE BIG 4 (Level 1 Metrics - Leasing Focus) ---
-  totalProjects: number = 15;
-  activeProjects: number = 12;
-  inactiveProjects: number = 3;
-
-  totalClients: number = 42;
-
-  totalAssets: number = 13450;
-  deployedAssets: number = 12778;
-  idleAssets: number = 672;
-
-  agentVisibility: number = 98.5; // Percentage
-  offlineAgents: number = 201;
-
-  // --- STRATEGIC VALUE (Risk & Revenue) ---
-  totalCapexExposure: string = 'RM 2.45M';
-  agingUnits: number = 2400; // Units approaching EOL
-
-  monthlyRecurringRevenue: string = 'RM 850k';
-  expiringContracts: number = 3; // < 90 days
-
-  // --- INSIGHTS ---
-  idleFinancialLoss: string = 'RM 45,000 / mo';
-  osRiskExposure: string = 'RM 120,000';
-  revenueAtRisk: string = 'RM 320k / mo';
-
-  // --- AI EXECUTIVE BRIEF ---
+  stats: any = null;
+  isLoading: boolean = true;
   aiSummary: string = '';
   isLoadingAi: boolean = true;
 
-  constructor() { }
+  // --- STRATEGIC METRICS ---
+  totalCapexExposure: string = 'RM 0';
+  agingUnits: number = 0;
+  monthlyRecurringRevenue: string = 'RM 0';
+
+  // --- INSIGHT METRICS ---
+  idleFinancialLoss: string = 'RM 0';
+  osRiskExposure: string = 'RM 0';
+  revenueAtRisk: string = 'RM 0';
+
+  constructor(
+    private api: IncidentApi,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
-    // Simulasi loading AI Insight
-    this.generateAiInsight();
+    this.fetchDashboardStats();
   }
 
-  generateAiInsight() {
+  // 🛠️ HELPER: Format currency dengan safety check
+  private formatCurrency(value: number | undefined | null): string {
+    const num = value || 0; // Jika null/undefined, guna 0
+    if (num >= 1000000000) {
+      return `RM ${(num / 1000000000).toFixed(2)}B`;
+    } else if (num >= 1000000) {
+      return `RM ${(num / 1000000).toFixed(2)}M`;
+    } else if (num >= 1000) {
+      return `RM ${Math.round(num / 1000)}k`;
+    } else {
+      return `RM ${num}`;
+    }
+  }
+
+  fetchDashboardStats() {
+    this.isLoading = true;
+    this.api.getManagementStats().subscribe({
+      next: (data) => {
+        this.stats = data;
+
+        // --- DATA SAFETY CHECK ---
+        const deployedUnits = data.assets?.deployed || 0;
+        const idleUnits = data.assets?.idle || 0;
+        const capexExp = data.assets?.capexExposure || 0;
+        const osRiskExp = data.risk_analysis?.financial_impact || 0;
+        const idleLoss = data.assets?.idleLoss || 0;
+
+        // --- STRATEGIC GRID ---
+        this.agingUnits = idleUnits; 
+        this.totalCapexExposure = this.formatCurrency(capexExp);
+        this.monthlyRecurringRevenue = this.formatCurrency(deployedUnits * 150);
+
+        // --- INSIGHT GRID ---
+        // 1. OS Risk (RM 646k)
+        this.osRiskExposure = this.formatCurrency(osRiskExp);
+        
+        // 2. Idle Loss (RM 17k)
+        this.idleFinancialLoss = this.formatCurrency(idleLoss) + ' / mo';
+        
+        // 3. Revenue at Risk (FIXED NaN: Guna deployedUnits yang dah di-validate)
+        const mrrValue = deployedUnits * 150;
+        this.revenueAtRisk = this.formatCurrency(mrrValue * 0.2) + ' / mo';
+
+        this.isLoading = false;
+        this.generateAiInsight(data);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("❌ API Error:", err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  generateAiInsight(liveData: any) {
+    if (!liveData) return;
     this.isLoadingAi = true;
-    
-    // Ayat AI yang direka khas untuk Hardware Leasing Partner
-    const insights = [
-      "Operasi mencatatkan 12 Projek dan 42 Klien aktif. Terdapat risiko keselamatan tinggi pada 1,240 PC dengan OS/BIOS lapuk yang boleh mengakibatkan penalti SLA. Anggaran CapEx untuk menggantikan 2,400 PC berikutan tamat tempoh sewa pada Q3 adalah RM 2.45M.",
-      "Sebanyak 672 aset sedang berstatus 'Idle' menyebabkan potensi kebocoran pendapatan RM 45,000 bulan ini. Kadar ejen yang berfungsi ('Online') kekal stabil pada tahap 98.5%.",
-      "MRR kekal pada paras RM 850k. Tumpuan utama pengurusan suku ini adalah memperbaharui 3 kontrak utama (KPM & KKM) yang menghampiri tempoh tamat pajakan bagi mengelakkan kerugian RM 320k sebulan."
-    ];
 
-    // Pilih insight pertama untuk demo
-    // Boleh gunakan Math.random() untuk tukar-tukar insight
+    const active = liveData.portfolio?.active || 0;
+    const visibility = liveData.visibility?.percentage || 0;
+    const idle = liveData.assets?.idle || 0;
+    const osRisk = liveData.risk_analysis?.total_units || 0;
+
+    // AI Insight yang lebih dinamik merangkumi OS Risk baru
+    const insight = `Operations report ${active} active projects with ${visibility}% visibility. Immediate attention required for ${osRisk} outdated OS units and ${idle} idle assets to mitigate a total financial exposure of ${this.osRiskExposure}.`;
+
     setTimeout(() => {
-      this.aiSummary = insights[0]; 
+      this.aiSummary = insight;
       this.isLoadingAi = false;
-    }, 1500);
-  }
-
-  // --- NAVIGATION (Simulasi Drill-Down) ---
-  navigateToProjectDetails() {
-    console.log("Navigating to Level 2: Project Breakdown...");
-    // this.router.navigate(['/projects']);
+      this.cdr.detectChanges();
+    }, 1200);
   }
 }

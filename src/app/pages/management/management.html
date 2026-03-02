@@ -5,23 +5,25 @@
       <h1>Enterprise Command Center</h1>
     </div>
     <div class="mgmt-meta">
-      <div class="update-pill">
-        <span class="pulse"></span> LIVE OPERATIONS
+      <div class="update-pill" [class.loading]="isLoading">
+        <span class="pulse"></span>
+        {{ isLoading ? 'SYNCING DATA...' : 'LIVE OPERATIONS' }}
       </div>
     </div>
   </div>
 
-  <div class="big-4-container">
+  <div class="big-4-container" *ngIf="!isLoading; else loadingTemplate">
     <div class="metric-box">
       <div class="box-icon blue"><mat-icon>folder_special</mat-icon></div>
       <div class="box-data">
         <label>Project Portfolio</label>
         <div class="value-row">
-          <div class="value">15</div>
+          <div class="value">{{ stats?.portfolio?.total }}</div>
           <span class="trend-badge stable">Total</span>
         </div>
         <div class="asset-details-row">
-          <strong style="color: #16a34a;">12 Active</strong> | <span style="color: #dc2626;">3 Inactive</span>
+          <strong style="color: #16a34a">{{ stats?.portfolio?.active }} Active</strong> |
+          <span style="color: #dc2626">{{ stats?.portfolio?.inactive }} Inactive</span>
         </div>
       </div>
     </div>
@@ -31,8 +33,7 @@
       <div class="box-data">
         <label>Total Clients</label>
         <div class="value-row">
-          <div class="value">42</div>
-          <span class="trend-badge up">+2 New</span> 
+          <div class="value">{{ stats?.clients?.total }}</div>
         </div>
         <div class="asset-details-row">Across all active projects</div>
       </div>
@@ -43,10 +44,11 @@
       <div class="box-data">
         <label>Total Assets</label>
         <div class="value-row">
-          <div class="value">13,450</div>
+          <div class="value">{{ stats?.assets?.total | number }}</div>
         </div>
         <div class="asset-details-row">
-          <strong>12,778</strong> Deployed | <strong style="color: #ea580c;">672</strong> Idle
+          <strong>{{ stats?.assets?.deployed | number }}</strong> Deployed |
+          <strong style="color: #ea580c">{{ stats?.assets?.idle | number }}</strong> Offline
         </div>
       </div>
     </div>
@@ -56,27 +58,34 @@
       <div class="box-data">
         <label>Agent Visibility</label>
         <div class="value-row">
-          <div class="value">98.5%</div>
-          <span class="trend-badge stable">Online</span> 
+          <div class="value">{{ stats?.visibility?.percentage }}%</div>
+          <span class="trend-badge stable">Online</span>
         </div>
         <div class="asset-details-row">
-          <strong>201</strong> Offline / Not Reporting
+          <strong style="color: #ea580c">{{ stats?.visibility?.offline | number }}</strong> Offline / Not Reporting
         </div>
       </div>
     </div>
   </div>
 
-  <div class="strategic-grid">
+  <ng-template #loadingTemplate>
+    <div class="loading-spinner-container">
+      <div class="spinner"></div>
+      <p>Fetching live operational data...</p>
+    </div>
+  </ng-template>
+
+  <div class="strategic-grid" *ngIf="!isLoading">
     <div class="value-card orange-gradient">
       <div class="v-content">
         <div class="v-info">
           <h3>Aging & Refresh CapEx Exposure</h3>
-          <div class="v-price">RM 2.45M</div>
+          <div class="v-price">{{ totalCapexExposure }}</div>
           <p>Estimated cost to replace assets >4 years old & EOL devices</p>
         </div>
         <div class="v-sub-data">
           <small>Critical Replacements</small>
-          <strong>2,400 Units</strong>
+          <strong>{{ agingUnits | number }} Units</strong>
         </div>
       </div>
     </div>
@@ -85,17 +94,18 @@
       <div class="v-content">
         <div class="v-info">
           <h3>Lease Contract Health (MRR)</h3>
-          <div class="v-price">RM 850k</div>
+          <div class="v-price">{{ monthlyRecurringRevenue }}</div>
           <p>Monthly Recurring Revenue from active PC deployments</p>
         </div>
-        <div class="v-status-tag">
-          <mat-icon>notification_important</mat-icon> 3 Projects Expiring < 90 Days
+        <div class="v-status-tag" [class.warning]="stats?.portfolio?.inactive > 0">
+          <mat-icon>notification_important</mat-icon>
+          {{ stats?.portfolio?.inactive || 0 }} Projects Expiring < 90 Days
         </div>
       </div>
     </div>
   </div>
 
-  <div class="insight-grid">
+  <div class="insight-grid" *ngIf="!isLoading">
     <div class="insight-card">
       <div class="card-header-sm">
         <mat-icon>money_off</mat-icon>
@@ -103,9 +113,12 @@
       </div>
       <div class="forecast-data">
         <small>Potential Revenue Leakage</small>
-        <strong style="color: #dc2626;">RM 45,000 / mo</strong>
+        <strong style="color: #dc2626">{{ idleFinancialLoss }}</strong>
       </div>
-      <p>Kerugian dari 672 aset yang terbiar (idle) dan tidak menjana sewaan.</p>
+      <p>
+        Projected loss from {{ stats?.assets?.idle | number }} assets currently idle and not
+        generating lease revenue.
+      </p>
     </div>
 
     <div class="insight-card">
@@ -114,11 +127,32 @@
         <span>Security & OS Risk Impact</span>
       </div>
       <div class="forecast-data">
-        <small>Outdated OS / BIOS Exposure</small>
-        <strong>RM 120,000</strong>
+        <small>Outdated OS Exposure Impact</small>
+        <strong style="color: #ef4444">{{ osRiskExposure }}</strong>
       </div>
-      <div class="trend-indicator down">
-        <mat-icon>warning</mat-icon> 1,240 PCs vulnerable to SLA penalty
+
+      <div class="os-breakdown-box" *ngIf="stats?.risk_analysis">
+        <div class="os-breakdown-item">
+          <span>Win 7 / XP:</span>
+          <strong>{{
+            (stats.risk_analysis.breakdown?.windows_7 || 0) +
+              (stats.risk_analysis.breakdown?.windows_xp || 0)
+          }}</strong>
+        </div>
+        <div class="os-breakdown-item">
+          <span>Windows 8:</span>
+          <strong>{{ stats.risk_analysis.breakdown?.windows_8 || 0 }}</strong>
+        </div>
+        <div class="os-breakdown-item">
+          <span>Win 10 (Outdated):</span>
+          <strong>{{ stats.risk_analysis.breakdown?.windows_10_outdated || 0 }}</strong>
+        </div>
+      </div>
+
+      <div class="trend-indicator down" style="margin-top: 10px">
+        <mat-icon>warning</mat-icon>
+        <strong>{{ stats?.risk_analysis?.total_units || 0 | number }}</strong> Outdated OS units
+        vulnerable
       </div>
     </div>
 
@@ -129,24 +163,27 @@
       </div>
       <div class="forecast-data">
         <small>Revenue at Risk (Q3-2026)</small>
-        <strong>RM 320k / mo</strong>
+        <strong>{{ revenueAtRisk }}</strong>
       </div>
       <div class="trend-indicator stable">
-        <mat-icon>arrow_forward</mat-icon> KPM & KKM Projects approaching expiry
+        <mat-icon>arrow_forward</mat-icon> High-priority projects approaching contract expiry
       </div>
     </div>
   </div>
 
-  <div class="ai-brief-section">
+  <div class="ai-brief-section" *ngIf="!isLoading">
     <div class="ai-header">
       <mat-icon>auto_awesome</mat-icon>
       <span>CHIEF OFFICER'S BRIEFING</span>
     </div>
     <div class="ai-body">
-      <p>Operasi mencatatkan 12 Projek dan 42 Klien aktif. Terdapat risiko keselamatan tinggi pada 1,240 PC dengan OS/BIOS lapuk yang boleh mengakibatkan penalti SLA. Anggaran CapEx untuk menggantikan 2,400 PC berikutan tamat tempoh sewa pada Q3 adalah RM 2.45M.</p>
-      <div class="ai-action-box">
-        <strong>ACTION:</strong> Prioritize OS/BIOS patching for the 1,240 vulnerable units to protect MRR, and initiate contract renewal talks for KPM & KKM.
+      <p>{{ aiSummary }}</p>
+      <div class="ai-action-box" *ngIf="!isLoadingAi">
+        <strong>ACTION:</strong> Prioritize OS migration for the
+        {{ stats?.risk_analysis?.total_units }} outdated units and health checks for idle assets to
+        secure MRR.
       </div>
+      <div *ngIf="isLoadingAi" class="ai-loading">AI is analyzing live operations trends...</div>
     </div>
   </div>
 </div>

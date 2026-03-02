@@ -97,7 +97,7 @@ app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) =>
     const allData = await db.queryAllServers('helpdesk', query);
 
     // 2. Cari tiket yang bila di-normalize + uuidv5, dapat UUID yang sama macam dalam URL
-    const targetTicket = allData.find(row => {
+    const targetTicket = allData.find((row) => {
       const generatedUuid = uuidv5(normalize(row.request_no), NAMESPACE);
       return generatedUuid === uuid;
     });
@@ -112,12 +112,10 @@ app.get('/api/dashboard/detail/:uuid', systemAuthMiddleware, async (req, res) =>
   }
 });
 
-
 // 3 Endpoint Hirarki Projek
 app.get('/api/dashboard/hierarchy', systemAuthMiddleware, (req, res) => {
   res.json(db.projects);
 });
-
 
 // 4 Summary (KPI)
 app.get('/api/dashboard/summary', systemAuthMiddleware, validateClientFilter, async (req, res) => {
@@ -126,29 +124,29 @@ app.get('/api/dashboard/summary', systemAuthMiddleware, validateClientFilter, as
     const query = `SELECT request_status, request_time, completed_time FROM HD_REQUEST`;
     const results = await db.querySpecificServers('helpdesk', query, selectedClient);
     const now = Math.floor(Date.now() / 1000);
-    
+
     const summary = results.reduce(
       (acc, curr) => {
         const status = Number(curr.request_status ?? 0);
         let reqTime = Number(curr.request_time ?? 0);
         let compTime = Number(curr.completed_time ?? 0);
-        
+
         if (reqTime > 9999999999) reqTime = Math.floor(reqTime / 1000);
         if (compTime > 9999999999) compTime = Math.floor(compTime / 1000);
-        
+
         const endTime = compTime > 0 ? compTime : now;
         const daysElapsed = Math.floor((endTime - reqTime) / 86400);
-        
+
         if (status === 0) acc.openTotal++;
         if (status === 1) acc.pendingTotal++;
         if (status === 2) acc.solvedTotal++;
         if (status !== 2 && daysElapsed > 7) acc.lapsedTotal++;
-        
+
         return acc;
       },
       { openTotal: 0, pendingTotal: 0, solvedTotal: 0, lapsedTotal: 0 },
     );
-    
+
     summary.masa_update = new Date().toLocaleTimeString();
     res.json(summary);
   } catch (err) {
@@ -160,19 +158,19 @@ app.get('/api/dashboard/summary', systemAuthMiddleware, validateClientFilter, as
 app.get('/api/assets/total', systemAuthMiddleware, async (req, res) => {
   try {
     const selectedClient = req.query.client || '';
-    
+
     // 1. Query SQL untuk kira total aset
     const queryStr = `SELECT COUNT(object_root_idn) as count FROM TS_OBJECT_ROOT`;
-    
+
     // 2. TUKAR KEPADA 'tco' (Sebab TS_OBJECT_ROOT ada dalam DB TCO, bukan Helpdesk)
     const results = await db.querySpecificServers('tco', queryStr, selectedClient);
-    
+
     // 3. DEBUG: Check console untuk tengok hasil mapping db.js
     console.log(`📡 Asset Results:`, results);
 
     // 4. Kira total (Pastikan row.count ditukar ke Number)
     const totalAssets = results.reduce((sum, row) => sum + Number(row.count || 0), 0);
-    
+
     res.json({ totalAssets });
   } catch (err) {
     console.error('❌ Total Asset Error:', err.message);
@@ -188,7 +186,7 @@ app.get('/api/dashboard/clients', systemAuthMiddleware, (req, res) => {
     label: c.type === 'project' ? `Project: ${c.name}` : `Client: ${c.name}`,
     projectName: c.projectName,
     sector: c.sector, // <--- Sekarang ni dah ada sebab db.js dah angkut dari MySQL
-    type: c.type
+    type: c.type,
   }));
 
   res.json(clientList);
@@ -216,19 +214,21 @@ app.get('/api/assets/top-faults', systemAuthMiddleware, async (req, res) => {
     // 📊 Aggregation (Gabungkan model yang sama tapi kekalkan info server/sector)
     const aggregated = allResults.reduce((acc, curr) => {
       // Kita cari dalam accumulator kalau model + server yang sama dah ada
-      const existing = acc.find(item => item.name === curr.name && item.serverId === curr.serverId);
-      
+      const existing = acc.find(
+        (item) => item.name === curr.name && item.serverId === curr.serverId,
+      );
+
       const count = Number(curr.fault_count || 0);
 
       if (existing) {
         existing.fault_count += count;
       } else {
-        acc.push({ 
-          name: curr.name, 
+        acc.push({
+          name: curr.name,
           fault_count: count,
           serverId: curr.serverId,
           projectName: curr.projectName,
-          serverSector: curr.serverSector // <--- Dah ada balik!
+          serverSector: curr.serverSector, // <--- Dah ada balik!
         });
       }
       return acc;
@@ -241,13 +241,12 @@ app.get('/api/assets/top-faults', systemAuthMiddleware, async (req, res) => {
     const finalTop5 = aggregated
       .sort((a, b) => b.fault_count - a.fault_count)
       .slice(0, 5)
-      .map(item => ({
+      .map((item) => ({
         ...item,
-        rate: grandTotal > 0 ? Math.round((item.fault_count * 100) / grandTotal) : 0
+        rate: grandTotal > 0 ? Math.round((item.fault_count * 100) / grandTotal) : 0,
       }));
 
     res.json(finalTop5);
-
   } catch (err) {
     console.error('❌ Top Faults Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -295,11 +294,16 @@ app.get('/api/assets/brand-aging', systemAuthMiddleware, async (req, res) => {
     rawResults.forEach((curr) => {
       const bName = curr.brand;
       if (!brandMap[bName]) {
-        brandMap[bName] = { 
-          name: bName, total: 0, new: 0, standard: 0, aging: 0, critical: 0,
+        brandMap[bName] = {
+          name: bName,
+          total: 0,
+          new: 0,
+          standard: 0,
+          aging: 0,
+          critical: 0,
           serverId: curr.serverId,
           projectName: curr.projectName,
-          serverSector: curr.serverSector
+          serverSector: curr.serverSector,
         };
       }
 
@@ -326,7 +330,7 @@ app.get('/api/assets/brand-aging', systemAuthMiddleware, async (req, res) => {
         // Metadata dikekalkan (Ambil rekod terakhir server yang jumpa brand ni)
         serverId: b.serverId,
         projectName: b.projectName,
-        serverSector: b.serverSector
+        serverSector: b.serverSector,
       }));
 
     res.json(finalResults);
@@ -344,17 +348,26 @@ app.get('/api/incidents/trend', systemAuthMiddleware, async (req, res) => {
 
     // 1. Filter Status (Kekalkan logik kau)
     switch (type) {
-      case 'open': conditions.push("request_status = 0"); break;
-      case 'pending': conditions.push("request_status IN (1, 10, 11, 12, 13)"); break;
-      case 'solved': conditions.push("request_status = 2"); break;
-      case 'lapsed': 
-        conditions.push("request_status NOT IN (2, 14) AND DATEDIFF(DAY, DATEADD(SECOND, request_time, '1970-01-01'), GETDATE()) > 7"); 
+      case 'open':
+        conditions.push('request_status = 0');
         break;
-      default: conditions.push("1=1");
+      case 'pending':
+        conditions.push('request_status IN (1, 10, 11, 12, 13)');
+        break;
+      case 'solved':
+        conditions.push('request_status = 2');
+        break;
+      case 'lapsed':
+        conditions.push(
+          "request_status NOT IN (2, 14) AND DATEDIFF(DAY, DATEADD(SECOND, request_time, '1970-01-01'), GETDATE()) > 7",
+        );
+        break;
+      default:
+        conditions.push('1=1');
     }
 
     // 2. Logik Dynamic Date Formatting
-    let dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'yyyy')"; 
+    let dateSelect = "FORMAT(DATEADD(SECOND, request_time, '1970-01-01'), 'yyyy')";
     const isAllYear = !year || year === 'All' || year === 'All Year';
 
     if (!isAllYear) {
@@ -373,7 +386,7 @@ app.get('/api/incidents/trend', systemAuthMiddleware, async (req, res) => {
       }
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : "";
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Query SQL: Kita tarik Sort Key supaya Node.js tahu mana bulan dulu, mana bulan kemudian
     const query = `
@@ -393,10 +406,10 @@ app.get('/api/incidents/trend', systemAuthMiddleware, async (req, res) => {
     const aggregated = rawResults.reduce((acc, curr) => {
       const label = curr.date;
       if (!acc[label]) {
-        acc[label] = { 
-          date: label, 
-          count: 0, 
-          sortTime: Number(curr.sort_key) 
+        acc[label] = {
+          date: label,
+          count: 0,
+          sortTime: Number(curr.sort_key),
         };
       }
       acc[label].count += Number(curr.count || 0);
@@ -408,10 +421,9 @@ app.get('/api/incidents/trend', systemAuthMiddleware, async (req, res) => {
 
     console.log(`📈 Trend Generated: ${finalTrend.length} data points.`);
     res.json(finalTrend);
-
-  } catch (err) { 
-    console.error("❌ Trend Error:", err.message);
-    res.status(500).json({ error: 'Internal Server Error', details: err.message }); 
+  } catch (err) {
+    console.error('❌ Trend Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 });
 
@@ -419,13 +431,13 @@ app.get('/api/incidents/trend', systemAuthMiddleware, async (req, res) => {
 app.get('/api/incidents/years', async (req, res) => {
   try {
     const query = `SELECT DISTINCT YEAR(DATEADD(SECOND, request_time, '1970-01-01')) AS year FROM HD_REQUEST WHERE request_time > 0`;
-    
+
     // Panggil semua server Helpdesk
     const results = await db.queryAllServers('helpdesk', query);
-    
+
     // Ambil tahun, buang null/undefined, buang duplicate, dan susun (Desc)
     const uniqueYears = [...new Set(results.map((r) => r.year))]
-      .filter(y => y !== null && y !== undefined)
+      .filter((y) => y !== null && y !== undefined)
       .sort((a, b) => b - a); // Susun 2026, 2025, 2024...
 
     res.json(uniqueYears);
@@ -453,37 +465,46 @@ app.get('/api/assets/summary', systemAuthMiddleware, async (req, res) => {
     // Panggil db.js (Sekarang dia akan pulangkan data + serverSector)
     const allResults = await db.querySpecificServers('tco', query, selectedClient);
 
-    const summary = allResults.reduce((acc, curr) => {
-      const count = Number(curr.Total || 0);
-      const sector = (curr.serverSector || 'OTHERS').toUpperCase(); // Ambil dari db.js
+    const summary = allResults.reduce(
+      (acc, curr) => {
+        const count = Number(curr.Total || 0);
+        const sector = (curr.serverSector || 'OTHERS').toUpperCase(); // Ambil dari db.js
 
-      // 1. Tambah ke Total Asset Global
-      acc.totalAsset += count;
+        // 1. Tambah ke Total Asset Global
+        acc.totalAsset += count;
 
-      // 2. Pecahkan mengikut Kategori Machine Type
-      const type = curr.Machine_Type;
-      if (type.includes('DESKTOP')) acc.desktop += count;
-      else if (type.includes('LAPTOP') || type.includes('NOTEBOOK')) acc.laptop += count;
-      else if (type.includes('SERVER')) acc.server += count;
-      else acc.others += count;
+        // 2. Pecahkan mengikut Kategori Machine Type
+        const type = curr.Machine_Type;
+        if (type.includes('DESKTOP')) acc.desktop += count;
+        else if (type.includes('LAPTOP') || type.includes('NOTEBOOK')) acc.laptop += count;
+        else if (type.includes('SERVER')) acc.server += count;
+        else acc.others += count;
 
-      // 3. Pecahkan mengikut Sektor (Terus guna data dari MySQL)
-      if (sector === 'GLC') acc.glc += count;
-      else if (sector === 'FSI') acc.fsi += count;
-      else if (sector === 'GOV') acc.gov += count;
-      else if (sector === 'EDU') acc.edu += count;
-      else acc.othersSector += count; // Tambah sikit untuk sektor lain-lain
-      
-      return acc;
-    }, { 
-      totalAsset: 0, 
-      desktop: 0, laptop: 0, server: 0, others: 0, 
-      glc: 0, fsi: 0, gov: 0, edu: 0, othersSector: 0 
-    });
+        // 3. Pecahkan mengikut Sektor (Terus guna data dari MySQL)
+        if (sector === 'GLC') acc.glc += count;
+        else if (sector === 'FSI') acc.fsi += count;
+        else if (sector === 'GOV') acc.gov += count;
+        else if (sector === 'EDU') acc.edu += count;
+        else acc.othersSector += count; // Tambah sikit untuk sektor lain-lain
+
+        return acc;
+      },
+      {
+        totalAsset: 0,
+        desktop: 0,
+        laptop: 0,
+        server: 0,
+        others: 0,
+        glc: 0,
+        fsi: 0,
+        gov: 0,
+        edu: 0,
+        othersSector: 0,
+      },
+    );
 
     console.log(`✅ Summary Berjaya: ${summary.totalAsset} Aset diproses.`);
     res.json(summary);
-
   } catch (err) {
     console.error('❌ Summary Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
@@ -528,7 +549,7 @@ app.get('/api/assets/brand-hierarchy-new', systemAuthMiddleware, async (req, res
 
     // Metadata serverSector & serverId secara automatik dah ada dalam results
     console.log(`📊 [Brand Hierarchy] Dijana: ${results.length} rekod untuk brand: ${brand}`);
-    
+
     res.json(results);
   } catch (err) {
     console.error('❌ [Brand Hierarchy Error]:', err.message);
@@ -560,7 +581,9 @@ app.get('/api/assets/individual-details', systemAuthMiddleware, async (req, res)
     if (type) {
       const t = type.toLowerCase();
       if (t === 'notebook' || t === 'laptop') {
-        conditions.push("(LOWER(ISNULL(c.MachineType, 'devices')) LIKE '%laptop%' OR LOWER(ISNULL(c.MachineType, 'devices')) LIKE '%notebook%')");
+        conditions.push(
+          "(LOWER(ISNULL(c.MachineType, 'devices')) LIKE '%laptop%' OR LOWER(ISNULL(c.MachineType, 'devices')) LIKE '%notebook%')",
+        );
       } else {
         conditions.push(`LOWER(ISNULL(c.MachineType, 'devices')) LIKE '%${t}%'`);
       }
@@ -595,23 +618,114 @@ app.get('/api/assets/individual-details', systemAuthMiddleware, async (req, res)
     const rawResults = await db.querySpecificServers('tco', query, project || '');
 
     // 🛠️ MAPPING BERSIH: Buang duplicate & metadata teknikal yang tak perlu
-    const finalData = rawResults.map(row => {
+    const finalData = rawResults.map((row) => {
       // Kita "destructure" untuk buang serverId & projectName yang datang dari db.js
       const { serverId, projectName, serverSector, ...cleanRow } = row;
 
       return {
         ...cleanRow,
-        client: serverId,    // Guna 'client' yang lebih pendek (e.g., FELDA)
-        sector: serverSector // Guna 'sector' (e.g., GLC)
+        client: serverId, // Guna 'client' yang lebih pendek (e.g., FELDA)
+        sector: serverSector, // Guna 'sector' (e.g., GLC)
       };
     });
 
     console.log(`✅ ${finalData.length} baris dipulangkan (Metadata cleaned).`);
     res.json(finalData);
-
   } catch (err) {
     console.error('❌ Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// 14 Statistic For Capex
+app.get('/api/dashboard/stats-summary', systemAuthMiddleware, async (req, res) => {
+  try {
+    const selectedClient = req.query.client || '';
+
+    const allProjects = db.projects || [];
+    const allClients = db.clients || [];
+
+    // 2. Query MSSQL - Tambah pecahan mengikut versi OS
+    const query = `
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN DATEDIFF(day, ConnectionTime, GETDATE()) > 90 THEN 1 ELSE 0 END) as idle,
+        
+        -- PECAHAN OS RISK
+        SUM(CASE WHEN OS LIKE '%Windows 7%' THEN 1 ELSE 0 END) as win7_units,
+        SUM(CASE WHEN OS LIKE '%Windows 8%' THEN 1 ELSE 0 END) as win8_units,
+        SUM(CASE WHEN OS LIKE '%Windows XP%' THEN 1 ELSE 0 END) as winXP_units,
+        SUM(CASE WHEN OS LIKE '%Windows 10%' AND OS NOT LIKE '%22H2%' AND OS NOT LIKE '%21H2%' THEN 1 ELSE 0 END) as win10_old_units
+      FROM TS_OBJECT_ROOT
+    `;
+
+    const mssqlResults = await db.querySpecificServers('tco', query, selectedClient);
+
+    // 3. Rumuskan Data (Update Reducer untuk kutip semua pecahan OS)
+    const assetStats = mssqlResults.reduce((acc, curr) => {
+      acc.total += Number(curr.total || 0);
+      acc.idle += Number(curr.idle || 0);
+      
+      // Ambil pecahan dari SQL
+      acc.win7 += Number(curr.win7_units || 0);
+      acc.win8 += Number(curr.win8_units || 0);
+      acc.winXP += Number(curr.winXP_units || 0);
+      acc.win10_old += Number(curr.win10_old_units || 0);
+      
+      return acc;
+    }, { 
+      total: 0, idle: 0, 
+      win7: 0, win8: 0, winXP: 0, win10_old: 0 
+    });
+
+    // Kira jumlah besar OS Risk
+    const totalOsRiskUnits = assetStats.win7 + assetStats.win8 + assetStats.winXP + assetStats.win10_old;
+
+    // 4. Filter Projects (Kekalkan logic asal kau)
+    const filteredProjects = selectedClient
+      ? allProjects.filter(p => p.project_name === selectedClient || p.client_name === selectedClient)
+      : allProjects;
+
+    const activeCount = filteredProjects.filter(p => {
+      const val = p.is_active;
+      if (val === undefined || val === null) return false;
+      if (Buffer.isBuffer(val)) return val[0] === 1;
+      return String(val) === '1' || val === true || Number(val) === 1;
+    }).length;
+
+    // 5. Respond JSON (Ditambah breakdown untuk Angular)
+    res.json({
+      portfolio: {
+        total: filteredProjects.length,
+        active: activeCount,
+        inactive: filteredProjects.length - activeCount
+      },
+      assets: {
+        total: assetStats.total,
+        idle: assetStats.idle,
+        capexExposure: assetStats.idle * 3500,
+        idleLoss: assetStats.idle * 150
+      },
+      risk_analysis: {
+        total_units: totalOsRiskUnits,
+        financial_impact: totalOsRiskUnits * 500,
+        // KAU BOLEH PAKAI DATA NI UTUK TOOLTIP ATAU CHART
+        breakdown: {
+          windows_7: assetStats.win7,
+          windows_8: assetStats.win8,
+          windows_xp: assetStats.winXP,
+          windows_10_outdated: assetStats.win10_old
+        }
+      },
+      visibility: {
+        percentage: assetStats.total > 0 ? (((assetStats.total - assetStats.idle) / assetStats.total) * 100).toFixed(1) : '0.0',
+        offline: assetStats.idle
+      }
+    });
+
+  } catch (err) {
+    console.error('❌ Stats Summary Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 });
 

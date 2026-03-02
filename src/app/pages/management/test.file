@@ -1,0 +1,76 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { HttpClient, HttpClientModule } from '@angular/common/http'; // Tambah ni
+
+@Component({
+  selector: 'app-management',
+  standalone: true,
+  imports: [CommonModule, MatIconModule, HttpClientModule], // Tambah HttpClientModule
+  templateUrl: './management.html',
+  styleUrls: ['./management.scss']
+})
+export class ManagementComponent implements OnInit {
+
+  // Data Dashboard (Inisial 0)
+  totalProjects: number = 0;
+  activeProjects: number = 0;
+  inactiveProjects: number = 0;
+  totalClients: number = 0;
+  totalAssets: number = 0;
+  agentVisibility: number = 0;
+  offlineAgents: number = 0;
+
+  // Status Loading
+  isLoadingData: boolean = true;
+  isLoadingAi: boolean = true;
+  aiSummary: string = '';
+
+  // API URL (Sesuaikan dengan port Node.js kau)
+  private apiUrl = 'http://localhost:3000/api/executive-summary';
+
+  constructor(private http: HttpClient) { }
+
+  ngOnInit(): void {
+    this.fetchDashboardData();
+  }
+
+  fetchDashboardData() {
+    this.isLoadingData = true;
+    
+    // Tarik data dari Backend
+    this.http.get<any>(this.apiUrl).subscribe({
+      next: (data) => {
+        // Update variable Dashboard Level 1
+        this.totalProjects = data.projects.total;
+        this.activeProjects = data.projects.active;
+        this.inactiveProjects = data.projects.inactive;
+        this.totalClients = data.clients.total;
+        this.totalAssets = data.assets.total;
+        this.agentVisibility = data.assets.visibility;
+        this.offlineAgents = data.assets.offline;
+
+        this.isLoadingData = false;
+        this.generateAiInsight(data); // Jana AI guna data sebenar
+      },
+      error: (err) => {
+        console.error("Gagal tarik data dashboard", err);
+        this.isLoadingData = false;
+      }
+    });
+  }
+
+  generateAiInsight(data: any) {
+    this.isLoadingAi = true;
+    
+    // Bina ayat AI secara dinamik berdasarkan data API
+    const insight = `Sistem mengesan ${data.projects.active} projek aktif merangkumi ${data.clients.total} klien. 
+                     Tahap 'Visibility' aset berada pada ${data.assets.visibility}%. 
+                     Terdapat ${data.assets.offline} ejen yang tidak melaporkan status (Offline).`;
+
+    setTimeout(() => {
+      this.aiSummary = insight;
+      this.isLoadingAi = false;
+    }, 1000);
+  }
+}

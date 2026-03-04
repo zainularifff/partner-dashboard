@@ -1,5 +1,4 @@
 <div class="crm-container">
-  
   <div class="loading-full-screen" *ngIf="loading">
     <div class="loading-content">
       <mat-icon class="spin">sync</mat-icon>
@@ -8,96 +7,219 @@
   </div>
 
   <div class="main-content-wrapper" *ngIf="!loading">
-    <header class="crm-header">
+    <header class="crm-header compact">
       <div class="header-left">
-        <button class="back-btn" (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
+        <button class="back-btn-sm" (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
         <div>
           <h1>Project Portfolio Breakdown</h1>
           <p>Operational CRM & Deployment Status</p>
         </div>
       </div>
       <div class="header-actions">
-        <div class="search-box">
+        <div class="search-box-sm">
           <mat-icon>search</mat-icon>
-          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="updateGroups()" placeholder="Search project...">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="updateGroups()"
+            placeholder="Search project..."
+          />
         </div>
       </div>
     </header>
 
-    <div class="kpi-row">
-      <div class="kpi-card" [class.active]="selectedSector === 'ALL'" (click)="setSector('ALL')">
-        <label>Total Clients</label>
-        <div class="kpi-value">{{ sectorStats['ALL'] }}</div>
-      </div>
-      <div class="kpi-card" [class.active]="selectedSector === s" *ngFor="let s of ['GOV','GLC','EDU','FSI']" (click)="setSector(s)">
-        <label>{{ s }} Clients</label>
-        <div class="kpi-value">{{ sectorStats[s] }}</div>
+    <div class="overall-analytics-row">
+      <div class="analytics-card">
+        <div class="analytics-info">
+          <h3>Overall Connectivity Health</h3>
+          <p>Real-time status of all deployed assets across sectors</p>
+          <div class="mini-stats-row">
+            <div class="m-stat">
+              <span class="dot online"></span> <strong>{{ totalOnlineAll }}</strong> Online
+            </div>
+            <div class="m-stat">
+              <span class="dot offline"></span> <strong>{{ totalOfflineAll }}</strong> Offline
+            </div>
+          </div>
+        </div>
+        <div class="analytics-chart">
+          <apx-chart
+            [series]="[totalOnlineAll, totalOfflineAll]"
+            [chart]="{ type: 'donut', height: 160 }"
+            [labels]="['Online', 'Offline']"
+            [colors]="['#22c55e', '#ef4444']"
+            [legend]="{ show: false }"
+            [dataLabels]="{ enabled: false }"
+            [plotOptions]="{
+              pie: {
+                donut: {
+                  size: '75%',
+                  labels: {
+                    show: true,
+                    total: { show: true, label: 'Health', formatter: getHealthRate },
+                  },
+                },
+              },
+            }"
+          ></apx-chart>
+        </div>
       </div>
     </div>
 
-    <div class="sector-section" *ngFor="let group of groupedProjectsData">
-      <div class="sector-header">
-        <mat-icon>label_important</mat-icon>
-        <h2>{{ group.key }} SECTOR</h2>
-        <span class="count-badge">{{ group.value.length }} Projects</span>
+    <div class="kpi-row-compact">
+      <div class="kpi-card-sm" [class.active]="selectedSector === 'ALL'" (click)="setSector('ALL')">
+        <label>All Sector</label>
+        <div class="kpi-value">{{ sectorStats['ALL'] }}</div>
       </div>
+      <ng-container *ngFor="let s of sectorStats | keyvalue">
+        <div
+          class="kpi-card-sm"
+          [class.active]="selectedSector === $any(s.key)"
+          *ngIf="s.key !== 'ALL'"
+          (click)="setSector($any(s.key))"
+        >
+          <label>{{ s.key }} Sector</label>
+          <div class="kpi-value">{{ s.value }}</div>
+        </div>
+      </ng-container>
+    </div>
 
-      <div class="project-grid" 
-           cdkDropList 
-           cdkDropListOrientation="mixed"
-           [cdkDropListData]="group.value"
-           (cdkDropListDropped)="drop($event, group.key)">
-        
-        <div class="project-card" 
-             *ngFor="let p of group.value" 
-             cdkDrag
-             [class.warning]="p.status === 'Warning'">
-          
-          <div class="drag-placeholder" *cdkDragPlaceholder></div>
+    <div class="projects-list-area">
+      <div class="sector-section-sm" *ngFor="let group of groupedProjectsData; let i = index">
+        <div class="sector-header-sm">
+          <mat-icon>folder_open</mat-icon>
+          <h2>{{ group.key }} Sector</h2>
+          <span class="count-badge-sm">{{ group.value.length }}</span>
+        </div>
 
-          <div class="card-top">
-            <div class="left-meta">
-              <div class="drag-handle" cdkDragHandle>
-                <mat-icon>drag_indicator</mat-icon>
+        <div class="project-grid-compact" cdkDropList (cdkDropListDropped)="drop($event, i)">
+          <div class="project-card-compact" *ngFor="let p of group.value" cdkDrag>
+            <div class="card-top-sm">
+              <div class="left-meta">
+                <div class="drag-handle-sm" cdkDragHandle><mat-icon>drag_indicator</mat-icon></div>
+                <span class="sector-tag-sm">{{ p.client }}</span>
               </div>
-              <span class="sector-tag">{{ p.client }}</span>
+              <span class="status-dot-sm" [class.active]="p.status === 'Active'"></span>
             </div>
-            <span class="status-dot" [class.active]="p.status === 'Active'"></span>
+
+            <div class="card-mid-sm">
+              <h3>{{ p.name }}</h3>
+              <div class="meta-row-sm">
+                <mat-icon>inventory_2</mat-icon><span>{{ p.assets | number }} Target Assets</span>
+              </div>
+            </div>
+
+            <div class="card-stats-sm">
+              <div class="stat-box">
+                <label>Deployed</label>
+                <strong class="text-blue">{{ p.deployed | number }}</strong>
+              </div>
+              <div class="stat-box">
+                <label>Balance</label>
+                <strong class="text-orange">{{ p.balance | number }}</strong>
+              </div>
+              <div class="stat-box">
+                <label>Online</label>
+                <strong class="text-green"
+                  ><span class="dot-s online"></span> {{ p.onlineAgents || 0 }}</strong
+                >
+              </div>
+              <div class="stat-box">
+                <label>Offline</label>
+                <strong class="text-red"
+                  ><span class="dot-s offline"></span> {{ p.offlineAgents || 0 }}</strong
+                >
+              </div>
+            </div>
+
+            <!-- <div class="progress-container-sm">
+              <div class="progress-bar-sm">
+                <div class="fill" [style.width.%]="(p.deployed / p.assets) * 100"></div>
+              </div>
+              <span class="percentage-label">{{ ((p.deployed / p.assets) * 100).toFixed(0) }}%</span>
+            </div> -->
+
+            <button class="view-detail-btn-sm" (click)="openProjectModal(p)">
+              <span>View Detail</span><mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+    <div class="side-drawer" (click)="$event.stopPropagation()">
+      <header class="drawer-header">
+        <div>
+          <span class="tag">{{ selectedProject?.client }}</span>
+          <h2>{{ selectedProject?.name }} Details</h2>
+        </div>
+        <button (click)="closeModal()"><mat-icon>close</mat-icon></button>
+      </header>
+
+      <div class="drawer-content">
+        <div class="modal-search-wrapper">
+          <div class="search-box">
+            <mat-icon>search</mat-icon>
+            <input
+              type="text"
+              [(ngModel)]="agentSearchQuery"
+              (ngModelChange)="applyFiltersAndSort()"
+              placeholder="Search Hostname, IP or Model..."
+            />
+          </div>
+          <span class="count-tag" [class.error-bg]="filteredAgents.length === 0">
+            {{ filteredAgents.length | number }} Nodes
+          </span>
+        </div>
+
+        <div class="agent-table-wrapper">
+          <table class="agent-table-modern">
+            <thead>
+              <tr>
+                <th (click)="toggleSort('AssetTag')">Hostname</th>
+                <th (click)="toggleSort('IP')">IP Address</th>
+                <th (click)="toggleSort('Model')">Device / Model</th>
+                <th (click)="toggleSort('ConnectionTime')">Last Seen</th>
+                <th (click)="toggleSort('AgentStatus')">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let agent of getPaginatedAgents()">
+                <td class="bold">{{ agent.AssetTag }}</td>
+                <td>
+                  <code class="ip-text">{{ agent.IP }}</code>
+                </td>
+                <td>
+                  <div class="device-info">
+                    <span class="brand">{{ agent.Brand }}</span>
+                    <span class="model">{{ agent.Model }}</span>
+                  </div>
+                </td>
+                <td class="time-cell">{{ agent.ConnectionTime | date: 'dd MMM, HH:mm' }}</td>
+                <td>
+                  <span class="status-indicator" [class.online]="agent.AgentStatus === 'On'">
+                    {{ agent.AgentStatus === 'On' ? 'Online' : 'Offline' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-container">
+          <button [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          <div class="page-info">
+            Page <b>{{ currentPage }}</b> of <b>{{ totalPages }}</b>
           </div>
 
-          <div class="card-mid">
-            <h3>{{ p.name }}</h3>
-            <div class="meta-row">
-              <span><mat-icon>inventory_2</mat-icon> {{ p.assets | number }} Assets</span>
-            </div>
-          </div>
-
-          <div class="card-stats">
-            <div class="stat-item">
-              <label>Target</label>
-              <strong>{{ p.agents | number }}</strong>
-            </div>
-            <div class="stat-item">
-              <label>Deployed</label>
-              <strong class="text-green">{{ p.deployed | number }}</strong>
-            </div>
-            <div class="stat-item">
-              <label>Balance</label>
-              <strong class="text-orange">{{ p.balance | number }}</strong>
-            </div>
-          </div>
-
-          <div class="progress-section">
-            <div class="progress-info">
-              <small>Completion</small>
-              <small>{{ ((p.deployed/p.agents)*100).toFixed(0) }}%</small>
-            </div>
-            <div class="progress-bar">
-              <div class="fill" [style.width.%]="(p.deployed/p.agents)*100"></div>
-            </div>
-          </div>
+          <button [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
         </div>
       </div>
     </div>

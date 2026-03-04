@@ -31,7 +31,7 @@
           </div>
           <div class="asset-details-row">
             <strong style="color: #16a34a">{{ stats?.portfolio?.active }} Live</strong> |
-            <span style="color: #64748b">{{ stats?.portfolio?.inactive }} Completed</span>
+            <span style="color: #64748b">{{ stats?.portfolio?.inactive }} Inactive</span>
           </div>
         </div>
       </div>
@@ -42,7 +42,7 @@
           <label>Managed Client Entities</label>
           <div class="value-row">
             <div class="value">{{ stats?.portfolio?.partners }}</div>
-            <span class="trend-badge">Entities</span>
+            <span class="trend-badge">Client</span>
           </div>
           <div class="asset-details-row">
             <span>Portfolio Diversification</span>
@@ -50,10 +50,10 @@
         </div>
       </div>
 
-      <div class="metric-box clickable-card" (click)="onCardClick('Escalations')">
+      <div class="metric-box clickable-card" (click)="onCardClick('Risk Escalation')">
         <div class="box-icon red"><mat-icon>report_problem</mat-icon></div>
         <div class="box-data">
-          <label>Risk Escalations (L2)</label>
+          <label>Technical Risk Escalations</label>
           <div class="value-row">
             <div class="value text-red">{{ stats?.helpdesk?.l2_escalated || 70 }}</div>
             <span class="trend-badge warning">{{ escalationRate }} Rate</span>

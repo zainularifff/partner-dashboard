@@ -1,0 +1,102 @@
+<div class="overall-container">
+  <header class="page-header">
+    <div class="title-section">
+      <h1>Managed Client Entities</h1>
+      <p>Strategic Fleet & Risk Analysis</p>
+    </div>
+    <div class="search-bar">
+      <mat-icon>search</mat-icon>
+      <input type="text" [(ngModel)]="searchQuery" (input)="filterClients()" placeholder="Search entity...">
+    </div>
+  </header>
+
+  <div class="infographic-row">
+    <div class="chart-card">
+      <h3>Portfolio Health Status</h3>
+      <apx-chart 
+        [series]="healthChart.series" 
+        [chart]="healthChart.chart" 
+        [labels]="healthChart.labels" 
+        [colors]="healthChart.colors"
+        [legend]="healthChart.legend"
+        [plotOptions]="healthChart.plotOptions">
+      </apx-chart>
+    </div>
+
+    <div class="chart-card">
+      <h3>Support Intensity vs SLA</h3>
+      <apx-chart 
+        [series]="incidentChart.series" 
+        [chart]="incidentChart.chart" 
+        [xaxis]="incidentChart.xaxis"
+        [colors]="incidentChart.colors"
+        [plotOptions]="incidentChart.plotOptions"
+        [dataLabels]="incidentChart.dataLabels">
+      </apx-chart>
+    </div>
+
+    <div class="mini-stats-col">
+        <div class="stat-bubble red">
+            <mat-icon>priority_high</mat-icon>
+            <div>
+                <label>Critical Entity</label>
+                <strong>KKM (72% SLA)</strong>
+            </div>
+        </div>
+        <div class="stat-bubble purple">
+            <mat-icon>devices</mat-icon>
+            <div>
+                <label>Largest Fleet</label>
+                <strong>MOE (5.5k Units)</strong>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="client-table">
+      <thead>
+        <tr>
+          <th>Entity Name</th>
+          <th>Industry</th>
+          <th>Fleet Size</th>
+          <th>Fleet Health</th>
+          <th>SLA Perf.</th>
+          <th>Legacy Hardware (4y+)</th>
+          <th>Open Tickets</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filteredClients">
+          <td class="client-name">
+            <strong>{{ c.name }}</strong>
+            <span class="status-tag" [attr.data-status]="c.status">{{ c.status }}</span>
+          </td>
+          <td>{{ c.industry }}</td>
+          <td>{{ c.totalAssets | number }}</td>
+          <td>
+            <div class="health-mini-bar">
+              <div class="fill" [style.width.%]="c.healthScore"></div>
+              <span>{{ c.healthScore }}%</span>
+            </div>
+          </td>
+          <td class="bold" [style.color]="c.slaPerf < 80 ? '#ef4444' : '#0f172a'">
+            {{ c.slaPerf }}%
+          </td>
+          <td class="text-center">
+            <span class="aging-pill" [class.danger]="c.highRiskAging > 30">
+              {{ c.highRiskAging }}%
+            </span>
+          </td>
+          <td class="text-center bold">{{ c.activeTickets }}</td>
+          <td>
+            <button class="btn-audit">
+              Investigate <mat-icon>chevron_right</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

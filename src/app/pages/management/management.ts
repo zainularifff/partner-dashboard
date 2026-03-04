@@ -41,9 +41,13 @@ export class ManagementComponent implements OnInit {
     this.runMockDashboard();
   }
 
-  onCardClick(target: string) {
-    if (target === 'Project Portfolio') {
-      this.router.navigate(['/project']);
+  onCardClick(type: string) {
+    if (type === 'Client Entities') {
+      this.router.navigate(['/client']); // Hantar ke path 'client' yang ada dlm app.routes.ts
+    } else if (type === 'Project Portfolio') {
+      this.router.navigate(['/project']); 
+    } else if (type === 'Risk Escalation') {
+      this.router.navigate(['/risk-escalation']); 
     }
   }
 
@@ -54,10 +58,10 @@ export class ManagementComponent implements OnInit {
     // Mock Data Lengkap mengikut 6 Pillar
     const mockData = {
       portfolio: { 
-        total: 48, 
-        active: 42, 
-        inactive: 6, 
-        partners: 12 
+        total: 2, 
+        active: 2, 
+        inactive: 0, 
+        partners: 6 
       },
       assets: { 
         total: 18500, 

@@ -1,0 +1,60 @@
+<div class="risk-container">
+  <header class="risk-header">
+    <h1>Technical Risk & Escalation</h1>
+    <p>Correlation between Asset Health (OS/BIOS) and Service Delivery</p>
+  </header>
+
+  <div class="chart-section">
+    <div class="card shadow">
+      <h3>Fleet Technical Vulnerability (By Entity)</h3>
+      <apx-chart 
+        [series]="riskChart.series" 
+        [chart]="riskChart.chart" 
+        [xaxis]="riskChart.xaxis"
+        [colors]="riskChart.colors"
+        [plotOptions]="riskChart.plotOptions"
+        [legend]="riskChart.legend">
+      </apx-chart>
+    </div>
+  </div>
+
+  <div class="table-section">
+    <div class="card shadow no-padding">
+      <table class="risk-table">
+        <thead>
+          <tr>
+            <th>Client Entity</th>
+            <th>OS Security Risk</th>
+            <th>Hardware BIOS Risk</th>
+            <th>Escalation (Tickets)</th>
+            <th>SLA Impact</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of riskData">
+            <td><strong>{{ item.client }}</strong></td>
+            <td>
+              <span class="badge" [style.background]="getRiskColor(item.osRisk)">
+                {{ item.osVersion }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [style.background]="getRiskColor(item.biosRisk)">
+                {{ item.biosAge }}
+              </span>
+            </td>
+            <td class="text-center">
+                <span class="ticket-count">{{ item.openTickets }}</span>
+                <mat-icon [style.color]="item.trend === 'up' ? '#ef4444' : '#10b981'">
+                    {{ item.trend === 'up' ? 'trending_up' : 'trending_down' }}
+                </mat-icon>
+            </td>
+            <td class="bold">{{ item.slaStatus }}</td>
+            <td><button class="btn-risk">Mitigate Risk</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

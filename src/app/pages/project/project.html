@@ -1,0 +1,105 @@
+<div class="crm-container">
+  
+  <div class="loading-full-screen" *ngIf="loading">
+    <div class="loading-content">
+      <mat-icon class="spin">sync</mat-icon>
+      <p>Syncing Strategic Dashboard...</p>
+    </div>
+  </div>
+
+  <div class="main-content-wrapper" *ngIf="!loading">
+    <header class="crm-header">
+      <div class="header-left">
+        <button class="back-btn" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div>
+          <h1>Project Portfolio Breakdown</h1>
+          <p>Operational CRM & Deployment Status</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="updateGroups()" placeholder="Search project...">
+        </div>
+      </div>
+    </header>
+
+    <div class="kpi-row">
+      <div class="kpi-card" [class.active]="selectedSector === 'ALL'" (click)="setSector('ALL')">
+        <label>Total Clients</label>
+        <div class="kpi-value">{{ sectorStats['ALL'] }}</div>
+      </div>
+      <div class="kpi-card" [class.active]="selectedSector === s" *ngFor="let s of ['GOV','GLC','EDU','FSI']" (click)="setSector(s)">
+        <label>{{ s }} Clients</label>
+        <div class="kpi-value">{{ sectorStats[s] }}</div>
+      </div>
+    </div>
+
+    <div class="sector-section" *ngFor="let group of groupedProjectsData">
+      <div class="sector-header">
+        <mat-icon>label_important</mat-icon>
+        <h2>{{ group.key }} SECTOR</h2>
+        <span class="count-badge">{{ group.value.length }} Projects</span>
+      </div>
+
+      <div class="project-grid" 
+           cdkDropList 
+           cdkDropListOrientation="mixed"
+           [cdkDropListData]="group.value"
+           (cdkDropListDropped)="drop($event, group.key)">
+        
+        <div class="project-card" 
+             *ngFor="let p of group.value" 
+             cdkDrag
+             [class.warning]="p.status === 'Warning'">
+          
+          <div class="drag-placeholder" *cdkDragPlaceholder></div>
+
+          <div class="card-top">
+            <div class="left-meta">
+              <div class="drag-handle" cdkDragHandle>
+                <mat-icon>drag_indicator</mat-icon>
+              </div>
+              <span class="sector-tag">{{ p.client }}</span>
+            </div>
+            <span class="status-dot" [class.active]="p.status === 'Active'"></span>
+          </div>
+
+          <div class="card-mid">
+            <h3>{{ p.name }}</h3>
+            <div class="meta-row">
+              <span><mat-icon>inventory_2</mat-icon> {{ p.assets | number }} Assets</span>
+            </div>
+          </div>
+
+          <div class="card-stats">
+            <div class="stat-item">
+              <label>Target</label>
+              <strong>{{ p.agents | number }}</strong>
+            </div>
+            <div class="stat-item">
+              <label>Deployed</label>
+              <strong class="text-green">{{ p.deployed | number }}</strong>
+            </div>
+            <div class="stat-item">
+              <label>Balance</label>
+              <strong class="text-orange">{{ p.balance | number }}</strong>
+            </div>
+          </div>
+
+          <div class="progress-section">
+            <div class="progress-info">
+              <small>Completion</small>
+              <small>{{ ((p.deployed/p.agents)*100).toFixed(0) }}%</small>
+            </div>
+            <div class="progress-bar">
+              <div class="fill" [style.width.%]="(p.deployed/p.agents)*100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

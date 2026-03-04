@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { IncidentApi } from '../../services/dashboard.api';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-management',
@@ -12,100 +12,133 @@ import { IncidentApi } from '../../services/dashboard.api';
 })
 export class ManagementComponent implements OnInit {
   stats: any = null;
-  isLoading: boolean = true;
-  aiSummary: string = '';
+  isLoading: boolean = false;
   isLoadingAi: boolean = true;
+  aiSummary: string = '';
 
-  // --- STRATEGIC METRICS ---
+  // === 1. VARIABLES ASAL & FINANCIAL ===
   totalCapexExposure: string = 'RM 0';
-  agingUnits: number = 0;
   monthlyRecurringRevenue: string = 'RM 0';
-
-  // --- INSIGHT METRICS ---
   idleFinancialLoss: string = 'RM 0';
   osRiskExposure: string = 'RM 0';
   revenueAtRisk: string = 'RM 0';
+  agingUnits: number = 0;
+  
+  // === 2. ESCALATION & SERVICE (LEVEL 2 INFO) ===
+  majorEscalations: number = 0;
+  escalationRate: string = '0%';
 
-  constructor(
-    private api: IncidentApi,
-    private cdr: ChangeDetectorRef,
-  ) {}
+  // === 3. TAMBAHAN LOGIC LEVEL 1 (6 PILLARS) ===
+  growthTrend: string = '';        // Pillar 1: Growth
+  utilizationRate: string = '';    // Pillar 2: Efficiency
+  blindspotCount: number = 0;      // Pillar 3: Oversight
+  techDebtExposure: string = '';   // Pillar 4: Liability
+  operationalHealthScore: number = 0; // Pillar 6: Financial Impact Score
+
+  constructor(private cdr: ChangeDetectorRef, private router: Router) {}
 
   ngOnInit(): void {
-    this.fetchDashboardStats();
+    this.runMockDashboard();
   }
 
-  // 🛠️ HELPER: Format currency dengan safety check
-  private formatCurrency(value: number | undefined | null): string {
-    const num = value || 0; // Jika null/undefined, guna 0
-    if (num >= 1000000000) {
-      return `RM ${(num / 1000000000).toFixed(2)}B`;
-    } else if (num >= 1000000) {
-      return `RM ${(num / 1000000).toFixed(2)}M`;
-    } else if (num >= 1000) {
-      return `RM ${Math.round(num / 1000)}k`;
-    } else {
-      return `RM ${num}`;
+  onCardClick(target: string) {
+    if (target === 'Project Portfolio') {
+      this.router.navigate(['/project']);
     }
   }
 
-  fetchDashboardStats() {
+  runMockDashboard() {
     this.isLoading = true;
-    this.api.getManagementStats().subscribe({
-      next: (data) => {
-        this.stats = data;
-
-        // --- DATA SAFETY CHECK ---
-        const deployedUnits = data.assets?.deployed || 0;
-        const idleUnits = data.assets?.idle || 0;
-        const capexExp = data.assets?.capexExposure || 0;
-        const osRiskExp = data.risk_analysis?.financial_impact || 0;
-        const idleLoss = data.assets?.idleLoss || 0;
-
-        // --- STRATEGIC GRID ---
-        this.agingUnits = idleUnits; 
-        this.totalCapexExposure = this.formatCurrency(capexExp);
-        this.monthlyRecurringRevenue = this.formatCurrency(deployedUnits * 150);
-
-        // --- INSIGHT GRID ---
-        // 1. OS Risk (RM 646k)
-        this.osRiskExposure = this.formatCurrency(osRiskExp);
-        
-        // 2. Idle Loss (RM 17k)
-        this.idleFinancialLoss = this.formatCurrency(idleLoss) + ' / mo';
-        
-        // 3. Revenue at Risk (FIXED NaN: Guna deployedUnits yang dah di-validate)
-        const mrrValue = deployedUnits * 150;
-        this.revenueAtRisk = this.formatCurrency(mrrValue * 0.2) + ' / mo';
-
-        this.isLoading = false;
-        this.generateAiInsight(data);
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error("❌ API Error:", err);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
-  }
-
-  generateAiInsight(liveData: any) {
-    if (!liveData) return;
     this.isLoadingAi = true;
 
-    const active = liveData.portfolio?.active || 0;
-    const visibility = liveData.visibility?.percentage || 0;
-    const idle = liveData.assets?.idle || 0;
-    const osRisk = liveData.risk_analysis?.total_units || 0;
-
-    // AI Insight yang lebih dinamik merangkumi OS Risk baru
-    const insight = `Operations report ${active} active projects with ${visibility}% visibility. Immediate attention required for ${osRisk} outdated OS units and ${idle} idle assets to mitigate a total financial exposure of ${this.osRiskExposure}.`;
+    // Mock Data Lengkap mengikut 6 Pillar
+    const mockData = {
+      portfolio: { 
+        total: 48, 
+        active: 42, 
+        inactive: 6, 
+        partners: 12 
+      },
+      assets: { 
+        total: 18500, 
+        deployed: 16200, 
+        idle: 2300,
+        totalCapexExposure: 5400000 
+      },
+      helpdesk: { 
+        total: 450, 
+        l1_resolved: 380, 
+        l2_escalated: 70, // Major isu yang naik ke Partner
+        sla_compliance: 98.2, 
+        avg_response: '18m' 
+      },
+      visibility: { 
+        percentage: '87.5', 
+        regional_health: [
+          { name: 'Central', val: 100 },
+          { name: 'Northern', val: 94 },
+          { name: 'Southern', val: 88 }
+        ] 
+      },
+      risk_analysis: { 
+        financial_impact: 575000, 
+        total_units: 1150,
+        breakdown: {
+          windows_7: 420,
+          windows_xp: 150,
+          windows_8: 80,
+          windows_10_outdated: 500,
+          aging_2_4_years: 6000,
+          aging_4_years_plus: 4000
+        },
+        firmware_risk: 45
+      }
+    };
 
     setTimeout(() => {
-      this.aiSummary = insight;
-      this.isLoadingAi = false;
+      this.stats = mockData;
+
+      // --- CALCULATING LEVEL 1 PILLARS ---
+      
+      // 1. Growth: Is operation expanding?
+      this.growthTrend = '+12.5%'; 
+
+      // 2. Efficiency: Capital generating revenue? (Deployed vs Total)
+      const efficiency = (mockData.assets.deployed / mockData.assets.total) * 100;
+      this.utilizationRate = efficiency.toFixed(1) + '%';
+
+      // 3. Oversight: Unmonitored assets (Blindspots)
+      this.blindspotCount = mockData.assets.total - mockData.assets.deployed;
+
+      // 4. Liability: Future technical costs
+      this.techDebtExposure = 'RM 2.1M'; // Combined Legacy & OS Risk
+      
+      // 5. Protection & Financial Impact
+      this.totalCapexExposure = 'RM 5.40M';
+      this.monthlyRecurringRevenue = 'RM 3.00M';
+      this.osRiskExposure = 'RM 575k';
+      this.revenueAtRisk = 'RM 1.2M';
+      this.idleFinancialLoss = 'RM 240k';
+      this.operationalHealthScore = 92; 
+
+      // 6. Escalation Logic (Accountability)
+      this.majorEscalations = mockData.helpdesk.l2_escalated;
+      this.escalationRate = ((mockData.helpdesk.l2_escalated / mockData.helpdesk.total) * 100).toFixed(1) + '%';
+      
+      this.agingUnits = mockData.risk_analysis.breakdown.aging_4_years_plus;
+
+      // Matikan Loading Screen
+      this.isLoading = false;
       this.cdr.detectChanges();
-    }, 1200);
+
+      // AI Briefing Update
+      setTimeout(() => {
+        this.aiSummary = `Executive Summary: Operational health is at ${this.operationalHealthScore}%. 
+        Growth is stable at ${this.growthTrend}, but oversight alert triggered for ${this.blindspotCount} unmonitored units. 
+        Critical revenue risk identified at ${this.revenueAtRisk} due to expiring contracts.`;
+        this.isLoadingAi = false;
+        this.cdr.detectChanges();
+      }, 1200);
+    }, 1500);
   }
 }

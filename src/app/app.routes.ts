@@ -8,6 +8,7 @@ import { IncidentComponent } from './pages/incident-detail/incident-detail';
 import { BrandSelectorComponent } from './pages/brand-selector/brand-selector'; 
 import { AssetDetailComponent } from './pages/asset-detail/asset-detail'; 
 import { LoginComponent } from './pages/landing-page/login';
+import { ProjectComponent } from './pages/project/project';
 
 export const routes: Routes = [
   // 1. Landing & Authentication
@@ -19,6 +20,9 @@ export const routes: Routes = [
 
   // 3. Level 2 - Operational Oversight (Drill-down dari Management)
   { path: 'oversight', component: OversightComponent },
+  
+  // --- AKU TAMBAH CRM KAT SINI ---
+  { path: 'project', component: ProjectComponent }, 
 
   // 4. Level 3 - Tactical & Technical Details
   { path: 'dashboard', component: DashboardComponent },

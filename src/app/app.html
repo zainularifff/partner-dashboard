@@ -1,78 +1,95 @@
 <div class="app-layout">
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <mat-icon>dashboard</mat-icon>
-        <span>CRM EXEC</span>
-      </div>
+    <!-- Sidebar - Hanya nampak bila BUKAN login page -->
+    <div class="sidebar" *ngIf="!isLoginPage">
+        <div class="sidebar-header">
+            <div class="logo">
+                <mat-icon>dashboard</mat-icon>
+                <span>CRM EXEC</span>
+            </div>
+        </div>
+
+        <div class="nav-label">MAIN</div>
+        <nav class="sidebar-nav">
+            <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+                <mat-icon>dashboard</mat-icon>
+                <span>Dashboard</span>
+            </a>
+
+            <a routerLink="/project" routerLinkActive="active">
+                <mat-icon>assignment</mat-icon>
+                <span>Projects</span>
+            </a>
+            <a routerLink="/client" routerLinkActive="active">
+                <mat-icon>business</mat-icon>
+                <span>Clients</span>
+            </a>
+
+            <a routerLink="/risk" routerLinkActive="active">
+                <mat-icon>warning</mat-icon>
+                <span>Technical Risk</span>
+            </a>
+
+            <a routerLink="/asset-utilization" routerLinkActive="active">
+                <mat-icon>inventory</mat-icon>
+                <span>Asset Utilization</span>
+            </a>
+
+            <a routerLink="/capex" routerLinkActive="active">
+                <mat-icon>account_balance</mat-icon>
+                <span>CAPEX Exposure</span>
+            </a>
+        </nav>
+
+        <nav class="sidebar-nav">
+            <a routerLink="/report" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+                <mat-icon>report</mat-icon>
+                <span>Report</span>
+            </a>
+        </nav>
+
+        <!-- SATU SIDEBAR-FOOTER JE - dengan tiga button -->
+        <div class="sidebar-footer">
+            <!-- Theme Toggle Button -->
+            <div class="footer-link" (click)="toggleTheme()">
+                <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+                <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+            </div>
+
+            <!-- Setting Button -->
+            <div class="footer-link" (click)="openSettings()">
+                <!-- <-- NI DAH BOLEH JALAN -->
+                <mat-icon>settings</mat-icon>
+                <span>Settings</span>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="footer-link" (click)="logout()">
+                <mat-icon>logout</mat-icon>
+                <span>Logout</span>
+            </div>
+        </div>
     </div>
 
-    <div class="nav-label">MAIN</div>
-    <nav class="sidebar-nav">
-      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-        <mat-icon>dashboard</mat-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/project" routerLinkActive="active">
-        <mat-icon>assignment</mat-icon>
-        <span>Projects</span>
-      </a>
-      <a routerLink="/asset-utilization" routerLinkActive="active">
-        <mat-icon>inventory</mat-icon>
-        <span>Asset Utilization</span>
-      </a>
-    </nav>
+    <!-- Main Body -->
+    <div class="main-body" [class.full-width]="isLoginPage">
 
-    <div class="nav-label">SYSTEM</div>
-    <nav class="sidebar-nav">
-      <a routerLink="/reports" routerLinkActive="active">
-        <mat-icon>assessment</mat-icon>
-        <span>Reports</span>
-      </a>
-      <a routerLink="/settings" routerLinkActive="active">
-        <mat-icon>settings</mat-icon>
-        <span>Settings</span>
-      </a>
-    </nav>
+        <!-- GLOBAL LOADING -->
+        <div class="global-loading" *ngIf="loadingService.loading$ | async">
+            <div class="loading-content">
+                <mat-icon class="spin">sync</mat-icon>
+                <p>Loading...</p>
+            </div>
+        </div>
 
-    <!-- SATU SIDEBAR-FOOTER JE - dengan dua button -->
-    <div class="sidebar-footer">
-      <!-- Theme Toggle Button -->
-      <div class="footer-link" (click)="toggleTheme()">
-        <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
-        <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
-      </div>
-      
-      <!-- Logout Button -->
-      <div class="footer-link" (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span>Logout</span>
-      </div>
+        <!-- Content Area -->
+        <div class="main-content-area">
+            <router-outlet></router-outlet>
+        </div>
+
+        <!-- Footer - Hanya nampak bila BUKAN login page -->
+        <footer class="main-footer" *ngIf="!isLoginPage">
+            <span>© 2024 CRM Executive</span>
+            <span>v2.0.0</span>
+        </footer>
     </div>
-  </div>
-
-  <!-- Main Body -->
-  <div class="main-body">
-    
-    <!-- GLOBAL LOADING -->
-    <div class="global-loading" *ngIf="loadingService.loading$ | async">
-      <div class="loading-content">
-        <mat-icon class="spin">sync</mat-icon>
-        <p>Loading...</p>
-      </div>
-    </div>
-
-    <!-- Content Area -->
-    <div class="main-content-area">
-      <router-outlet></router-outlet>
-    </div>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-      <span>© 2024 CRM Executive</span>
-      <span>v2.0.0</span>
-    </footer>
-
-  </div>
 </div>

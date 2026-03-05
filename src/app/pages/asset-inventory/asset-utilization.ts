@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core'; // <-- BUANG ChangeDetectorRef
 import { CommonModule, Location } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LoadingService } from '../../services/loading.service'; // adjust path ikut folder structure
+import { LoadingService } from '../../services/loading.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-asset-utilization',
@@ -16,8 +17,7 @@ import { LoadingService } from '../../services/loading.service'; // adjust path 
   templateUrl: './asset-utilization.html',
   styleUrls: ['./asset-utilization.scss']
 })
-export class AssetUtilizationComponent implements OnInit {
-  // Tak perlu loading variable - guna service
+export class AssetUtilizationComponent implements OnInit, OnDestroy {
   activeTab: string = 'project';
   
   // KPI Data
@@ -27,6 +27,8 @@ export class AssetUtilizationComponent implements OnInit {
   totalUnits: number = 18500;
   revenueLoss: string = 'RM 345k';
   
+  private subscription: Subscription = new Subscription();
+
   get idlePercentage(): number {
     return Math.round((this.idleUnits / this.totalUnits) * 100);
   }
@@ -82,24 +84,33 @@ export class AssetUtilizationComponent implements OnInit {
   constructor(
     private location: Location, 
     private router: Router,
-    private loadingService: LoadingService  // inject loading service
+    private loadingService: LoadingService
+    // BUANG ChangeDetectorRef - tak perlu
   ) {}
 
   ngOnInit(): void {
-    // Show loading
-    this.loadingService.show();
+    console.log('🚀 Asset Utilization - ngOnInit started');
     
-    // Simulate data fetching
+    // SHOW LOADING - TERUS, TAK PAYAH SETTIMEOUT
+    this.loadingService.show();
+    console.log('📢 Loading shown');
+    
+    // Simulate data fetching - loading akan hilang lepas data siap
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Loading finished - data loaded');
-    }, 1000);
+      console.log('✅ Loading hidden - data loaded');
+    }, 1500); // Boleh adjust ikut keperluan
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+    console.log('🧹 Component destroyed');
   }
 
   goBack() {
     this.loadingService.show();
+    console.log('📢 Loading shown - goBack');
     
-    // Simulate navigation
     setTimeout(() => {
       this.loadingService.hide();
       this.location.back();
@@ -115,8 +126,8 @@ export class AssetUtilizationComponent implements OnInit {
 
   viewProjectDetail(project: any) {
     this.loadingService.show();
+    console.log('📢 Loading shown - viewProjectDetail');
     
-    // Simulate navigation
     setTimeout(() => {
       this.loadingService.hide();
       this.router.navigate(['/project', project.projectId]);
@@ -125,8 +136,8 @@ export class AssetUtilizationComponent implements OnInit {
 
   exportData(type: string) {
     this.loadingService.show();
+    console.log('📢 Loading shown - exportData');
     
-    // Simulate export
     setTimeout(() => {
       this.loadingService.hide();
       console.log('Exporting', type);
@@ -136,8 +147,8 @@ export class AssetUtilizationComponent implements OnInit {
 
   generateOptimizationPlan() {
     this.loadingService.show();
+    console.log('📢 Loading shown - generateOptimizationPlan');
     
-    // Simulate generation
     setTimeout(() => {
       this.loadingService.hide();
       console.log('Generating optimization plan...');
@@ -147,8 +158,8 @@ export class AssetUtilizationComponent implements OnInit {
 
   redeployIdle() {
     this.loadingService.show();
+    console.log('📢 Loading shown - redeployIdle');
     
-    // Simulate redeployment
     setTimeout(() => {
       this.loadingService.hide();
       console.log('Redeploying idle units...');
@@ -158,8 +169,8 @@ export class AssetUtilizationComponent implements OnInit {
 
   scheduleAudit() {
     this.loadingService.show();
+    console.log('📢 Loading shown - scheduleAudit');
     
-    // Simulate scheduling
     setTimeout(() => {
       this.loadingService.hide();
       console.log('Scheduling audit...');
@@ -169,8 +180,8 @@ export class AssetUtilizationComponent implements OnInit {
 
   exportFullReport() {
     this.loadingService.show();
+    console.log('📢 Loading shown - exportFullReport');
     
-    // Simulate export
     setTimeout(() => {
       this.loadingService.hide();
       console.log('Exporting full report...');

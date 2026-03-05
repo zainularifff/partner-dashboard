@@ -15,7 +15,7 @@ import { LoadingService } from './services/loading.service';
 export class AppComponent implements OnInit {
   title = 'partner-dashboard';
   isLoginPage = false;
-  isDarkMode = false;  // <-- GUNA NI, BUKAN isDarkMode$
+  isDarkMode = false;
 
   constructor(
     private router: Router, 
@@ -28,7 +28,10 @@ export class AppComponent implements OnInit {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.isLoginPage =
-          event.urlAfterRedirects.includes('/login') || event.urlAfterRedirects === '/';
+          event.urlAfterRedirects.includes('/login') || 
+          event.urlAfterRedirects === '/';
+        
+        console.log('Route changed:', event.urlAfterRedirects, 'isLoginPage:', this.isLoginPage);
       }
     });
 
@@ -41,6 +44,17 @@ export class AppComponent implements OnInit {
 
   toggleTheme() {
     this.themeService.toggleTheme();
+  }
+
+  // ✅ TAMBAH METHOD NI untuk openSettings
+  openSettings() {
+    console.log('Opening settings...');
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      this.router.navigate(['/settings']);
+    }, 300);
   }
 
   logout() {

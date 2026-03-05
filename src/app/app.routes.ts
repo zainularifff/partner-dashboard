@@ -7,7 +7,7 @@ import { RiskComponent } from './pages/risk-escalation/risk';
 import { OversightComponent } from './pages/oversight/oversight';
 import { AssetUtilizationComponent } from './pages/asset-inventory/asset-utilization';  // <-- PATH INI MESTI BETUL
 import { OsRiskComponent } from './pages/os-risk/os-risk';
-import { PartnerComponent } from './pages/partner/partner';
+import { ReportComponent } from './pages/report/report';
 import { CapexComponent } from './pages/capex/capex';
 
 export const routes: Routes = [
@@ -21,6 +21,6 @@ export const routes: Routes = [
   { path: 'capex', component: CapexComponent }, 
   { path: 'os-risk', component: OsRiskComponent },
   { path: 'oversight', component: OversightComponent },
-  { path: 'partner', component: PartnerComponent },
+  { path: 'report', component: ReportComponent },
   { path: '**', redirectTo: 'management' }
 ];

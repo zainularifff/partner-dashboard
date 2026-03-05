@@ -12,7 +12,7 @@ import { GeminiService } from '../../services/gemini-services';
 import { IncidentApi } from '../../services/dashboard.api';
 
 @Component({
-  selector: 'app-partner',
+  selector: 'app-report',
   standalone: true,
   imports: [
     CommonModule,
@@ -21,10 +21,10 @@ import { IncidentApi } from '../../services/dashboard.api';
     MatProgressBarModule,
     MatTooltipModule
   ],
-  templateUrl: './partner.html',
-  styleUrls: ['./partner.scss']
+  templateUrl: './report.html',
+  styleUrls: ['./report.scss']
 })
-export class PartnerComponent implements OnInit {
+export class ReportComponent implements OnInit {
   // Services Injection
   private geminiService = inject(GeminiService) as any;
   private api = inject(IncidentApi); 

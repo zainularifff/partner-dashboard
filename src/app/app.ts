@@ -2,10 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-
-// 1. IMPORT THEME SERVICE
-// Nota: Pastikan path (laluan) ini betul mengikut folder di mana anda simpan theme.service.ts
-import { ThemeService } from './services/theme.service'; 
+import { ThemeService } from './services/theme.service';
+import { LoadingService } from './services/loading.service';
 
 @Component({
   selector: 'app-root',
@@ -17,15 +15,16 @@ import { ThemeService } from './services/theme.service';
 export class AppComponent implements OnInit {
   title = 'partner-dashboard';
   isLoginPage = false;
-  
-  // 2. VARIABLE UNTUK KAWAL IKON (Bulan/Matahari)
-  isDarkMode = false; 
+  isDarkMode = false;  // <-- GUNA NI, BUKAN isDarkMode$
 
-  // 3. INJECT THEME SERVICE KE DALAM CONSTRUCTOR
-  constructor(private router: Router, private themeService: ThemeService) {}
+  constructor(
+    private router: Router, 
+    private themeService: ThemeService,
+    public loadingService: LoadingService
+  ) {}
 
   ngOnInit() {
-    // Fungsi memantau pertukaran URL (Sedia ada)
+    // Monitor route changes
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.isLoginPage =
@@ -33,20 +32,19 @@ export class AppComponent implements OnInit {
       }
     });
 
-    // 4. FUNGSI MEMANTAU STATUS DARK MODE DARI SERVICE
-    this.themeService.isDarkMode.subscribe((status) => {
+    // Monitor theme changes
+    this.themeService.isDarkMode$.subscribe((status: boolean) => {
       this.isDarkMode = status;
+      console.log('Theme changed:', status ? 'Dark' : 'Light');
     });
   }
 
-  // 5. FUNGSI UNTUK BUTANG TOGGLE DI SIDEBAR HTML
   toggleTheme() {
     this.themeService.toggleTheme();
   }
 
   logout() {
-    // Tambah logic clear session/token di sini
-    console.log("Sesi ditamatkan.");
+    console.log("Session End.");
     this.router.navigate(['/login']);
   }
 }

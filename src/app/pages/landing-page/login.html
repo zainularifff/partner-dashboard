@@ -1,45 +1,107 @@
 <div class="login-page">
-  <div class="login-card">
-    
-    <div class="brand-section">
-      <div class="logo-placeholder">AISM</div>
-      <h2>nPoints™ AISM</h2>
-      <p>Unified Partner Management Portal</p>
+  <div class="login-container">
+    <!-- Left Side - Branding -->
+    <div class="login-left">
+      <div class="brand-content">
+        <div class="logo-wrapper">
+          <span class="logo-icon">✦</span>
+          <span class="logo-text">nPoints™</span>
+        </div>
+        
+        <h1>AISM 2.0</h1>
+        <p class="tagline">Unified Partner Management Portal</p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <span class="feature-icon">✓</span>
+            <span>Real-time Operational Dashboard</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">✓</span>
+            <span>Multi-Client Asset Tracking</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">✓</span>
+            <span>AI-Powered Risk Analysis</span>
+          </div>
+        </div>
+
+        <div class="testimonial-badge">
+          <div class="avatar-group">
+            <span class="avatar">JD</span>
+            <span class="avatar">MK</span>
+            <span class="avatar">AL</span>
+            <span class="avatar">+2k</span>
+          </div>
+          <p class="testimonial-text">Trusted by 50+ enterprise partners</p>
+        </div>
+      </div>
     </div>
+    
+    <!-- Right Side - Login Form -->
+    <div class="login-right">
+      <div class="login-card glass">
+        <div class="welcome-message">
+          <h2>Welcome back</h2>
+          <p>Please enter your credentials to access the dashboard</p>
+        </div>
 
-    <form (ngSubmit)="onLogin()" class="login-form">
-      <div class="form-group">
-        <label>Login ID / Email</label>
-        <input 
-          type="text" 
-          [(ngModel)]="username" 
-          name="username" 
-          placeholder="admin@partner.com" 
-          required>
+        <form (ngSubmit)="onLogin()" class="login-form">
+          <!-- Email Field -->
+          <div class="form-group">
+            <label>Email / Username</label>
+            <input 
+              type="email" 
+              [(ngModel)]="username" 
+              name="username" 
+              placeholder="Enter your email or username"
+              required>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <label>Password</label>
+            <input 
+              type="password" 
+              [(ngModel)]="password" 
+              name="password" 
+              placeholder="Enter your password"
+              required>
+          </div>
+
+          <!-- Remember Me & Forgot Password -->
+          <div class="form-actions">
+            <label class="checkbox-container">
+              <input type="checkbox" checked>
+              <span class="checkmark"></span>
+              <span class="checkbox-text">Remember me</span>
+            </label>
+            <a href="#" class="forgot-link" (click)="$event.preventDefault()">Forgot password?</a>
+          </div>
+
+          <!-- Login Button -->
+          <button type="submit" class="btn-login" [disabled]="!username || !password">
+            <span>Sign In</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </form>
+
+        <!-- Security Badge -->
+        <div class="security-badge">
+          <span class="shield-icon">🛡️</span>
+          <span>Secured by AISM Enterprise Security</span>
+        </div>
+
+        <!-- Alternative Login -->
+        <div class="alt-login">
+          <p class="alt-text">Or continue with</p>
+          <div class="alt-buttons">
+            <button class="alt-btn" type="button">🏢</button>
+            <button class="alt-btn" type="button">G</button>
+            <button class="alt-btn" type="button">⌨️</button>
+          </div>
+        </div>
       </div>
-
-      <div class="form-group">
-        <label>Password</label>
-        <input 
-          type="password" 
-          [(ngModel)]="password" 
-          name="password" 
-          placeholder="••••••••" 
-          required>
-      </div>
-
-      <div class="form-actions">
-        <label class="remember-me">
-          <input type="checkbox"> Remember Me
-        </label>
-        <a href="#" class="forgot-pass">Forget Password?</a>
-      </div>
-
-      <button type="submit" class="btn-login">Log In</button>
-    </form>
-
-    <div class="footer-note">
-      <p>Protected by AISM Security Gateway. © 2026</p>
     </div>
   </div>
 </div>

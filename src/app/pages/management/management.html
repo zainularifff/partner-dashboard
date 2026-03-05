@@ -1,4 +1,5 @@
 <div class="management-page">
+  <!-- Loading Screen -->
   <div class="loading-full-screen" *ngIf="isLoading">
     <div class="loading-content">
       <mat-icon class="spin">sync</mat-icon>
@@ -6,184 +7,240 @@
     </div>
   </div>
 
+  <!-- Main Content -->
   <div class="content-area" *ngIf="!isLoading">
-    <div class="mgmt-header">
-      <div class="mgmt-title">
-        <small>PARTNER COMMAND CENTER</small>
-        <h1>Enterprise Strategic Dashboard</h1>
+    <!-- Header -->
+    <div class="exec-header">
+      <div class="header-left">
+        <div class="brand-badge">nPoints™</div>
+        <div class="title-area">
+          <div class="title-main">PARTNER COMMAND CENTER</div>
+          <div class="title-sub">Enterprise Strategic Dashboard</div>
+        </div>
       </div>
-      <div class="mgmt-meta">
-        <div class="update-pill">
+      <div class="header-right">
+        <div class="live-badge">
           <span class="pulse"></span>
           LIVE OPERATIONS
+          <span class="timestamp">Updated: {{ liveTimestamp }}</span>
         </div>
       </div>
     </div>
 
-    <div class="big-4-container">
-      <div class="metric-box clickable-card" (click)="onCardClick('Project Portfolio')">
-        <div class="box-icon blue"><mat-icon>assignment</mat-icon></div>
-        <div class="box-data">
-          <label>Total Active Projects</label>
-          <div class="value-row">
-            <div class="value">{{ stats?.portfolio?.total }}</div>
-            <span class="trend-badge stable">{{ growthTrend }}</span>
+    <!-- KPI GRID - 6 Cards (Smaller) -->
+    <div class="kpi-grid">
+      <!-- 1. Total Active Projects -->
+      <div class="kpi-card clickable" (click)="onCardClick('Project Portfolio')">
+        <div class="kpi-icon blue-glow">
+          <mat-icon>assignment</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">TOTAL ACTIVE PROJECTS</div>
+          <div class="kpi-value-row">
+            <span class="kpi-value">2</span>
+            <span class="kpi-trend positive">+12.5%</span>
           </div>
-          <div class="asset-details-row">
-            <strong style="color: #16a34a">{{ stats?.portfolio?.active }} Live</strong> |
-            <span style="color: #64748b">{{ stats?.portfolio?.inactive }} Inactive</span>
+          <div class="kpi-footer">
+            <span>View Portfolio</span>
+            <mat-icon>arrow_forward</mat-icon>
           </div>
         </div>
       </div>
 
-      <div class="metric-box clickable-card" (click)="onCardClick('Client Entities')">
-        <div class="box-icon purple"><mat-icon>corporate_fare</mat-icon></div>
-        <div class="box-data">
-          <label>Managed Client Entities</label>
-          <div class="value-row">
-            <div class="value">{{ stats?.portfolio?.partners }}</div>
-            <span class="trend-badge">Client</span>
+      <!-- 2. Managed Client Entities -->
+      <div class="kpi-card clickable" (click)="onCardClick('Client Entities')">
+        <div class="kpi-icon purple-glow">
+          <mat-icon>corporate_fare</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">MANAGED CLIENT ENTITIES</div>
+          <div class="kpi-value-row">
+            <span class="kpi-value">6</span>
+            <span class="kpi-trend">Client</span>
           </div>
-          <div class="asset-details-row">
-            <span>Portfolio Diversification</span>
+          <div class="kpi-footer">
+            <span>View Clients</span>
+            <mat-icon>arrow_forward</mat-icon>
           </div>
         </div>
       </div>
 
-      <div class="metric-box clickable-card" (click)="onCardClick('Risk Escalation')">
-        <div class="box-icon red"><mat-icon>report_problem</mat-icon></div>
-        <div class="box-data">
-          <label>Technical Risk Escalations</label>
-          <div class="value-row">
-            <div class="value text-red">{{ stats?.helpdesk?.l2_escalated || 70 }}</div>
-            <span class="trend-badge warning">{{ escalationRate }} Rate</span>
-          </div>
-          <div class="asset-details-row">Awaiting Partner Action</div>
+      <!-- 3. Technical Risk Escalations -->
+      <div class="kpi-card clickable" (click)="onCardClick('Risk Escalation')">
+        <div class="kpi-icon orange-glow">
+          <mat-icon>report_problem</mat-icon>
         </div>
-      </div>
-
-      <div class="metric-box clickable-card" (click)="onCardClick('Asset Inventory')">
-        <div class="box-icon green"><mat-icon>inventory_2</mat-icon></div>
-        <div class="box-data">
-          <label>Asset Utilization</label>
-          <div class="value-row">
-            <div class="value">{{ utilizationRate }}</div>
+        <div class="kpi-content">
+          <div class="kpi-label">TECHNICAL RISK ESCALATIONS</div>
+          <div class="kpi-value-row">
+            <span class="kpi-value">10</span>
+            <span class="kpi-trend warning">+2.2% Rate</span>
           </div>
-          <div class="asset-details-row">
-             <strong>{{ stats?.assets?.deployed | number }}</strong> Deployed Units
+          <div class="kpi-footer">
+            <span>View Risks</span>
+            <mat-icon>arrow_forward</mat-icon>
           </div>
         </div>
       </div>
 
-      <div class="metric-box clickable-card" (click)="onCardClick('Capex')">
-        <div class="box-icon navy"><mat-icon>payments</mat-icon></div>
-        <div class="box-data">
-          <label>Capex Exposure</label>
-          <div class="value-row">
-            <div class="value">{{ totalCapexExposure }}</div>
+      <!-- 4. Asset Utilization -->
+      <div class="kpi-card clickable" (click)="onCardClick('Asset Inventory')">
+        <div class="kpi-icon green-glow">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">ASSET UTILIZATION</div>
+          <div class="kpi-value-row">
+            <span class="kpi-value">87.6%</span>
           </div>
-          <div class="asset-details-row">Total Asset Value Under Mgmt</div>
+          <div class="kpi-footer">
+            <span>16,200 Deployed Units</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
         </div>
       </div>
 
-      <div class="metric-box clickable-card" (click)="onCardClick('Health Score')">
-        <div class="box-icon orange"><mat-icon>shutter_speed</mat-icon></div>
-        <div class="box-data">
-          <label>Operational Health</label>
-          <div class="value-row">
-            <div class="value" [style.color]="operationalHealthScore > 90 ? '#16a34a' : '#ea580c'">
-              {{ operationalHealthScore }}%
-            </div>
+      <!-- 5. CAPEX Exposure - FIXED -->
+      <div class="kpi-card clickable" (click)="onCardClick('Capex')">
+        <div class="kpi-icon gold-glow">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">CAPEX EXPOSURE</div>
+          <div class="kpi-value-row">
+            <span class="kpi-value">RM 5.40M</span>
           </div>
-          <div class="asset-details-row">
-            <strong class="text-red">{{ blindspotCount }} Blindspots</strong>
+          <div class="kpi-footer">
+            <span>Total Asset Value</span>
+            <mat-icon>arrow_forward</mat-icon>
           </div>
+        </div>
+      </div>
+
+      <!-- 6. Portfolio Divergence -->
+      <div class="kpi-card clickable" (click)="onCardClick('Portfolio Divergence')">
+        <div class="kpi-icon blue-glow">
+          <mat-icon>scatter_plot</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">PORTFOLIO DIVERGENCE</div>
+          <div class="kpi-value-row">
+            <span class="kpi-value">70</span>
+            <span class="kpi-trend warning">15.8 Rate</span>
+          </div>
+          <div class="kpi-footer">
+            <span>Analyze Spread</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGIC CARDS -->
+    <div class="strategic-row">
+      <!-- Revenue at Risk -->
+      <div class="strategic-card revenue-card clickable" (click)="onCardClick('Revenue Risk')">
+        <div class="card-header">
+          <mat-icon>warning</mat-icon>
+          <span>REVENUE AT RISK</span>
+        </div>
+        <div class="card-value">RM 1.2M</div>
+        <div class="card-desc">Lease renewals due in 90 days</div>
+        <div class="card-meta">
+          <span>3 entities • 1,250 units</span>
+          <span class="badge danger">Action Required</span>
+        </div>
+      </div>
+
+      <!-- Monthly Recurring -->
+      <div class="strategic-card recurring-card clickable" (click)="onCardClick('Monthly Revenue')">
+        <div class="card-header">
+          <mat-icon>trending_up</mat-icon>
+          <span>MONTHLY RECURRING</span>
+        </div>
+        <div class="card-value">RM 3.00M</div>
+        <div class="card-desc">Projected for Current Month</div>
+        <div class="card-meta">
+          <span>+12.5% vs last month</span>
+          <span class="badge success">Healthy Pipeline</span>
         </div>
       </div>
     </div>
 
-    <div class="strategic-grid">
-      <div class="value-card orange-gradient clickable-card" (click)="onCardClick('Revenue Risk')">
-        <div class="v-content">
-          <div class="v-info">
-            <h3>Revenue at Risk</h3>
-            <div class="v-price">{{ revenueAtRisk }}</div>
-            <p>Lease renewals due in 90 days</p>
+    <!-- INSIGHT CARDS -->
+    <div class="insight-row">
+      <!-- OS Risk Analysis -->
+      <div class="insight-card clickable" (click)="onCardClick('OS Risk')">
+        <div class="card-header">
+          <div class="header-left">
+            <mat-icon>security</mat-icon>
+            <span>OS RISK ANALYSIS</span>
           </div>
-          <div class="v-sub-data">
-            <small>Aging Units</small>
-            <strong>{{ agingUnits }}</strong>
+          <span class="risk-badge high">HIGH</span>
+        </div>
+        <div class="insight-value">RM 575k</div>
+        <div class="insight-label">Potential Financial Impact</div>
+        <div class="os-breakdown">
+          <div class="os-row">
+            <span>Win 7/XP/8</span>
+            <span>650 (57%)</span>
+          </div>
+          <div class="os-row">
+            <span>Win 10 (Out)</span>
+            <span>500 (43%)</span>
           </div>
         </div>
-        <div class="v-status-tag warning"><mat-icon>priority_high</mat-icon> Action Required</div>
-      </div>
-
-      <div class="value-card green-gradient clickable-card" (click)="onCardClick('Monthly Revenue')">
-        <div class="v-content">
-          <div class="v-info">
-            <h3>Monthly Recurring</h3>
-            <div class="v-price">{{ monthlyRecurringRevenue }}</div>
-            <p>Projected for Current Month</p>
-          </div>
-          <div class="v-sub-data">
-            <small>Active Partners</small>
-            <strong>{{ stats?.portfolio?.partners }}</strong>
-          </div>
-        </div>
-        <div class="v-status-tag"><mat-icon>check_circle</mat-icon> Healthy Pipeline</div>
-      </div>
-    </div>
-
-    <div class="insight-grid">
-      <div class="insight-card clickable-card" (click)="onCardClick('OS Risk')">
-        <div class="card-header-sm"><mat-icon>security</mat-icon><span>OS Risk Analysis</span></div>
-        <div class="forecast-data">
-          <small>Potential Financial Impact</small>
-          <strong class="text-red">{{ osRiskExposure }}</strong>
-        </div>
-        <div class="os-breakdown-box">
-          <div class="os-breakdown-item">
-            <span>Win 7/XP/8:</span>
-            <strong>{{ (stats?.risk_analysis?.breakdown?.windows_7 || 0) + (stats?.risk_analysis?.breakdown?.windows_xp || 0) + (stats?.risk_analysis?.breakdown?.windows_8 || 0) }}</strong>
-          </div>
-          <div class="os-breakdown-item">
-            <span>Win 10 (Out):</span>
-            <strong>{{ stats?.risk_analysis?.breakdown?.windows_10_outdated }}</strong>
-          </div>
+        <div class="trend-indicator up">
+          <mat-icon>trending_up</mat-icon>
+          <span>+8% from last month</span>
         </div>
       </div>
 
-      <div class="insight-card clickable-card" (click)="onCardClick('Visibility')">
-        <div class="card-header-sm"><mat-icon>visibility</mat-icon><span>Visibility Health (Oversight)</span></div>
-        <div class="regional-list" style="margin-top: 10px">
-          <div class="reg-item" *ngFor="let reg of stats?.visibility?.regional_health" style="margin-bottom: 8px">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px">
-              <span>{{ reg.name }}</span>
-              <strong>{{ reg.val }}%</strong>
-            </div>
-            <div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden">
-              <div [style.width.%]="reg.val" [style.background]="reg.val < 90 ? '#f59e0b' : '#2563eb'" style="height: 100%"></div>
-            </div>
+      <!-- Service Performance -->
+      <div class="insight-card clickable" (click)="onCardClick('Service')">
+        <div class="card-header">
+          <div class="header-left">
+            <mat-icon>support_agent</mat-icon>
+            <span>SERVICE PERFORMANCE</span>
           </div>
         </div>
-        <p style="font-size: 11px; margin-top: 10px">Overall Visibility: <strong>{{ stats?.visibility?.percentage }}%</strong></p>
-      </div>
-
-      <div class="insight-card clickable-card" (click)="onCardClick('Service')">
-        <div class="card-header-sm"><mat-icon>support_agent</mat-icon><span>Service Performance</span></div>
-        <div class="forecast-data">
-          <small>SLA Compliance</small>
-          <strong>{{ stats?.helpdesk?.sla_compliance }}%</strong>
+        <div class="insight-value">98.2%</div>
+        <div class="insight-label">SLA Compliance</div>
+        <div class="service-stats">
+          <div class="service-row">
+            <span>Avg Response</span>
+            <strong>18m</strong>
+          </div>
+          <div class="service-row">
+            <span>Resolved L1</span>
+            <strong>380</strong>
+          </div>
         </div>
-        <div class="trend-indicator up"><mat-icon>trending_up</mat-icon> Avg Response: {{ stats?.helpdesk?.avg_response }}</div>
+        <div class="trend-indicator up">
+          <mat-icon>trending_up</mat-icon>
+          <span>+2.1% vs last month</span>
+        </div>
       </div>
     </div>
 
-    <div class="ai-brief-section">
-      <div class="ai-header"><mat-icon>auto_awesome</mat-icon><span>STRATEGIC BRIEFING</span></div>
+    <!-- AI STRATEGIC BRIEFING -->
+    <div class="ai-brief">
+      <div class="ai-header">
+        <mat-icon>auto_awesome</mat-icon>
+        <span>STRATEGIC BRIEFING</span>
+        <button class="refresh-btn" (click)="refreshBriefing()" [disabled]="isLoadingAi">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
       <div class="ai-body">
         <p *ngIf="!isLoadingAi">{{ aiSummary }}</p>
-        <div class="ai-loader" *ngIf="isLoadingAi">Generating summary...</div>
+        <div class="ai-loader" *ngIf="isLoadingAi">
+          <mat-icon class="spin">sync</mat-icon> Generating insights...
+        </div>
+      </div>
+      <div class="ai-action">
+        <span class="action-label">🔍 Key Action:</span>
+        <span class="action-text">{{ keyAction }}</span>
       </div>
     </div>
   </div>

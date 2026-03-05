@@ -1,33 +1,44 @@
 <div class="crm-container">
-  <div class="loading-full-screen" *ngIf="loading">
-    <div class="loading-content">
-      <mat-icon class="spin">sync</mat-icon>
-      <p>Syncing Strategic Dashboard...</p>
-    </div>
-  </div>
+  <!-- BUANG LOADING SCREEN - loading-full-screen dah tak guna -->
 
-  <div class="main-content-wrapper" *ngIf="!loading">
-    <header class="crm-header compact">
+  <!-- Content wrapper - TAK PERLU *ngIf="!loading" -->
+  <div class="main-content-wrapper">
+    <!-- Header -->
+    <header class="crm-header premium">
       <div class="header-left">
-        <button class="back-btn-sm" (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
-        <div>
-          <h1>Project Portfolio Breakdown</h1>
-          <p>Operational CRM & Deployment Status</p>
+        <button class="back-btn-modern" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          <span>Back</span>
+        </button>
+        
+        <div class="title-section">
+          <div class="title-badge">
+            <span class="badge-icon">📊</span>
+            <span class="badge-text">Level 2</span>
+          </div>
+          <h1>Project Portfolio <span class="highlight">Breakdown</span></h1>
+          <p class="subtitle">
+            <mat-icon>inventory_2</mat-icon>
+            Operational CRM & Deployment Status
+          </p>
         </div>
       </div>
-      <div class="header-actions">
-        <div class="search-box-sm">
+      
+      <div class="header-right">
+        <div class="search-box-premium">
           <mat-icon>search</mat-icon>
           <input
             type="text"
             [(ngModel)]="searchQuery"
             (ngModelChange)="updateGroups()"
-            placeholder="Search project..."
+            placeholder="Search by project or client..."
           />
+          <span class="shortcut-hint">⌘ K</span>
         </div>
       </div>
     </header>
 
+    <!-- Overall Connectivity Health (Donut Chart) -->
     <div class="overall-analytics-row">
       <div class="analytics-card">
         <div class="analytics-info">
@@ -35,10 +46,10 @@
           <p>Real-time status of all deployed assets across sectors</p>
           <div class="mini-stats-row">
             <div class="m-stat">
-              <span class="dot online"></span> <strong>{{ totalOnlineAll }}</strong> Online
+              <span class="dot online"></span> <strong>{{ totalOnlineAll | number }}</strong> Online
             </div>
             <div class="m-stat">
-              <span class="dot offline"></span> <strong>{{ totalOfflineAll }}</strong> Offline
+              <span class="dot offline"></span> <strong>{{ totalOfflineAll | number }}</strong> Offline
             </div>
           </div>
         </div>
@@ -56,16 +67,46 @@
                   size: '75%',
                   labels: {
                     show: true,
-                    total: { show: true, label: 'Health', formatter: getHealthRate },
-                  },
-                },
-              },
+                    total: { show: true, label: 'Health', formatter: getHealthRate }
+                  }
+                }
+              }
             }"
           ></apx-chart>
         </div>
       </div>
     </div>
 
+    <!-- Sector Deployment Comparison Chart -->
+    <div class="sector-chart-row" *ngIf="sectorCategories.length">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>Deployment by Sector</h3>
+            <p class="chart-subtitle">Total Assets vs Deployed Agents</p>
+          </div>
+          <div class="legend-inline">
+            <span class="legend-item"><span class="color-dot" style="background: #2563eb;"></span> Total Assets</span>
+            <span class="legend-item"><span class="color-dot" style="background: #10b981;"></span> Deployed</span>
+          </div>
+        </div>
+        <div class="chart-container">
+          <apx-chart
+            [series]="sectorChartSeries"
+            [chart]="sectorChartOptions.chart"
+            [xaxis]="sectorChartOptions.xaxis"
+            [colors]="sectorChartOptions.colors"
+            [plotOptions]="sectorChartOptions.plotOptions"
+            [dataLabels]="sectorChartOptions.dataLabels"
+            [legend]="sectorChartOptions.legend"
+            [grid]="sectorChartOptions.grid"
+            [tooltip]="sectorChartOptions.tooltip"
+          ></apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sector Filter KPI Cards -->
     <div class="kpi-row-compact">
       <div class="kpi-card-sm" [class.active]="selectedSector === 'ALL'" (click)="setSector('ALL')">
         <label>All Sector</label>
@@ -84,6 +125,7 @@
       </ng-container>
     </div>
 
+    <!-- Projects List Grouped by Sector - WITH DRAG & DROP -->
     <div class="projects-list-area">
       <div class="sector-section-sm" *ngFor="let group of groupedProjectsData; let i = index">
         <div class="sector-header-sm">
@@ -92,11 +134,15 @@
           <span class="count-badge-sm">{{ group.value.length }}</span>
         </div>
 
+        <!-- DRAG DROP LIST CONTAINER -->
         <div class="project-grid-compact" cdkDropList (cdkDropListDropped)="drop($event, i)">
           <div class="project-card-compact" *ngFor="let p of group.value" cdkDrag>
             <div class="card-top-sm">
               <div class="left-meta">
-                <div class="drag-handle-sm" cdkDragHandle><mat-icon>drag_indicator</mat-icon></div>
+                <!-- DRAG HANDLE - VISIBLE & FUNCTIONAL -->
+                <div class="drag-handle-sm" cdkDragHandle>
+                  <mat-icon>drag_indicator</mat-icon>
+                </div>
                 <span class="sector-tag-sm">{{ p.client }}</span>
               </div>
               <span class="status-dot-sm" [class.active]="p.status === 'Active'"></span>
@@ -105,42 +151,32 @@
             <div class="card-mid-sm">
               <h3>{{ p.name }}</h3>
               <div class="meta-row-sm">
-                <mat-icon>inventory_2</mat-icon><span>{{ p.assets | number }} Target Assets</span>
+                <mat-icon>inventory_2</mat-icon>
+                <span>{{ p.assets | number }} Total Assets</span>
+              </div>
+              <div class="meta-row-sm">
+                <mat-icon>computer</mat-icon>
+                <span>{{ p.deployed | number }} Agents Deployed</span>
+              </div>
+              <div class="meta-row-sm" *ngIf="p.balance > 0">
+                <mat-icon>hourglass_empty</mat-icon>
+                <span>{{ p.balance | number }} Pending Deployment</span>
               </div>
             </div>
 
-            <div class="card-stats-sm">
-              <div class="stat-box">
-                <label>Deployed</label>
-                <strong class="text-blue">{{ p.deployed | number }}</strong>
-              </div>
-              <div class="stat-box">
-                <label>Balance</label>
-                <strong class="text-orange">{{ p.balance | number }}</strong>
-              </div>
-              <div class="stat-box">
-                <label>Online</label>
-                <strong class="text-green"
-                  ><span class="dot-s online"></span> {{ p.onlineAgents || 0 }}</strong
-                >
-              </div>
-              <div class="stat-box">
-                <label>Offline</label>
-                <strong class="text-red"
-                  ><span class="dot-s offline"></span> {{ p.offlineAgents || 0 }}</strong
-                >
-              </div>
+            <!-- Online/Offline Status -->
+            <div class="mini-status-row">
+              <span class="status-badge online">
+                <span class="dot"></span> {{ p.onlineAgents || 0 }} Online
+              </span>
+              <span class="status-badge offline">
+                <span class="dot"></span> {{ p.offlineAgents || 0 }} Offline
+              </span>
             </div>
-
-            <!-- <div class="progress-container-sm">
-              <div class="progress-bar-sm">
-                <div class="fill" [style.width.%]="(p.deployed / p.assets) * 100"></div>
-              </div>
-              <span class="percentage-label">{{ ((p.deployed / p.assets) * 100).toFixed(0) }}%</span>
-            </div> -->
 
             <button class="view-detail-btn-sm" (click)="openProjectModal(p)">
-              <span>View Detail</span><mat-icon>chevron_right</mat-icon>
+              <span>View Details</span>
+              <mat-icon>chevron_right</mat-icon>
             </button>
           </div>
         </div>
@@ -148,14 +184,16 @@
     </div>
   </div>
 
+  <!-- Modal / Side Drawer for Agent Details -->
   <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
     <div class="side-drawer" (click)="$event.stopPropagation()">
       <header class="drawer-header">
         <div>
           <span class="tag">{{ selectedProject?.client }}</span>
-          <h2>{{ selectedProject?.name }} Details</h2>
+          <h2>{{ selectedProject?.name }} - Agent List</h2>
+          <p class="deployed-info">{{ selectedProject?.deployed | number }} deployed agents</p>
         </div>
-        <button (click)="closeModal()"><mat-icon>close</mat-icon></button>
+        <button class="close-btn" (click)="closeModal()" title="Close">✕</button>
       </header>
 
       <div class="drawer-content">
@@ -170,38 +208,99 @@
             />
           </div>
           <span class="count-tag" [class.error-bg]="filteredAgents.length === 0">
-            {{ filteredAgents.length | number }} Nodes
+            {{ filteredAgents.length | number }} / {{ selectedProject?.deployed | number }} Agents
           </span>
+          <button class="export-btn" (click)="exportToCSV()" title="Export to CSV">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+
+        <!-- Summary Stats in Modal -->
+        <div class="modal-stats-row" *ngIf="selectedProject">
+          <div class="stat-item">
+            <span class="stat-label">Online</span>
+            <span class="stat-value online">{{ getOnlineCount() | number }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Offline</span>
+            <span class="stat-value offline">{{ getOfflineCount() | number }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Online Rate</span>
+            <span class="stat-value">{{ getOnlineRate() }}%</span>
+          </div>
         </div>
 
         <div class="agent-table-wrapper">
           <table class="agent-table-modern">
             <thead>
               <tr>
-                <th (click)="toggleSort('AssetTag')">Hostname</th>
-                <th (click)="toggleSort('IP')">IP Address</th>
-                <th (click)="toggleSort('Model')">Device / Model</th>
-                <th (click)="toggleSort('ConnectionTime')">Last Seen</th>
-                <th (click)="toggleSort('AgentStatus')">Status</th>
+                <th (click)="toggleSort('AssetTag')">
+                  <div class="header-content">
+                    Hostname
+                    <mat-icon *ngIf="sortConfig.key === 'AssetTag'" class="active">
+                      {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                    </mat-icon>
+                  </div>
+                </th>
+                <th (click)="toggleSort('IP')">
+                  <div class="header-content">
+                    IP Address
+                    <mat-icon *ngIf="sortConfig.key === 'IP'" class="active">
+                      {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                    </mat-icon>
+                  </div>
+                </th>
+                <th (click)="toggleSort('Model')">
+                  <div class="header-content">
+                    Device / Model
+                    <mat-icon *ngIf="sortConfig.key === 'Model'" class="active">
+                      {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                    </mat-icon>
+                  </div>
+                </th>
+                <th (click)="toggleSort('ConnectionTime')">
+                  <div class="header-content">
+                    Last Seen
+                    <mat-icon *ngIf="sortConfig.key === 'ConnectionTime'" class="active">
+                      {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                    </mat-icon>
+                  </div>
+                </th>
+                <th (click)="toggleSort('AgentStatus')">
+                  <div class="header-content">
+                    Status
+                    <mat-icon *ngIf="sortConfig.key === 'AgentStatus'" class="active">
+                      {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                    </mat-icon>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let agent of getPaginatedAgents()">
                 <td class="bold">{{ agent.AssetTag }}</td>
-                <td>
-                  <code class="ip-text">{{ agent.IP }}</code>
-                </td>
+                <td><code class="ip-text">{{ agent.IP }}</code></td>
                 <td>
                   <div class="device-info">
                     <span class="brand">{{ agent.Brand }}</span>
                     <span class="model">{{ agent.Model }}</span>
                   </div>
                 </td>
-                <td class="time-cell">{{ agent.ConnectionTime | date: 'dd MMM, HH:mm' }}</td>
+                <td class="time-cell">{{ agent.ConnectionTime | date:'dd MMM, HH:mm' }}</td>
                 <td>
                   <span class="status-indicator" [class.online]="agent.AgentStatus === 'On'">
                     {{ agent.AgentStatus === 'On' ? 'Online' : 'Offline' }}
                   </span>
+                </td>
+              </tr>
+              <tr *ngIf="filteredAgents.length === 0">
+                <td colspan="5" class="empty-message">
+                  <mat-icon>search_off</mat-icon>
+                  <p>No agents found matching "{{ agentSearchQuery }}"</p>
+                  <button class="clear-btn" (click)="agentSearchQuery = ''; applyFiltersAndSort()">
+                    Clear Search
+                  </button>
                 </td>
               </tr>
             </tbody>

@@ -27,11 +27,11 @@ async function initConfig() {
         poolPromise = new sql.ConnectionPool(config)
             .connect()
             .then(pool => {
-                console.log('✅ [DB] Connected to MSSQL (aism) Successfully!');
+                console.log('[DB] Connected to MSSQL (aism) Successfully!');
                 return pool;
             })
             .catch(err => {
-                console.error('❌ [DB] Connection Failed:', err.message);
+                console.error('[DB] Connection Failed:', err.message);
                 poolPromise = null;
                 throw err;
             });
@@ -39,7 +39,6 @@ async function initConfig() {
     return poolPromise;
 }
 
-// 2. QUERY ENGINE (Guna queryDatabase untuk tarik data)
 async function queryDatabase(queryStr) {
     try {
         const pool = await initConfig();

@@ -1,60 +1,355 @@
 <div class="risk-container">
-  <header class="risk-header">
-    <h1>Technical Risk & Escalation</h1>
-    <p>Correlation between Asset Health (OS/BIOS) and Service Delivery</p>
+  <!-- PREMIUM HEADER (MATCH PROJECT & CLIENT) -->
+  <header class="crm-header premium">
+    <div class="header-left">
+      <button class="back-btn-modern" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        <span>Back</span>
+      </button>
+      
+      <div class="title-section">
+        <div class="title-badge">
+          <span class="badge-icon">⚠️</span>
+          <span class="badge-text">Level 2</span>
+        </div>
+        <h1>Technical Risk & <span class="highlight">Escalation</span></h1>
+        <p class="subtitle">
+          <mat-icon>warning</mat-icon>
+          Correlation between Asset Health (OS/BIOS) and Service Delivery
+        </p>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <!-- SEARCH BOX - SAME AS PROJECT & CLIENT -->
+      <div class="search-box-premium">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="filterTable()"
+          placeholder="Search by client, OS or BIOS..."
+        />
+        <span class="shortcut-hint">⌘ K</span>
+      </div>
+    </div>
   </header>
 
-  <div class="chart-section">
-    <div class="card shadow">
-      <h3>Fleet Technical Vulnerability (By Entity)</h3>
-      <apx-chart 
-        [series]="riskChart.series" 
-        [chart]="riskChart.chart" 
-        [xaxis]="riskChart.xaxis"
-        [colors]="riskChart.colors"
-        [plotOptions]="riskChart.plotOptions"
-        [legend]="riskChart.legend">
-      </apx-chart>
+  <!-- SECTION 1: SUMMARY KPI CARDS - REDESIGNED -->
+  <div class="kpi-grid">
+    <div class="kpi-card critical">
+      <div class="kpi-icon">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Total Escalations</div>
+        <div class="kpi-value">10</div>
+        <div class="kpi-trend up">+2 from last month</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <mat-icon>business</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Affected Clients</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-trend">KKM, MOE, PETRONAS</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <mat-icon>attach_money</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Revenue at Risk</div>
+        <div class="kpi-value">RM 1.2M</div>
+        <div class="kpi-trend down">From Level 1</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <mat-icon>build</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Remediation Cost</div>
+        <div class="kpi-value">RM 450k</div>
+        <div class="kpi-trend">ROI 62%</div>
+      </div>
     </div>
   </div>
 
+  <!-- SECTION 2: MAIN CHARTS ROW - NEW LAYOUT -->
+  <div class="charts-row">
+    <!-- Fleet Technical Vulnerability Chart -->
+    <div class="chart-card main-chart">
+      <div class="chart-card-header">
+        <div class="header-left">
+          <mat-icon class="card-icon">assessment</mat-icon>
+          <h3>Fleet Technical Vulnerability</h3>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon" (click)="exportChart()" matTooltip="Export Chart">
+            <mat-icon>download</mat-icon>
+          </button>
+          <button class="btn-icon" (click)="expandChart()" matTooltip="Expand">
+            <mat-icon>fullscreen</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <apx-chart 
+          [series]="riskChart.series" 
+          [chart]="riskChart.chart" 
+          [xaxis]="riskChart.xaxis"
+          [colors]="riskChart.colors"
+          [plotOptions]="riskChart.plotOptions"
+          [legend]="riskChart.legend"
+          [dataLabels]="riskChart.dataLabels"
+          [tooltip]="riskChart.tooltip"
+          (chartClick)="onChartClick($event)">
+        </apx-chart>
+      </div>
+      <div class="chart-footer">
+        <div class="legend-items">
+          <span class="legend-item"><span class="dot" style="background: #f43f5e;"></span> Outdated OS</span>
+          <span class="legend-item"><span class="dot" style="background: #fbbf24;"></span> Legacy BIOS</span>
+        </div>
+        <span class="hint">Click bars to drill down</span>
+      </div>
+    </div>
+
+    <!-- Escalation Trend Chart -->
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="header-left">
+          <mat-icon class="card-icon">trending_up</mat-icon>
+          <h3>Escalation Trend (90 Days)</h3>
+        </div>
+        <div class="trend-badge" [class.up]="trendDirection === 'up'" [class.down]="trendDirection === 'down'">
+          <mat-icon>{{ trendDirection === 'up' ? 'trending_up' : 'trending_down' }}</mat-icon>
+          {{ trendPercentage }}%
+        </div>
+      </div>
+      <div class="chart-container small">
+        <apx-chart 
+          [series]="trendChart.series" 
+          [chart]="trendChart.chart" 
+          [xaxis]="trendChart.xaxis"
+          [colors]="trendChart.colors"
+          [stroke]="trendChart.stroke"
+          [markers]="trendChart.markers"
+          [annotations]="trendChart.annotations">
+        </apx-chart>
+      </div>
+      <div class="forecast-warning" *ngIf="trendDirection === 'up'">
+        <mat-icon>warning_amber</mat-icon>
+        <span>Forecast: 95 tickets by Aug</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: BREAKDOWN GRID - REDESIGNED -->
+  <div class="breakdown-grid">
+    <!-- By Entity -->
+    <div class="card">
+      <div class="card-header">
+        <mat-icon class="card-icon">pie_chart</mat-icon>
+        <h3>Breakdown by Entity</h3>
+      </div>
+      <div class="entity-list">
+        <div class="entity-item" *ngFor="let item of entityBreakdown">
+          <div class="entity-info">
+            <span class="entity-name">{{ item.name }}</span>
+            <span class="entity-value">{{ item.value }}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="item.percentage" [style.background]="item.color"></div>
+          </div>
+          <span class="entity-percent">{{ item.percentage }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- By OS/Hardware -->
+    <div class="card">
+      <div class="card-header">
+        <mat-icon class="card-icon">computer</mat-icon>
+        <h3>By OS/Hardware</h3>
+      </div>
+      <div class="os-list">
+        <div class="os-item" *ngFor="let os of osBreakdown">
+          <div class="os-info">
+            <span class="os-name">{{ os.name }}</span>
+            <span class="os-count">{{ os.count }}</span>
+          </div>
+          <div class="os-risk-badge" [style.background]="os.color">{{ os.risk }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- By Issue Type -->
+    <div class="card">
+      <div class="card-header">
+        <mat-icon class="card-icon">bug_report</mat-icon>
+        <h3>By Issue Type</h3>
+      </div>
+      <div class="donut-container">
+        <apx-chart 
+          [series]="donutChart.series" 
+          [chart]="donutChart.chart"
+          [labels]="donutChart.labels"
+          [colors]="donutChart.colors"
+          [plotOptions]="donutChart.plotOptions"
+          [dataLabels]="donutChart.dataLabels"
+          [legend]="donutChart.legend">
+        </apx-chart>
+      </div>
+      <div class="donut-legend">
+        <div class="legend-item" *ngFor="let item of donutLegend; let i = index">
+          <span class="dot" [style.background]="donutChart.colors[i]"></span>
+          <span class="label">{{ item.label }}</span>
+          <span class="value">{{ item.value }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: FINANCIAL IMPACT - REDESIGNED -->
+  <div class="financial-section">
+    <div class="financial-card">
+      <div class="financial-header">
+        <div class="header-left">
+          <mat-icon class="card-icon">payments</mat-icon>
+          <h3>Financial Impact Analysis</h3>
+        </div>
+        <span class="roi-badge">ROI 62% • 8 months payback</span>
+      </div>
+      
+      <div class="financial-content">
+        <div class="financial-columns">
+          <!-- Revenue at Risk -->
+            <div class="financial-col">
+              <h4>Revenue at Risk</h4>
+              <div class="amount">RM 1.2M</div>
+              <div class="breakdown-list">
+                <div class="breakdown-item" *ngFor="let item of revenueBreakdown">
+                  <span class="entity">{{ item.entity }}</span>
+                  <span class="amount">RM {{ item.amount }}k</span>
+                  <span class="percentage">{{ item.percentage }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Remediation Cost -->
+            <div class="financial-col">
+              <h4>Remediation Cost</h4>
+              <div class="amount">RM 450k</div>
+              <div class="breakdown-list">
+                <div class="breakdown-item" *ngFor="let item of costBreakdown">
+                  <span class="entity">{{ item.entity }}</span>
+                  <span class="amount">RM {{ item.amount }}k</span>
+                  <span class="percentage">{{ item.percentage }}%</span>
+                </div>
+              </div>
+            </div>
+
+          <!-- Priority -->
+          <div class="financial-col priority">
+            <div class="priority-content">
+              <mat-icon>priority_high</mat-icon>
+              <div>
+                <strong>KKM Priority</strong>
+                <p>Highest ROI (72%) - Focus here first</p>
+              </div>
+            </div>
+            <button class="btn-action" (click)="mitigateAll()">
+              <mat-icon>security</mat-icon> Mitigate Risks
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: ENTITY DETAILS TABLE -->
   <div class="table-section">
-    <div class="card shadow no-padding">
-      <table class="risk-table">
-        <thead>
-          <tr>
-            <th>Client Entity</th>
-            <th>OS Security Risk</th>
-            <th>Hardware BIOS Risk</th>
-            <th>Escalation (Tickets)</th>
-            <th>SLA Impact</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of riskData">
-            <td><strong>{{ item.client }}</strong></td>
-            <td>
-              <span class="badge" [style.background]="getRiskColor(item.osRisk)">
-                {{ item.osVersion }}
-              </span>
-            </td>
-            <td>
-              <span class="badge" [style.background]="getRiskColor(item.biosRisk)">
-                {{ item.biosAge }}
-              </span>
-            </td>
-            <td class="text-center">
-                <span class="ticket-count">{{ item.openTickets }}</span>
-                <mat-icon [style.color]="item.trend === 'up' ? '#ef4444' : '#10b981'">
-                    {{ item.trend === 'up' ? 'trending_up' : 'trending_down' }}
+    <div class="table-card">
+      <div class="table-header">
+        <div class="header-left">
+          <mat-icon class="card-icon">table_rows</mat-icon>
+          <h3>Entity Details</h3>
+        </div>
+        <div class="table-filters">
+          <div class="search-box">
+            <mat-icon>search</mat-icon>
+            <input 
+              type="text" 
+              [(ngModel)]="searchQuery" 
+              (ngModelChange)="filterTable()"
+              placeholder="Search...">
+          </div>
+          <button class="btn-filter">
+            <mat-icon>filter_list</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive-wrapper">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>OS Security</th>
+              <th>BIOS Risk</th>
+              <th>Tickets</th>
+              <th>SLA</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredRiskData" class="clickable-row" (click)="navigateToEntity(item.client)">
+              <td>
+                <div class="client-cell">
+                  <strong>{{ item.client }}</strong>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [style.background]="getRiskColor(item.osRisk)">
+                  {{ item.osVersion }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [style.background]="getRiskColor(item.biosRisk)">
+                  {{ item.biosAge }}
+                </span>
+              </td>
+              <td>
+                <span class="ticket-badge">{{ item.openTickets }}</span>
+              </td>
+              <td>
+                <span class="sla-value" [style.color]="getSlaColor(item.slaStatus)">
+                  {{ item.slaStatus }}
+                </span>
+              </td>
+              <td>
+                <mat-icon class="trend-icon" [style.color]="item.trend === 'up' ? '#ef4444' : '#10b981'">
+                  {{ item.trend === 'up' ? 'trending_up' : 'trending_down' }}
                 </mat-icon>
-            </td>
-            <td class="bold">{{ item.slaStatus }}</td>
-            <td><button class="btn-risk">Mitigate Risk</button></td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+            </tr>
+            <tr *ngIf="filteredRiskData.length === 0">
+              <td colspan="6" class="empty-state">
+                <mat-icon>search_off</mat-icon>
+                <p>No results found</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

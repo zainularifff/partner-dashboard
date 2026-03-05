@@ -13,8 +13,19 @@
   align-items: center;
   margin-bottom: 24px;
 
-  .sup { font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 1px; }
-  h1 { font-size: 24px; font-weight: 800; color: #1e293b; margin: 4px 0 0; }
+  .sup { 
+    font-size: 10px; 
+    font-weight: 800; 
+    color: #64748b; 
+    letter-spacing: 1px; 
+  }
+  
+  h1 { 
+    font-size: 24px; 
+    font-weight: 800; 
+    color: #1e293b; 
+    margin: 4px 0 0; 
+  }
 }
 
 .section-label {
@@ -26,15 +37,13 @@
   letter-spacing: 0.5px;
 }
 
-/* ================= CONTAINER DEFINITION ================= */
+/* ================= CARDS ================= */
 .card {
   background: white;
   border: 1px solid #eef2f6;
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  display: flex;
-  flex-direction: column;
   transition: all 0.2s ease;
 
   h3 {
@@ -48,158 +57,64 @@
   }
 }
 
-/* ================= GRID SYSTEM ================= */
-.grid-2x2 {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 24px;
-  width: 100%;
+/* ================= AI RESULT CARD ================= */
+.ai-result-card {
   margin-bottom: 24px;
-}
-
-/* --- HORIZONTAL SCROLL FOR REPORTS --- */
-.report-grid {
-  display: flex;            /* Tukar ke flex untuk enable scrolling */
-  gap: 24px;
-  width: 100%;
-  margin-bottom: 24px;
-  overflow-x: auto;         /* Enable scroll mendatar */
-  padding-bottom: 15px;     /* Ruang untuk scrollbar */
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-
-  /* Gaya Scrollbar (Nampak lebih clean) */
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 10px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-    &:hover { background: #94a3b8; }
-  }
-}
-
-/* ================= 1. MULTI-CLIENT OVERVIEW ================= */
-.vp-row {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.vp-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.spinner-container {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-
-  .spinner-text {
-    position: absolute;
-    font-size: 11px;
-    font-weight: 800;
-    color: #1e293b;
-  }
-}
-
-.vp-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
-}
-
-/* ================= 2. INVENTORY OVERVIEW ================= */
-.asset-flex {
-  display: flex;
-  gap: 32px;
-  align-items: center;
-}
-
-.ah-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 120px;
-  flex-shrink: 0;
-}
-
-.spinner-wrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 110px;
-  width: 110px;
-
-  .ah-inner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    width: 100%;
-
-    .ah-val { 
-      font-size: 20px; 
-      font-weight: 800; 
-      color: #1e293b; 
-      line-height: 1;
-      margin: 0;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: none;
+  
+  .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    
+    mat-icon {
+      color: #a855f7;
+      font-size: 20px;
     }
     
-    .ah-sub { 
-      font-size: 8px; 
-      color: #94a3b8; 
-      font-weight: 700;
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    h3 {
+      color: white;
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+  }
+  
+  .ai-content {
+    p {
+      color: #e2e8f0;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+    }
+  }
+  
+  .ai-footer {
+    margin-top: 16px;
+    small {
+      color: #64748b;
+      font-size: 10px;
     }
   }
 }
 
-.ah-right { flex: 1; }
-
-.fault-row {
-  margin-bottom: 16px;
-  .fault-info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    font-weight: 700;
-    color: #475569;
-    margin-bottom: 6px;
-  }
-}
-
-/* ================= SUMMARY REPORTS (BACK TO GRID) ================= */
+/* ================= REPORT GRID ================= */
 .report-grid {
   display: grid;
-  /* Kita gunakan grid 2-kolum supaya 1 baris ada 2 kad (macam asal) */
-  grid-template-columns: 1fr 1fr; 
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
   width: 100%;
   margin-bottom: 24px;
 }
 
 .report-card {
-  /* Kita buang flex-basis supaya dia ikut saiz grid */
-  flex-direction: row !important; 
+  display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px !important;
-  height: 80px;
+  min-height: 80px;
   background: white;
   border: 1px solid #eef2f6;
   border-radius: 12px;
@@ -217,6 +132,17 @@
     align-items: center;
     gap: 16px;
     min-width: 0;
+  }
+
+  .icon-box {
+    background: #eff6ff;
+    color: #2f6fed;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
   .rep-details {
@@ -243,18 +169,40 @@
   }
 }
 
-.icon-box {
-  background: #eff6ff;
-  color: #2f6fed;
-  padding: 8px;
-  border-radius: 8px;
+/* ================= EXPORT ACTIONS ================= */
+.export-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  gap: 8px;
+  
+  .btn-dl {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    
+    &:hover { 
+      background: #e2e8f0; 
+      color: #2f6fed; 
+      transform: scale(1.1);
+    }
+  }
 }
 
-/* ================= 4. CUSTOM ANALYSIS BUILDER ================= */
+/* ================= CUSTOM ANALYSIS BUILDER ================= */
 .custom-report-card {
   background: linear-gradient(to bottom right, #ffffff, #f8faff);
   border: 2px solid #e2e8f0;
@@ -266,8 +214,17 @@
     gap: 12px;
     margin-bottom: 24px;
     
-    mat-icon { color: #3b82f6; }
-    h3 { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
+    mat-icon { 
+      color: #3b82f6; 
+      font-size: 24px;
+    }
+    
+    h3 { 
+      margin: 0; 
+      font-size: 16px; 
+      font-weight: 800; 
+      color: #1e293b; 
+    }
   }
 
   .builder-grid {
@@ -301,7 +258,9 @@
         cursor: pointer;
         transition: border-color 0.2s;
 
-        &:focus { border-color: #3b82f6; }
+        &:focus { 
+          border-color: #3b82f6; 
+        }
       }
     }
   }
@@ -349,7 +308,11 @@
     cursor: pointer;
     transition: all 0.2s ease;
 
-    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    mat-icon { 
+      font-size: 20px; 
+      width: 20px; 
+      height: 20px; 
+    }
 
     &:hover {
       background: #3b82f6;
@@ -359,7 +322,7 @@
   }
 }
 
-/* ================= BUTTONS & BARS ================= */
+/* ================= BUTTONS ================= */
 .btn-export {
   background: #1e293b;
   color: white;
@@ -374,36 +337,53 @@
   cursor: pointer;
   transition: 0.2s;
   
-  mat-icon { font-size: 18px; width: 18px; height: 18px; }
-  &:hover { background: #334155; }
-}
-
-.btn-dl {
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-
-  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  mat-icon { 
+    font-size: 18px; 
+    width: 18px; 
+    height: 18px; 
+  }
+  
   &:hover { 
-    background: #e2e8f0; 
-    color: #2f6fed; 
-    transform: scale(1.1);
+    background: #334155; 
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
-.custom-bar {
-  height: 8px !important;
-  border-radius: 4px;
-  background-color: #f1f5f9 !important;
+/* ================= ANIMATIONS ================= */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-::ng-deep .custom-bar.blue .mdc-linear-progress__bar-inner {
-  border-color: #2f6fed !important;
+.spin {
+  animation: spin 2s linear infinite;
+}
+
+/* ================= TOOLTIP ================= */
+::ng-deep .mat-tooltip {
+  font-size: 11px;
+  background: #1e293b;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .builder-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

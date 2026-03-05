@@ -1,0 +1,332 @@
+<div class="capex-container">
+  <!-- PREMIUM HEADER -->
+  <header class="crm-header premium">
+    <div class="header-left">
+      <button class="back-btn-modern" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        <span>Back</span>
+      </button>
+      
+      <div class="title-section">
+        <div class="title-badge">
+          <span class="badge-icon">💰</span>
+          <span class="badge-text">Level 2</span>
+        </div>
+        <h1>CAPEX <span class="highlight">Exposure</span></h1>
+        <p class="subtitle">
+          <mat-icon>account_balance</mat-icon>
+          Asset value at risk and replacement planning
+        </p>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <div class="search-box-premium">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="filterTable()"
+          placeholder="Search by entity, asset or risk..."
+        />
+        <span class="shortcut-hint">⌘ K</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI GRID -->
+  <div class="kpi-grid">
+    <div class="kpi-card main">
+      <div class="kpi-icon blue">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Total CAPEX Exposure</div>
+        <div class="kpi-value">{{ formatMoney(totalExposure) }}</div>
+        <div class="kpi-sub">Asset value at risk</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon orange">
+        <mat-icon>devices</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Assets at Risk</div>
+        <div class="kpi-value">{{ assetsAtRisk | number }}</div>
+        <div class="kpi-sub">Units needing replacement</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon red">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">EOL Assets</div>
+        <div class="kpi-value">{{ formatMoney(eolValue) }}</div>
+        <div class="kpi-sub">{{ eolPercentage }}% of total</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">
+        <mat-icon>upcoming</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Budget Required (2025)</div>
+        <div class="kpi-value">{{ formatMoney(budget2025) }}</div>
+        <div class="kpi-sub">52% of total exposure</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="charts-row">
+    <!-- Donut Chart - By Entity -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="header-left">
+          <mat-icon class="card-icon">pie_chart</mat-icon>
+          <h3>CAPEX by Entity</h3>
+        </div>
+        <span class="total-hint">Total: {{ formatMoney(totalExposure) }}</span>
+      </div>
+      <div class="chart-container">
+        <apx-chart 
+          [series]="entityDonut.series" 
+          [chart]="entityDonut.chart"
+          [labels]="entityDonut.labels"
+          [colors]="entityDonut.colors"
+          [plotOptions]="entityDonut.plotOptions"
+          [dataLabels]="entityDonut.dataLabels"
+          [legend]="entityDonut.legend"
+          [tooltip]="entityDonut.tooltip">
+        </apx-chart>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item" *ngFor="let item of entityBreakdown; let i = index">
+          <span class="dot" [style.background]="item.color"></span>
+          <span class="label">{{ item.name }}</span>
+          <span class="value">{{ formatMoney(item.value) }}</span>
+          <span class="percentage">{{ item.percentage }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bar Chart - By Asset Type -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="header-left">
+          <mat-icon class="card-icon">computer</mat-icon>
+          <h3>By Asset Type</h3>
+        </div>
+      </div>
+      <div class="chart-container">
+        <apx-chart 
+          [series]="assetChart.series" 
+          [chart]="assetChart.chart"
+          [xaxis]="assetChart.xaxis"
+          [colors]="assetChart.colors"
+          [plotOptions]="assetChart.plotOptions"
+          [dataLabels]="assetChart.dataLabels"
+          [tooltip]="assetChart.tooltip">
+        </apx-chart>
+      </div>
+      <div class="asset-breakdown">
+        <div class="asset-item" *ngFor="let item of assetTypeBreakdown">
+          <div class="asset-info">
+            <span class="asset-name">{{ item.name }}</span>
+            <span class="asset-count">{{ item.count }} units</span>
+          </div>
+          <div class="asset-value">
+            <span class="value">{{ formatMoney(item.value) }}</span>
+            <span class="percentage">{{ item.percentage }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREAKDOWN GRID -->
+  <div class="breakdown-grid">
+    <!-- By Risk Level -->
+    <div class="card">
+      <div class="card-header">
+        <mat-icon class="card-icon">security</mat-icon>
+        <h3>By Risk Level</h3>
+      </div>
+      <div class="breakdown-list">
+        <div class="breakdown-item" *ngFor="let item of riskBreakdown">
+          <div class="item-info">
+            <span class="dot" [style.background]="item.color"></span>
+            <span class="label">{{ item.name }}</span>
+          </div>
+          <div class="item-value">
+            <span class="value">{{ formatMoney(item.value) }}</span>
+            <span class="percentage">{{ item.percentage }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- By Age Group -->
+    <div class="card">
+      <div class="card-header">
+        <mat-icon class="card-icon">schedule</mat-icon>
+        <h3>By Age Group</h3>
+      </div>
+      <div class="breakdown-list">
+        <div class="breakdown-item" *ngFor="let item of ageBreakdown">
+          <div class="item-info">
+            <span class="dot" [style.background]="item.color"></span>
+            <span class="label">{{ item.name }}</span>
+          </div>
+          <div class="item-value">
+            <span class="value">{{ formatMoney(item.value) }}</span>
+            <span class="percentage">{{ item.percentage }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Projection -->
+    <div class="card">
+      <div class="card-header">
+        <mat-icon class="card-icon">timeline</mat-icon>
+        <h3>Replacement Timeline</h3>
+      </div>
+      <div class="timeline-container">
+        <apx-chart 
+          [series]="timelineChart.series" 
+          [chart]="timelineChart.chart"
+          [xaxis]="timelineChart.xaxis"
+          [colors]="timelineChart.colors"
+          [stroke]="timelineChart.stroke"
+          [markers]="timelineChart.markers"
+          [tooltip]="timelineChart.tooltip">
+        </apx-chart>
+      </div>
+      <div class="timeline-breakdown">
+        <div class="timeline-item" *ngFor="let item of timelineData">
+          <span class="year">{{ item.year }}</span>
+          <span class="value">{{ formatMoney(item.value) }}</span>
+          <span class="percentage">{{ item.percentage }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION CARD -->
+  <div class="action-card">
+    <div class="action-content">
+      <div class="action-left">
+        <mat-icon>auto_awesome</mat-icon>
+        <div>
+          <strong>CAPEX Optimization Plan</strong>
+          <p>Proactive replacement can save RM 2.1M in maintenance costs</p>
+        </div>
+      </div>
+      <button class="btn-primary" (click)="generatePlan()">
+        <mat-icon>build</mat-icon> Generate Plan
+      </button>
+      <button class="btn-secondary" (click)="exportData()">
+        <mat-icon>download</mat-icon> Export
+      </button>
+    </div>
+  </div>
+
+  <!-- DETAILS TABLE WITH PAGINATION -->
+  <div class="table-section">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="header-left">
+          <mat-icon class="card-icon">table_rows</mat-icon>
+          <h3>Asset Details</h3>
+          <span class="record-count">{{ filteredData.length }} records</span>
+        </div>
+        <div class="table-filters">
+          <div class="search-box small">
+            <mat-icon>search</mat-icon>
+            <input 
+              type="text" 
+              [(ngModel)]="searchQuery" 
+              (ngModelChange)="filterTable()"
+              placeholder="Search...">
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive-wrapper">
+        <table class="capex-table">
+          <thead>
+            <tr>
+              <th>Entity</th>
+              <th>Asset Type</th>
+              <th>Age</th>
+              <th>Value</th>
+              <th>Risk</th>
+              <th>EOL Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of paginatedData" class="clickable-row" (click)="onEntityClick(item.entity)">
+              <td>
+                <strong>{{ item.entity }}</strong>
+              </td>
+              <td>{{ item.assetType }}</td>
+              <td>{{ item.age }}</td>
+              <td>{{ formatMoney(item.value) }}</td>
+              <td>
+                <span class="risk-badge" [style.background]="item.riskColor">
+                  {{ item.risk }}
+                </span>
+              </td>
+              <td>{{ item.eol }}</td>
+            </tr>
+            <tr *ngIf="filteredData.length === 0">
+              <td colspan="6" class="empty-state">
+                <mat-icon>search_off</mat-icon>
+                <p>No results found</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION CONTROLS -->
+      <div class="pagination-container" *ngIf="filteredData.length > pageSize">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} - 
+          {{ Math.min(currentPage * pageSize, filteredData.length) }} 
+          of {{ filteredData.length }} records
+        </div>
+        <div class="pagination-controls">
+          <button 
+            class="pagination-btn" 
+            [disabled]="currentPage === 1"
+            (click)="prevPage()">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          
+          <div class="page-numbers">
+            <button 
+              *ngFor="let page of [].constructor(totalPages); let i = index"
+              class="page-number" 
+              [class.active]="currentPage === i + 1"
+              (click)="goToPage(i + 1)">
+              {{ i + 1 }}
+            </button>
+          </div>
+          
+          <button 
+            class="pagination-btn" 
+            [disabled]="currentPage === totalPages"
+            (click)="nextPage()">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

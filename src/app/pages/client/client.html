@@ -1,102 +1,335 @@
-<div class="overall-container">
-  <header class="page-header">
-    <div class="title-section">
-      <h1>Managed Client Entities</h1>
-      <p>Strategic Fleet & Risk Analysis</p>
-    </div>
-    <div class="search-bar">
-      <mat-icon>search</mat-icon>
-      <input type="text" [(ngModel)]="searchQuery" (input)="filterClients()" placeholder="Search entity...">
-    </div>
-  </header>
+<div class="client-container">
+  <!-- BUANG LOADING SCREEN - loading-full-screen dah tak guna -->
 
-  <div class="infographic-row">
-    <div class="chart-card">
-      <h3>Portfolio Health Status</h3>
-      <apx-chart 
-        [series]="healthChart.series" 
-        [chart]="healthChart.chart" 
-        [labels]="healthChart.labels" 
-        [colors]="healthChart.colors"
-        [legend]="healthChart.legend"
-        [plotOptions]="healthChart.plotOptions">
-      </apx-chart>
-    </div>
-
-    <div class="chart-card">
-      <h3>Support Intensity vs SLA</h3>
-      <apx-chart 
-        [series]="incidentChart.series" 
-        [chart]="incidentChart.chart" 
-        [xaxis]="incidentChart.xaxis"
-        [colors]="incidentChart.colors"
-        [plotOptions]="incidentChart.plotOptions"
-        [dataLabels]="incidentChart.dataLabels">
-      </apx-chart>
-    </div>
-
-    <div class="mini-stats-col">
-        <div class="stat-bubble red">
-            <mat-icon>priority_high</mat-icon>
-            <div>
-                <label>Critical Entity</label>
-                <strong>KKM (72% SLA)</strong>
-            </div>
+  <!-- MAIN CONTENT - TAK PERLU *ngIf="!isLoading" -->
+  <div class="main-content">
+    <!-- PREMIUM HEADER (SAME AS PROJECT) -->
+    <header class="crm-header premium">
+      <div class="header-left">
+        <button class="back-btn-modern" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          <span>Back</span>
+        </button>
+        
+        <div class="title-section">
+          <div class="title-badge">
+            <span class="badge-icon">🏢</span>
+            <span class="badge-text">Level 2</span>
+          </div>
+          <h1>Managed Client <span class="highlight">Entities</span></h1>
+          <p class="subtitle">
+            <mat-icon>business</mat-icon>
+            Operational health and technical debt breakdown by sector
+          </p>
         </div>
-        <div class="stat-bubble purple">
-            <mat-icon>devices</mat-icon>
-            <div>
-                <label>Largest Fleet</label>
-                <strong>MOE (5.5k Units)</strong>
-            </div>
+      </div>
+      
+      <div class="header-right">
+        <div class="search-box-premium">
+          <mat-icon>search</mat-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="filterClients()"
+            placeholder="Search clients..."
+          />
+          <span class="shortcut-hint">⌘ K</span>
         </div>
+      </div>
+    </header>
+
+    <!-- Summary Cards - FLEXIBLE GRID -->
+    <div class="summary-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <span class="stat-label">Total Entities</span>
+          <span class="stat-value">{{ clientStats.total }}</span>
+        </div>
+      </div>
+      
+      <div class="stat-card healthy">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <span class="stat-label">Healthy Status</span>
+          <span class="stat-value">{{ clientStats.healthy }}</span>
+        </div>
+      </div>
+      
+      <div class="stat-card atrisk">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-content">
+          <span class="stat-label">At-Risk</span>
+          <span class="stat-value">{{ clientStats.warning }}</span>
+        </div>
+      </div>
+      
+      <div class="stat-card critical">
+        <div class="stat-icon">🔴</div>
+        <div class="stat-content">
+          <span class="stat-label">Critical</span>
+          <span class="stat-value">{{ clientStats.critical }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row - FLEXIBLE -->
+    <div class="charts-row">
+      <div class="chart-card main-chart">
+        <div class="chart-header">
+          <h3>
+            <mat-icon>show_chart</mat-icon>
+            SLA vs Technical Compliance Correlation
+          </h3>
+        </div>
+        <div class="chart-container">
+          <apx-chart 
+            [series]="performanceChart.series" 
+            [chart]="performanceChart.chart" 
+            [colors]="performanceChart.colors"
+            [labels]="performanceChart.labels"
+            [stroke]="performanceChart.stroke"
+            [yaxis]="performanceChart.yaxis"
+            [plotOptions]="performanceChart.plotOptions"
+            [legend]="performanceChart.legend">
+          </apx-chart>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>
+            <mat-icon>pie_chart</mat-icon>
+            Overall Hardware Maturity
+          </h3>
+        </div>
+        <div class="chart-container">
+          <apx-chart 
+            [series]="agingDonut.series" 
+            [chart]="agingDonut.chart" 
+            [labels]="agingDonut.labels"
+            [colors]="agingDonut.colors"
+            [legend]="agingDonut.legend"
+            [plotOptions]="agingDonut.plotOptions">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Card - FULLY RESPONSIVE -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>
+          <mat-icon>table_rows</mat-icon>
+          Fleet Detail Breakdown
+        </h3>
+      </div>
+      
+      <!-- TABLE WRAPPER FOR HORIZONTAL SCROLL ON MOBILE -->
+      <div class="table-responsive-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Client & Sector</th>
+              <th>Status</th>
+              <th>Agents</th>
+              <th>Lease End</th>
+              <th>Tenure Progress</th>
+              <th>Utilization</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of filteredClients" class="clickable-row" (click)="openClientModal(c)">
+              <td>
+                <div class="client-info">
+                  <strong>{{ c.name }}</strong>
+                  <span class="sector-tag">{{ c.sector }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="status-badge" [style.background]="getStatusColor(c.status)">
+                  {{ c.status }}
+                </span>
+              </td>
+              <td>
+                <div class="agent-badge">
+                  <span class="online"><span class="dot"></span> {{ c.onlineAgents | number }}</span>
+                  <span class="offline"><span class="dot"></span> {{ c.offlineAgents | number }}</span>
+                </div>
+              </td>
+              <td>{{ c.leaseEnd }}</td>
+              <td>
+                <div class="progress-container">
+                  <div class="progress-bg">
+                    <div class="progress-fill" 
+                         [style.width]="(c.remainingMonths / 36 * 100) + '%'" 
+                         [style.background]="getStatusColor(c.status)">
+                    </div>
+                  </div>
+                  <span class="progress-label">{{ c.remainingMonths }} months</span>
+                </div>
+              </td>
+              <td class="utilization">{{ c.utilization }}</td>
+              <td>
+                <button class="action-btn" (click)="openClientModal(c); $event.stopPropagation()">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredClients.length === 0">
+              <td colspan="7" class="empty-state">
+                <mat-icon>search_off</mat-icon>
+                <p>No clients found</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div class="table-wrapper">
-    <table class="client-table">
-      <thead>
-        <tr>
-          <th>Entity Name</th>
-          <th>Industry</th>
-          <th>Fleet Size</th>
-          <th>Fleet Health</th>
-          <th>SLA Perf.</th>
-          <th>Legacy Hardware (4y+)</th>
-          <th>Open Tickets</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let c of filteredClients">
-          <td class="client-name">
-            <strong>{{ c.name }}</strong>
-            <span class="status-tag" [attr.data-status]="c.status">{{ c.status }}</span>
-          </td>
-          <td>{{ c.industry }}</td>
-          <td>{{ c.totalAssets | number }}</td>
-          <td>
-            <div class="health-mini-bar">
-              <div class="fill" [style.width.%]="c.healthScore"></div>
-              <span>{{ c.healthScore }}%</span>
+  <!-- MODAL (SAME AS BEFORE) -->
+  <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div class="header-left">
+          <mat-icon class="client-icon">account_balance</mat-icon>
+          <div>
+            <div class="modal-title-row">
+              <h2>{{ selectedClient?.name }}</h2>
+              <span class="modal-sector-pill">{{ selectedClient?.sector }}</span>
             </div>
-          </td>
-          <td class="bold" [style.color]="c.slaPerf < 80 ? '#ef4444' : '#0f172a'">
-            {{ c.slaPerf }}%
-          </td>
-          <td class="text-center">
-            <span class="aging-pill" [class.danger]="c.highRiskAging > 30">
-              {{ c.highRiskAging }}%
+            <p>{{ selectedClient?.contractType }}</p>
+          </div>
+        </div>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <!-- Technical Health Stats -->
+        <div class="health-stats">
+          <div class="stat-item">
+            <span class="label">OS Compliance</span>
+            <span class="value">{{ selectedClient?.osCompliance }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="label">BIOS Aging</span>
+            <span class="value">{{ selectedClient?.biosAging }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="label">SLA Index</span>
+            <span class="value" [style.color]="getStatusColor(selectedClient?.status)">
+              {{ selectedClient?.sla }}
             </span>
-          </td>
-          <td class="text-center bold">{{ c.activeTickets }}</td>
-          <td>
-            <button class="btn-audit">
-              Investigate <mat-icon>chevron_right</mat-icon>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+          <div class="stat-item">
+            <span class="label">Health Score</span>
+            <span class="value">{{ selectedClient?.healthScore || 85 }}%</span>
+          </div>
+        </div>
+
+        <!-- Deployment Summary -->
+        <div class="deployment-summary">
+          <div class="summary-item">
+            <span class="summary-label">Total Assets</span>
+            <span class="summary-value">{{ selectedClient?.totalAssets | number }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Deployed</span>
+            <span class="summary-value">{{ selectedClient?.deployed | number }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Online</span>
+            <span class="summary-value online">{{ getOnlineCount() | number }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Offline</span>
+            <span class="summary-value offline">{{ getOfflineCount() | number }}</span>
+          </div>
+        </div>
+
+        <!-- Agent Search -->
+        <div class="search-section">
+          <div class="search-box">
+            <mat-icon>search</mat-icon>
+            <input
+              type="text"
+              [(ngModel)]="agentSearchQuery"
+              (ngModelChange)="filterAgents()"
+              placeholder="Search by Asset Tag or IP..."
+            />
+          </div>
+          <span class="agent-count">{{ filteredAgents.length }} / {{ selectedClient?.deployed }}</span>
+          <button class="export-btn" (click)="exportToCSV()" title="Export CSV">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+
+        <!-- Agent Table -->
+        <div class="agent-table-wrapper">
+          <table class="agent-table">
+            <thead>
+              <tr>
+                <th (click)="toggleSort('AssetTag')">
+                  Asset Tag
+                  <mat-icon *ngIf="sortConfig.key === 'AssetTag'" class="sort-icon">
+                    {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </th>
+                <th (click)="toggleSort('IP')">
+                  IP Address
+                  <mat-icon *ngIf="sortConfig.key === 'IP'" class="sort-icon">
+                    {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </th>
+                <th (click)="toggleSort('Model')">
+                  Model
+                  <mat-icon *ngIf="sortConfig.key === 'Model'" class="sort-icon">
+                    {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </th>
+                <th (click)="toggleSort('LastSeen')">
+                  Last Seen
+                  <mat-icon *ngIf="sortConfig.key === 'LastSeen'" class="sort-icon">
+                    {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </th>
+                <th (click)="toggleSort('AgentStatus')">
+                  Status
+                  <mat-icon *ngIf="sortConfig.key === 'AgentStatus'" class="sort-icon">
+                    {{ sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let agent of getPaginatedAgents()">
+                <td class="asset-tag">{{ agent.AssetTag }}</td>
+                <td><code>{{ agent.IP }}</code></td>
+                <td>{{ agent.Brand }} {{ agent.Model }}</td>
+                <td>{{ agent.LastSeen | date:'dd MMM, HH:mm' }}</td>
+                <td>
+                  <span class="status-indicator" [class.online]="agent.AgentStatus === 'On'">
+                    {{ agent.AgentStatus === 'On' ? 'Online' : 'Offline' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages > 1">
+          <button [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+          <button [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

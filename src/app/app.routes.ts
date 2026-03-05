@@ -5,40 +5,22 @@ import { ProjectComponent } from './pages/project/project';
 import { ClientComponent } from './pages/client/client';
 import { RiskComponent } from './pages/risk-escalation/risk';
 import { OversightComponent } from './pages/oversight/oversight';
-import { DashboardComponent } from './pages/tactical-dashboard/dashboard';
+import { AssetUtilizationComponent } from './pages/asset-inventory/asset-utilization';  // <-- PATH INI MESTI BETUL
+import { OsRiskComponent } from './pages/os-risk/os-risk';
 import { PartnerComponent } from './pages/partner/partner';
-import { BrandBreakdownComponent } from './pages/brand-breakdown/brand-breakdown';
-import { IncidentComponent } from './pages/incident-detail/incident-detail';
-import { BrandSelectorComponent } from './pages/brand-selector/brand-selector'; 
-import { AssetDetailComponent } from './pages/asset-detail/asset-detail'; 
-
-
+import { CapexComponent } from './pages/capex/capex';
 
 export const routes: Routes = [
-  // 1. Landing & Authentication
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
-
-  // 2. Level 1 - Executive Strategic (First view after login)
   { path: 'management', component: ManagementComponent },
-
-  // 3. Level 2 - Information Breakdown
   { path: 'project', component: ProjectComponent }, 
   { path: 'client', component: ClientComponent }, 
   { path: 'risk-escalation', component: RiskComponent }, 
-
-  // 4. Level 3 - Operational Oversight (Drill-down dari Management)
+  { path: 'asset-utilization', component: AssetUtilizationComponent }, 
+  { path: 'capex', component: CapexComponent }, 
+  { path: 'os-risk', component: OsRiskComponent },
   { path: 'oversight', component: OversightComponent },
-
-  // 5. Level 4 - Tactical & Technical Details
-  // { path: 'dashboard', component: DashboardComponent },
-  // { path: 'partner', component: PartnerComponent },
-  // { path: 'incident-detail', component: IncidentComponent },
-  // { path: 'brand-breakdown/:brandName', component: BrandBreakdownComponent },
-  // { path: 'ticket-view/:uuid', component: IncidentComponent }, 
-  // { path: 'brand-selector', component: BrandSelectorComponent }, 
-  // { path: 'asset-detail', component: AssetDetailComponent },
-
-  // 6. Wildcard (Opsional: Jika user taip URL salah, hantar balik ke Management)
+  { path: 'partner', component: PartnerComponent },
   { path: '**', redirectTo: 'management' }
 ];

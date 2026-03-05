@@ -1,9 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { NgApexchartsModule } from "ng-apexcharts";
+import { Router } from '@angular/router';
+import { LoadingService } from '../../services/loading.service'; // <-- IMPORT LOADING SERVICE
 
 @Component({
   selector: 'app-project',
@@ -17,7 +19,7 @@ export class ProjectComponent implements OnInit {
 
   selectedSector: string = 'ALL';
   searchQuery: string = '';
-  loading: boolean = true;
+  // BUANG loading variable - tak perlu lagi
   groupedProjectsData: { key: string, value: any[] }[] = [];
 
   totalOnlineAll: number = 0;
@@ -33,63 +35,82 @@ export class ProjectComponent implements OnInit {
   pageSize: number = 10;
   sortConfig = { key: 'AssetTag', direction: 'asc' };
 
-  // DATA UPDATED: Ditambah leaseStart & leaseDuration (Level 2 & 3 Support)
+  showFilters: boolean = false;
+
+  // Sector Chart Data
+  sectorChartSeries: any[] = [];
+  sectorCategories: string[] = [];
+  sectorChartOptions: any = {
+    chart: { type: 'bar', height: 250, toolbar: { show: false } },
+    plotOptions: { bar: { columnWidth: '60%', borderRadius: 4 } },
+    colors: ['#2563eb', '#10b981'],
+    dataLabels: { enabled: false },
+    legend: { show: false },
+    grid: { borderColor: '#f1f5f9' },
+    tooltip: { y: { formatter: (val: number) => val.toLocaleString() + ' units' } }
+  };
+
+  // Project Data
   projects = [
-    { id: 1, name: 'FGV', client: 'MOE', sector: 'EDU', assets: 5500, deployed: 4200, balance: 1300, onlineAgents: 3800, offlineAgents: 400, status: 'Active', leaseStart: '2023-01-01', leaseDuration: 36 },
-    { id: 2, name: 'FGV', client: 'MINDEF', sector: 'GOV', assets: 1500, deployed: 1150, balance: 350, onlineAgents: 1100, offlineAgents: 50, status: 'Active', leaseStart: '2024-06-01', leaseDuration: 24 },
-    { id: 3, name: 'WSSB', client: 'KKM', sector: 'GOV', assets: 3200, deployed: 800, balance: 2400, onlineAgents: 750, offlineAgents: 50, status: 'Active', leaseStart: '2022-10-15', leaseDuration: 36 },
-    { id: 4, name: 'WSSB', client: 'MBB', sector: 'FIN', assets: 850, deployed: 800, balance: 50, onlineAgents: 790, offlineAgents: 10, status: 'Completed', leaseStart: '2021-05-01', leaseDuration: 48 },
-    { id: 5, name: 'FGV', client: 'CIMB', sector: 'FIN', assets: 1600, deployed: 600, balance: 1000, onlineAgents: 550, offlineAgents: 50, status: 'Active', leaseStart: '2023-03-01', leaseDuration: 24 },
-    { id: 6, name: 'WSSB', client: 'PETRONAS', sector: 'GLC', assets: 1600, deployed: 600, balance: 1000, onlineAgents: 580, offlineAgents: 20, status: 'Active', leaseStart: '2024-01-01', leaseDuration: 36 }
+    { id: 1, name: 'FGV', client: 'MOE', sector: 'EDU', assets: 5500, deployed: 4200, balance: 1300, onlineAgents: 3800, offlineAgents: 400, status: 'Active' },
+    { id: 2, name: 'FGV', client: 'MINDEF', sector: 'GOV', assets: 1500, deployed: 1150, balance: 350, onlineAgents: 1100, offlineAgents: 50, status: 'Active' },
+    { id: 3, name: 'WSSB', client: 'KKM', sector: 'GOV', assets: 3200, deployed: 800, balance: 2400, onlineAgents: 750, offlineAgents: 50, status: 'Active' },
+    { id: 4, name: 'WSSB', client: 'MBB', sector: 'FIN', assets: 850, deployed: 800, balance: 50, onlineAgents: 790, offlineAgents: 10, status: 'Completed' },
+    { id: 5, name: 'FGV', client: 'CIMB', sector: 'FIN', assets: 1600, deployed: 600, balance: 1000, onlineAgents: 550, offlineAgents: 50, status: 'Active' },
+    { id: 6, name: 'WSSB', client: 'PETRONAS', sector: 'GLC', assets: 1600, deployed: 600, balance: 1000, onlineAgents: 580, offlineAgents: 20, status: 'Active' }
   ];
 
-  constructor(private cdr: ChangeDetectorRef, private location: Location) { }
+  constructor(
+    // BUANG ChangeDetectorRef - tak perlu
+    private location: Location,
+    private router: Router,
+    private loadingService: LoadingService  // <-- TAMBAH LOADING SERVICE
+  ) { }
 
   ngOnInit(): void {
+    // Show loading
+    this.loadingService.show();
+    
+    // Simulate data fetching
     setTimeout(() => {
-      this.loading = false;
       this.updateGroups();
       this.calculateOverallStats();
-      this.cdr.detectChanges();
+      this.calculateSectorChart();
+      
+      // Hide loading lepas data siap
+      this.loadingService.hide();
+      console.log('Project data loaded');
     }, 1000);
   }
 
-  // --- LEASING UTILS ---
-  getRemainingLease(startDate: string, durationMonths: number): number {
-    const start = new Date(startDate);
-    const end = new Date(start.setMonth(start.getMonth() + durationMonths));
-    const today = new Date();
-    const diffTime = end.getTime() - today.getTime();
-    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30));
-    return diffMonths > 0 ? diffMonths : 0;
+  // Calculate Sector Chart Data
+  calculateSectorChart() {
+    const sectors = ['EDU', 'GOV', 'FIN', 'GLC'];
+    const sectorMap = new Map();
+    
+    sectors.forEach(s => sectorMap.set(s, { assets: 0, deployed: 0 }));
+    
+    this.projects.forEach(p => {
+      if (sectorMap.has(p.sector)) {
+        const data = sectorMap.get(p.sector);
+        data.assets += p.assets;
+        data.deployed += p.deployed;
+      }
+    });
+    
+    this.sectorCategories = Array.from(sectorMap.keys());
+    const assetsData = Array.from(sectorMap.values()).map(d => d.assets);
+    const deployedData = Array.from(sectorMap.values()).map(d => d.deployed);
+    
+    this.sectorChartSeries = [
+      { name: 'Total Assets', data: assetsData },
+      { name: 'Deployed Agents', data: deployedData }
+    ];
+    
+    this.sectorChartOptions.xaxis = { categories: this.sectorCategories };
   }
 
-  getLeaseMaturity(startDate: string, durationMonths: number): number {
-    const start = new Date(startDate);
-    const today = new Date();
-    const diffTime = today.getTime() - start.getTime();
-    const monthsPassed = diffTime / (1000 * 60 * 60 * 24 * 30);
-    const percentage = (monthsPassed / durationMonths) * 100;
-    return percentage > 100 ? 100 : Math.floor(percentage);
-  }
-
-  // --- EXPORT TO CSV ---
-  exportToCSV() {
-    if (this.filteredAgents.length === 0) return;
-    const headers = ['Hostname', 'IP Address', 'Brand', 'Model', 'Last Seen', 'Status'];
-    const rows = this.filteredAgents.map(agent => [
-      agent.AssetTag, agent.IP, agent.Brand, agent.Model, agent.ConnectionTime,
-      agent.AgentStatus === 'On' ? 'Online' : 'Offline'
-    ]);
-    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `Export_${this.selectedProject.name}_${new Date().getTime()}.csv`);
-    link.click();
-  }
-
+  // Calculate Overall Stats (Online/Offline)
   calculateOverallStats() {
     this.totalOnlineAll = 0;
     this.totalOfflineAll = 0;
@@ -102,18 +123,21 @@ export class ProjectComponent implements OnInit {
     });
   }
 
+  // Health Rate Formatter for Donut Chart
   getHealthRate = (w: any) => {
     const total = w.globals.seriesTotals.reduce((a: any, b: any) => a + b, 0);
     const online = w.globals.seriesTotals[0];
     return total > 0 ? Math.floor((online / total) * 100) + '%' : '0%';
   }
 
+  // Sector Filter
   setSector(sector: string) {
     this.selectedSector = sector;
     this.updateGroups();
     this.calculateOverallStats();
   }
 
+  // Update Project Groups based on filter
   updateGroups() {
     const filtered = this.projects.filter(p =>
       (this.selectedSector === 'ALL' || p.sector === this.selectedSector) &&
@@ -132,6 +156,7 @@ export class ProjectComponent implements OnInit {
     }));
   }
 
+  // Sector Stats for KPI Cards
   get sectorStats(): any {
     return {
       ALL: this.projects.length,
@@ -142,6 +167,7 @@ export class ProjectComponent implements OnInit {
     };
   }
 
+  // Open Modal with Agent List
   openProjectModal(project: any) {
     this.selectedProject = project;
     this.isModalOpen = true;
@@ -163,12 +189,29 @@ export class ProjectComponent implements OnInit {
     this.applyFiltersAndSort();
   }
 
+  // Modal Helper Functions
+  getOnlineCount(): number {
+    return this.filteredAgents.filter(a => a.AgentStatus === 'On').length;
+  }
+
+  getOfflineCount(): number {
+    return this.filteredAgents.filter(a => a.AgentStatus === 'Off').length;
+  }
+
+  getOnlineRate(): number {
+    if (this.filteredAgents.length === 0) return 0;
+    return Math.round((this.getOnlineCount() / this.filteredAgents.length) * 100);
+  }
+
+  // Apply Filters and Sorting
   applyFiltersAndSort() {
     let data = [...this.allAgents];
     if (this.agentSearchQuery) {
       const q = this.agentSearchQuery.toLowerCase();
       data = data.filter(a =>
-        a.AssetTag?.toLowerCase().includes(q) || a.IP?.includes(q) || a.Model?.toLowerCase().includes(q)
+        a.AssetTag?.toLowerCase().includes(q) || 
+        a.IP?.includes(q) || 
+        a.Model?.toLowerCase().includes(q)
       );
     }
     data.sort((a, b) => {
@@ -181,8 +224,10 @@ export class ProjectComponent implements OnInit {
       return 0;
     });
     this.filteredAgents = data;
+    this.currentPage = 1;
   }
 
+  // Pagination
   goToPage(p: number) {
     if (p >= 1 && p <= this.totalPages) this.currentPage = p;
   }
@@ -196,6 +241,7 @@ export class ProjectComponent implements OnInit {
     return this.filteredAgents.slice(start, start + this.pageSize);
   }
 
+  // Sorting
   toggleSort(key: string) {
     if (this.sortConfig.key === key) {
       this.sortConfig.direction = this.sortConfig.direction === 'asc' ? 'desc' : 'asc';
@@ -206,13 +252,46 @@ export class ProjectComponent implements OnInit {
     this.applyFiltersAndSort();
   }
 
+  // Export to CSV
+  exportToCSV() {
+    if (this.filteredAgents.length === 0) return;
+    const headers = ['Hostname', 'IP Address', 'Brand', 'Model', 'Last Seen', 'Status'];
+    const rows = this.filteredAgents.map(agent => [
+      agent.AssetTag, agent.IP, agent.Brand, agent.Model, 
+      new Date(agent.ConnectionTime).toLocaleString(),
+      agent.AgentStatus === 'On' ? 'Online' : 'Offline'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Export_${this.selectedProject?.name}_${new Date().getTime()}.csv`);
+    link.click();
+  }
+
+  // Close Modal
   closeModal() {
     this.isModalOpen = false;
     document.body.style.overflow = 'auto';
   }
 
-  goBack() { this.location.back(); }
+  // Go Back with referrer check
+  goBack() { 
+    this.loadingService.show(); // <-- SHOW LOADING
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      
+      if (document.referrer.includes('login')) {
+        this.router.navigate(['/management']);
+      } else {
+        this.location.back();
+      }
+    }, 300);
+  }
 
+  // DRAG & DROP FUNCTION
   drop(event: CdkDragDrop<any[]>, groupIndex: number) {
     moveItemInArray(this.groupedProjectsData[groupIndex].value, event.previousIndex, event.currentIndex);
   }

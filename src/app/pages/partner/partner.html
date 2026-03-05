@@ -1,4 +1,5 @@
 <div class="page" *ngIf="stockData">
+  <!-- Header -->
   <div class="header">
     <div class="header-left">
       <div class="sup">nPoints™ AISM PLATFORM</div>
@@ -11,58 +12,7 @@
     </button>
   </div>
 
-  <!-- <div class="grid-2x2">
-    <div class="card">
-      <h3>Multi-Client Operation Overview</h3>
-      <div class="vp-row">
-        <div class="vp-item" *ngFor="let v of vendorHealth">
-          <div class="spinner-container">
-            <mat-progress-spinner 
-              mode="determinate" 
-              [value]="v.percent" 
-              [diameter]="45" 
-              [strokeWidth]="5"
-              [color]="v.matColor">
-            </mat-progress-spinner>
-            <div class="spinner-text">{{ v.percent }}%</div>
-          </div>
-          <div class="vp-label">{{ v.label }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Inventory & Logistic Overview</h3>
-      <div class="asset-flex">
-        <div class="ah-left">
-          <div class="spinner-wrapper">
-            <mat-progress-spinner mode="determinate" [value]="100" [diameter]="90" [strokeWidth]="8"></mat-progress-spinner>
-            <div class="ah-inner">
-              <div class="ah-val">{{ stockData.total | number }}</div>
-              <div class="ah-sub">TOTAL STOCK</div>
-            </div>
-          </div>
-        </div>
-        <div class="ah-right">
-          <div class="fault-row">
-            <div class="fault-info">
-              <span>Logistic Compliance</span>
-              <strong>{{stockData.logisticCompliance}}%</strong>
-            </div>
-            <mat-progress-bar mode="determinate" [value]="stockData.logisticCompliance" class="custom-bar blue"></mat-progress-bar>
-          </div>
-          <div class="fault-row">
-            <div class="fault-info">
-              <span>Fulfillment Rate</span>
-              <strong>{{stockData.fulfillmentRate}}%</strong>
-            </div>
-            <mat-progress-bar mode="determinate" [value]="stockData.fulfillmentRate" class="custom-bar blue"></mat-progress-bar>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div> -->
-
+  <!-- AI Result Card -->
   <div class="ai-result-card card" *ngIf="aiResult">
     <div class="ai-header">
       <mat-icon>auto_awesome</mat-icon>
@@ -76,6 +26,7 @@
     </div>
   </div>
 
+  <!-- Summary Reports Section -->
   <div class="section-label">Summary Report</div>
   <div class="report-grid">
     <div class="card report-card" *ngFor="let r of reports">
@@ -88,12 +39,22 @@
           <span class="rep-status">{{ r.status }}</span>
         </div>
       </div>
-      <button class="btn-dl" (click)="downloadReport(r.name)" [title]="'Download ' + r.name">
-        <mat-icon>download</mat-icon>
-      </button>
+      
+      <!-- Export Actions with Tooltips -->
+      <div class="export-actions">
+        <button class="btn-dl" (click)="downloadReport(r.name)" 
+                matTooltip="Download as PDF" matTooltipPosition="above">
+          <mat-icon>picture_as_pdf</mat-icon>
+        </button>
+        <button class="btn-dl" (click)="exportToExcel(r.name)" 
+                matTooltip="Download as Excel" matTooltipPosition="above">
+          <mat-icon>table_chart</mat-icon>
+        </button>
+      </div>
     </div>
   </div>
 
+  <!-- Custom Analysis Builder -->
   <div class="card custom-report-card">
     <div class="report-header">
       <mat-icon>settings_suggest</mat-icon>
@@ -123,8 +84,10 @@
       <div class="input-group">
         <label>Output Format</label>
         <div class="format-toggle">
-          <button class="btn-toggle active">PDF</button>
-          <button class="btn-toggle">Excel (XLSX)</button>
+          <button class="btn-toggle" [class.active]="selectedFormat === 'PDF'" 
+                  (click)="selectedFormat = 'PDF'">PDF</button>
+          <button class="btn-toggle" [class.active]="selectedFormat === 'Excel'" 
+                  (click)="selectedFormat = 'Excel'">Excel (XLSX)</button>
         </div>
       </div>
     </div>

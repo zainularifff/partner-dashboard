@@ -17,8 +17,8 @@ export class LoginComponent {
   constructor(private router: Router) {}
 
   onLogin() {
-    // Mockup logik: Untuk pembentangan, asalkan ada isi, terus bawa ke Level 1 (Oversight)
     if (this.username && this.password) {
+      console.log('Login successful', this.username);
       this.router.navigate(['/management']);
     } else {
       alert('Sila masukkan ID Pengguna dan Kata Laluan anda.');

@@ -46,7 +46,6 @@ export class AppComponent implements OnInit {
     this.themeService.toggleTheme();
   }
 
-  // ✅ TAMBAH METHOD NI untuk openSettings
   openSettings() {
     console.log('Opening settings...');
     this.loadingService.show();

@@ -1,588 +1,97 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>SLA Performance Report</title>
-    <style>
-        /* ================= GLOBAL STYLES ================= */
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-            background: #ffffff;
-            color: #1e293b;
-            line-height: 1.5;
-            padding: 40px;
-        }
-        /* ================= HEADER ================= */
-        
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: #2563eb;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 20px;
-        }
-        
-        .logo-text {
-            font-size: 20px;
-            font-weight: 800;
-            color: #1e293b;
-        }
-        
-        .logo-text span {
-            color: #2563eb;
-        }
-        
-        .header-right {
-            text-align: right;
-        }
-        
-        .report-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #1e293b;
-            margin-bottom: 5px;
-        }
-        
-        .report-date {
-            color: #64748b;
-            font-size: 12px;
-        }
-        /* ================= METRICS CARDS ================= */
-        
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .metric-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-        }
-        
-        .metric-label {
-            color: #64748b;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        
-        .metric-value {
-            font-size: 32px;
-            font-weight: 800;
-            color: #1e293b;
-            margin-bottom: 5px;
-        }
-        
-        .metric-trend {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 12px;
-        }
-        
-        .trend-up {
-            color: #10b981;
-        }
-        
-        .trend-down {
-            color: #ef4444;
-        }
-        /* ================= SECTION HEADERS ================= */
-        
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 30px 0 20px;
-        }
-        
-        .section-icon {
-            width: 30px;
-            height: 30px;
-            background: #eff6ff;
-            color: #2563eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            font-size: 18px;
-        }
-        
-        .section-title h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-        /* ================= TABLES ================= */
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        th {
-            background: #f1f5f9;
-            padding: 14px 16px;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 700;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 14px;
-            color: #334155;
-        }
-        
-        tr:last-child td {
-            border-bottom: none;
-        }
-        /* Status Badges */
-        
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .badge-critical {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-        
-        .badge-warning {
-            background: #fff3cd;
-            color: #b45309;
-        }
-        
-        .badge-good {
-            background: #dcfce7;
-            color: #15803d;
-        }
-        /* ================= PROGRESS BARS ================= */
-        
-        .progress-container {
-            margin: 20px 0;
-        }
-        
-        .progress-item {
-            margin-bottom: 15px;
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 13px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            border-radius: 4px;
-        }
-        /* ================= AI INSIGHTS CARD ================= */
-        
-        .ai-card {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            border-radius: 16px;
-            padding: 24px;
-            margin: 30px 0;
-            color: white;
-        }
-        
-        .ai-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .ai-header mat-icon {
-            color: #a855f7;
-            font-size: 24px;
-        }
-        
-        .ai-header h3 {
-            font-size: 14px;
-            letter-spacing: 1px;
-            color: #94a3b8;
-        }
-        
-        .ai-content p {
-            color: #e2e8f0;
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        
-        .ai-footer {
-            color: #64748b;
-            font-size: 11px;
-        }
-        /* ================= FOOTER ================= */
-        
-        .report-footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            color: #94a3b8;
-        }
-        
-        .footer-left {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .footer-right {
-            text-align: right;
-        }
-        /* ================= GRAPHS ================= */
-        
-        .graph-container {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .bar-chart {
-            display: flex;
-            align-items: flex-end;
-            gap: 20px;
-            height: 200px;
-            margin-top: 20px;
-        }
-        
-        .bar {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .bar-fill {
-            width: 60px;
-            border-radius: 6px 6px 0 0;
-            transition: height 0.3s;
-        }
-        
-        .bar-label {
-            font-size: 12px;
-            color: #64748b;
-        }
-    </style>
-</head>
-
-<body>
-    <!-- HEADER -->
-    <div class="report-header">
-        <div class="logo-area">
-            <div class="logo-icon">nP</div>
-            <div class="logo-text">nPoints™ <span>AISM</span></div>
+<div class="page" *ngIf="stockData">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="sup">nPoints™ AISM PLATFORM</div>
+            <h1>Summary Report</h1>
         </div>
-        <div class="header-right">
-            <div class="report-title">SLA Performance Report</div>
-            <div class="report-date">Generated: 05 March 2026 • 14:30 GMT+8</div>
-        </div>
+        <button class="btn-export" (click)="generateAIAnalysis()" [disabled]="isAnalyzing">
+      <mat-icon *ngIf="!isAnalyzing">psychology</mat-icon>
+      <mat-icon *ngIf="isAnalyzing" class="spin">sync</mat-icon>
+      {{ isAnalyzing ? 'AI IS ANALYZING...' : 'Full Gemini AI Report Analysis' }}
+    </button>
     </div>
 
-    <!-- EXECUTIVE SUMMARY -->
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-label">Overall SLA</div>
-            <div class="metric-value">98.2%</div>
-            <div class="metric-trend">
-                <span class="trend-up">↑ 2.1%</span>
-                <span style="color:#64748b">from last month</span>
-            </div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Critical Tickets</div>
-            <div class="metric-value">23</div>
-            <div class="metric-trend">
-                <span class="trend-down">↓ 5</span>
-                <span style="color:#64748b">from last week</span>
-            </div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Avg Response Time</div>
-            <div class="metric-value">18m</div>
-            <div class="metric-trend">
-                <span class="trend-up">↑ 2m</span>
-                <span style="color:#64748b">from target</span>
-            </div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">CSAT Score</div>
-            <div class="metric-value">4.2/5</div>
-            <div class="metric-trend">
-                <span class="trend-up">↑ 0.3</span>
-                <span style="color:#64748b">this quarter</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- AI INSIGHTS SECTION -->
-    <div class="ai-card">
+    <!-- AI Result Card -->
+    <div class="ai-result-card card" *ngIf="aiResult">
         <div class="ai-header">
-            <span style="font-size:24px;">🧠</span>
+            <mat-icon>auto_awesome</mat-icon>
             <h3>STRATEGIC AI INSIGHTS</h3>
         </div>
         <div class="ai-content">
-            <p>KKM shows critical SLA performance at 72% with 84 open tickets, primarily linked to legacy hardware (5.2 years average age). Correlation analysis indicates that 60% of SLA lapses are attributed to devices with >4 years BIOS age. Immediate
-                remediation on KKM's EOL assets could improve SLA by up to 15% within 60 days.</p>
-            <p><strong>CapEx Recommendation:</strong> Allocate RM 2.8M for KKM fleet refresh in Q3 2026 to mitigate revenue risk of RM 720k/month.</p>
+            <p>{{ aiResult }}</p>
         </div>
         <div class="ai-footer">
-            Analysis powered by Gemini 1.5 Flash • Based on Real-time SQL Data
+            <small>Analysis powered by Gemini 1.5 Flash • Based on Real-time SQL Data</small>
         </div>
     </div>
 
-    <!-- CLIENT SLA BREAKDOWN -->
-    <div class="section-title">
-        <div class="section-icon">📊</div>
-        <h2>Client SLA Performance</h2>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Client</th>
-                <th>SLA Achievement</th>
-                <th>Status</th>
-                <th>Open Tickets</th>
-                <th>Trend (30d)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>KKM</strong></td>
-                <td>72%</td>
-                <td><span class="badge badge-critical">Critical</span></td>
-                <td>84</td>
-                <td style="color:#ef4444;">↑ +12</td>
-            </tr>
-            <tr>
-                <td><strong>PETRONAS</strong></td>
-                <td>85%</td>
-                <td><span class="badge badge-warning">Warning</span></td>
-                <td>42</td>
-                <td style="color:#f59e0b;">↔ +2</td>
-            </tr>
-            <tr>
-                <td><strong>MOE (KPM)</strong></td>
-                <td>98%</td>
-                <td><span class="badge badge-good">Good</span></td>
-                <td>15</td>
-                <td style="color:#10b981;">↓ -3</td>
-            </tr>
-            <tr>
-                <td><strong>MINDEF</strong></td>
-                <td>90%</td>
-                <td><span class="badge badge-good">Good</span></td>
-                <td>8</td>
-                <td style="color:#10b981;">↓ -2</td>
-            </tr>
-            <tr>
-                <td><strong>BANK</strong></td>
-                <td>99%</td>
-                <td><span class="badge badge-good">Good</span></td>
-                <td>3</td>
-                <td style="color:#10b981;">↓ -1</td>
-            </tr>
-            <tr>
-                <td><strong>TM</strong></td>
-                <td>97%</td>
-                <td><span class="badge badge-good">Good</span></td>
-                <td>5</td>
-                <td style="color:#10b981;">↓ -1</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- TICKET DISTRIBUTION -->
-    <div class="section-title">
-        <div class="section-icon">🎫</div>
-        <h2>Ticket Distribution by Priority</h2>
-    </div>
-
-    <div class="graph-container">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <div><strong>Critical:</strong> 23</div>
-            <div><strong>High:</strong> 35</div>
-            <div><strong>Medium:</strong> 26</div>
-            <div><strong>Low:</strong> 15</div>
-        </div>
-        <div class="bar-chart">
-            <div class="bar">
-                <div class="bar-fill" style="height:115px; background:#ef4444; width:60px;"></div>
-                <span class="bar-label">Critical</span>
+    <!-- Summary Reports Section -->
+    <div class="section-label">Summary Report</div>
+    <div class="report-grid">
+        <div class="card report-card" *ngFor="let r of reports">
+            <div class="report-main">
+                <div class="icon-box">
+                    <mat-icon>{{ r.icon }}</mat-icon>
+                </div>
+                <div class="rep-details">
+                    <span class="rep-title">{{ r.name }}</span>
+                    <span class="rep-status">{{ r.status }}</span>
+                </div>
             </div>
-            <div class="bar">
-                <div class="bar-fill" style="height:175px; background:#f59e0b; width:60px;"></div>
-                <span class="bar-label">High</span>
-            </div>
-            <div class="bar">
-                <div class="bar-fill" style="height:130px; background:#3b82f6; width:60px;"></div>
-                <span class="bar-label">Medium</span>
-            </div>
-            <div class="bar">
-                <div class="bar-fill" style="height:75px; background:#10b981; width:60px;"></div>
-                <span class="bar-label">Low</span>
+
+            <!-- Export Actions with Tooltips -->
+            <div class="export-actions">
+                <button class="btn-dl" (click)="downloadReport(r.name)" matTooltip="Download as PDF" matTooltipPosition="above">
+          <mat-icon>picture_as_pdf</mat-icon>
+        </button>
+                <button class="btn-dl" (click)="exportToExcel(r.name)" matTooltip="Download as Excel" matTooltipPosition="above">
+          <mat-icon>table_chart</mat-icon>
+        </button>
             </div>
         </div>
     </div>
 
-    <!-- ASSET RISK CORRELATION -->
-    <div class="section-title">
-        <div class="section-icon">⚠️</div>
-        <h2>Asset Risk Correlation</h2>
-    </div>
+    <!-- Custom Analysis Builder -->
+    <div class="card custom-report-card">
+        <div class="report-header">
+            <mat-icon>settings_suggest</mat-icon>
+            <h3>Custom Analysis Builder</h3>
+        </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:30px;">
-        <!-- OS Risk -->
-        <div style="background:#f8fafc; border-radius:12px; padding:20px;">
-            <h3 style="font-size:14px; margin-bottom:15px;">OS Security Risk</h3>
-            <div class="progress-item">
-                <div class="progress-header">
-                    <span>Windows 7/XP (EOL)</span>
-                    <span>650 units</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:35%; background:#ef4444;"></div>
-                </div>
+        <div class="builder-grid">
+            <div class="input-group">
+                <label>Select Brand</label>
+                <select class="custom-select" #brandSelect>
+          <option value="All Brands">All Brands</option>
+          <option value="ASUS Fleet">ASUS Fleet</option>
+          <option value="HP Fleet">HP Fleet</option>
+          <option value="Lenovo Fleet">Lenovo Fleet</option>
+        </select>
             </div>
-            <div class="progress-item">
-                <div class="progress-header">
-                    <span>Windows 10 (Outdated)</span>
-                    <span>500 units</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:27%; background:#f59e0b;"></div>
-                </div>
+
+            <div class="input-group">
+                <label>Analysis Period</label>
+                <select class="custom-select" #periodSelect>
+          <option value="Q1 2026">Q1 2026 (Jan - Mar)</option>
+          <option value="Q2 2026">Q2 2026 (Apr - Jun)</option>
+          <option value="Current Month">Current Month</option>
+        </select>
             </div>
-            <div class="progress-item">
-                <div class="progress-header">
-                    <span>Windows 10 (Current)</span>
-                    <span>1,730 units</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:38%; background:#10b981;"></div>
+
+            <div class="input-group">
+                <label>Output Format</label>
+                <div class="format-toggle">
+                    <button class="btn-toggle" [class.active]="selectedFormat === 'PDF'" (click)="selectedFormat = 'PDF'">PDF</button>
+                    <button class="btn-toggle" [class.active]="selectedFormat === 'Excel'" (click)="selectedFormat = 'Excel'">Excel (XLSX)</button>
                 </div>
             </div>
         </div>
 
-        <!-- BIOS Age -->
-        <div style="background:#f8fafc; border-radius:12px; padding:20px;">
-            <h3 style="font-size:14px; margin-bottom:15px;">BIOS Age Distribution</h3>
-            <div class="progress-item">
-                <div class="progress-header">
-                    <span>&#60;2 years</span>
-                    <span>1,800 units</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:35%; background:#10b981;"></div>
-                </div>
-            </div>
-            <div class="progress-item">
-                <div class="progress-header">
-                    <span>2-4 years</span>
-                    <span>2,200 units</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:42%; background:#f59e0b;"></div>
-                </div>
-            </div>
-            <div class="progress-item">
-                <div class="progress-header">
-                    <span>>4 years</span>
-                    <span>1,200 units</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:23%; background:#ef4444;"></div>
-                </div>
-            </div>
+        <div class="builder-actions">
+            <button class="btn-generate" (click)="onGenerateCustomReport(brandSelect.value, periodSelect.value)">
+        <mat-icon>auto_awesome</mat-icon> Generate Custom Insight
+      </button>
         </div>
     </div>
-
-    <!-- CAPEX RECOMMENDATION -->
-    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:20px; margin-bottom:30px;">
-        <div style="display:flex; align-items:center; gap:15px;">
-            <div style="background:#2563eb; color:white; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px;">💰</div>
-            <div>
-                <h3 style="font-size:16px; margin-bottom:5px;">CapEX Exposure & Recommendation</h3>
-                <p style="color:#334155; margin-bottom:5px;">Total at-risk assets: RM 5.4M (3,200 units) • EOL value: RM 3.2M (59%)</p>
-                <p style="color:#2563eb; font-weight:600;">Priority: KKM fleet refresh (RM 2.8M) • ROI 62% • 8 months payback</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="report-footer">
-        <div class="footer-left">
-            <span>nPoints™ AISM Platform</span>
-            <span>Confidential</span>
-        </div>
-        <div class="footer-right">
-            <span>Page 1 of 1 • Generated on 05 March 2026</span>
-        </div>
-    </div>
-</body>
-
-</html>
+</div>

@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { LoadingService } from '../../services/loading.service'; // <-- IMPORT LOADING SERVICE
 
 @Component({
   selector: 'app-os-risk',
@@ -12,7 +13,6 @@ import { Router } from '@angular/router';
   templateUrl: './os-risk.html',
   styleUrls: ['./os-risk.scss'] 
 })
-
 export class OsRiskComponent implements OnInit {
   // Tab state
   activeTab: string = 'overview';
@@ -33,6 +33,7 @@ export class OsRiskComponent implements OnInit {
       win11: 0, 
       total: 745,
       riskLevel: 'CRITICAL',
+      riskColor: '#ef4444',
       financialImpact: 'RM 360k'
     },
     { 
@@ -43,6 +44,7 @@ export class OsRiskComponent implements OnInit {
       win11: 50, 
       total: 500,
       riskLevel: 'HIGH',
+      riskColor: '#f59e0b',
       financialImpact: 'RM 160k'
     },
     { 
@@ -53,6 +55,7 @@ export class OsRiskComponent implements OnInit {
       win11: 400, 
       total: 1255,
       riskLevel: 'LOW',
+      riskColor: '#10b981',
       financialImpact: 'RM 40k'
     },
     { 
@@ -63,6 +66,7 @@ export class OsRiskComponent implements OnInit {
       win11: 70, 
       total: 500,
       riskLevel: 'MEDIUM',
+      riskColor: '#fbbf24',
       financialImpact: 'RM 55k'
     }
   ];
@@ -103,11 +107,24 @@ export class OsRiskComponent implements OnInit {
       { name: 'Win10 (Ok)', data: [380, 250, 800, 300] },
       { name: 'Win11', data: [0, 50, 400, 70] }
     ],
-    chart: { type: 'bar', height: 300, stacked: true, toolbar: { show: false } },
-    xaxis: { categories: ['KKM', 'PETRONAS', 'MOE', 'MINDEF'] },
+    chart: { 
+      type: 'bar', 
+      height: 300, 
+      stacked: true, 
+      toolbar: { show: false },
+      background: 'transparent'
+    },
+    xaxis: { 
+      categories: ['KKM', 'PETRONAS', 'MOE', 'MINDEF'],
+      labels: { style: { colors: '#94a3b8' } }
+    },
     colors: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
     plotOptions: { bar: { borderRadius: 4, horizontal: false } },
-    dataLabels: { enabled: false }
+    dataLabels: { enabled: false },
+    legend: { 
+      show: true,
+      labels: { colors: '#cbd5e1' }
+    }
   };
 
   // Asset List for Assets tab
@@ -129,17 +146,32 @@ export class OsRiskComponent implements OnInit {
   pageSize: number = 15;
   totalPages: number = 1;
 
-  constructor(private location: Location, private router: Router) {}
+  constructor(
+    private location: Location, 
+    private router: Router,
+    private loadingService: LoadingService  // <-- INJECT LOADING SERVICE
+  ) {}
 
   ngOnInit(): void {
-    this.generateMockAssets();
-    this.filterAssets();
-    this.updateSelectedEntityData();
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.generateMockAssets();
+      this.filterAssets();
+      this.updateSelectedEntityData();
+      this.loadingService.hide();
+      console.log('OS Risk data loaded');
+    }, 1000);
   }
 
   // Navigation
   goBack() {
-    this.location.back();
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      this.location.back();
+    }, 300);
   }
 
   // Generate mock assets for demonstration
@@ -170,7 +202,8 @@ export class OsRiskComponent implements OnInit {
         installDate: installDate,
         eolStatus: os.eol,
         eolMonths: os.eol !== 'EOL' ? parseInt(os.eol) : 0,
-        risk: os.risk
+        risk: os.risk,
+        riskColor: os.risk === 'Critical' ? '#ef4444' : os.risk === 'High' ? '#f59e0b' : '#10b981'
       });
     }
   }
@@ -218,7 +251,7 @@ export class OsRiskComponent implements OnInit {
     });
 
     this.filteredAssets = filtered;
-    this.totalPages = Math.ceil(this.filteredAssets.length / this.pageSize);
+    this.totalPages = Math.ceil(this.filteredAssets.length / this.pageSize) || 1;
     this.currentPage = 1;
     this.updatePaginatedAssets();
   }
@@ -231,10 +264,15 @@ export class OsRiskComponent implements OnInit {
 
   // Change page
   changePage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.updatePaginatedAssets();
-    }
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.updatePaginatedAssets();
+      }
+      this.loadingService.hide();
+    }, 200);
   }
 
   // Toggle sort
@@ -289,6 +327,7 @@ export class OsRiskComponent implements OnInit {
         atRisk: 365,
         financialImpact: 'RM 360k',
         riskLevel: 'CRITICAL',
+        riskColor: '#ef4444',
         osBreakdown: [
           { name: 'Win 7/XP/8', count: 320, percentage: 43, color: '#ef4444' },
           { name: 'Win10 (Out)', count: 45, percentage: 6, color: '#f59e0b' },
@@ -303,6 +342,7 @@ export class OsRiskComponent implements OnInit {
         atRisk: 200,
         financialImpact: 'RM 160k',
         riskLevel: 'HIGH',
+        riskColor: '#f59e0b',
         osBreakdown: [
           { name: 'Win 7/XP/8', count: 180, percentage: 36, color: '#ef4444' },
           { name: 'Win10 (Out)', count: 20, percentage: 4, color: '#f59e0b' },
@@ -317,6 +357,7 @@ export class OsRiskComponent implements OnInit {
         atRisk: 55,
         financialImpact: 'RM 40k',
         riskLevel: 'LOW',
+        riskColor: '#10b981',
         osBreakdown: [
           { name: 'Win 7/XP/8', count: 50, percentage: 4, color: '#ef4444' },
           { name: 'Win10 (Out)', count: 5, percentage: 0.4, color: '#f59e0b' },
@@ -331,6 +372,7 @@ export class OsRiskComponent implements OnInit {
         atRisk: 130,
         financialImpact: 'RM 55k',
         riskLevel: 'MEDIUM',
+        riskColor: '#fbbf24',
         osBreakdown: [
           { name: 'Win 7/XP/8', count: 100, percentage: 20, color: '#ef4444' },
           { name: 'Win10 (Out)', count: 30, percentage: 6, color: '#f59e0b' },
@@ -364,50 +406,108 @@ export class OsRiskComponent implements OnInit {
 
   // View asset detail
   viewAssetDetail(assetId: number) {
-    this.router.navigate(['/asset-detail', assetId]);
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      this.router.navigate(['/asset-detail', assetId]);
+    }, 300);
   }
 
   // Schedule upgrade for entity
   scheduleUpgrade(data: any) {
-    console.log('Schedule upgrade for:', data);
-    // Navigate to scheduling page or open modal
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Schedule upgrade for:', data);
+      alert(`Upgrade scheduled for ${data.entity || data.assetId}`);
+    }, 500);
   }
 
   // Schedule upgrade for specific asset
   scheduleEntityUpgrade(entity: string) {
-    console.log('Schedule upgrade for entity:', entity);
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Schedule upgrade for entity:', entity);
+      alert(`Upgrade scheduled for ${entity}`);
+    }, 500);
   }
 
   // Bulk schedule upgrades
   bulkScheduleUpgrade() {
-    console.log('Bulk schedule upgrades');
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Bulk schedule upgrades');
+      alert('Bulk upgrade scheduling initiated');
+    }, 800);
   }
 
   // Export functions
   exportTable() {
-    console.log('Exporting table...');
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Exporting table...');
+      alert('Table exported successfully');
+    }, 500);
   }
 
   exportAssetList() {
-    console.log('Exporting asset list...');
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Exporting asset list...');
+      alert('Asset list exported successfully');
+    }, 500);
   }
 
   exportEntityReport(entityCode: string) {
-    console.log('Exporting report for:', entityCode);
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Exporting report for:', entityCode);
+      alert(`Report for ${entityCode} exported`);
+    }, 500);
   }
 
   // Generate report
   generateReport() {
-    console.log('Generating risk report...');
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Generating risk report...');
+      alert('Risk report generated');
+    }, 800);
   }
 
   // Create mitigation plan
   createMitigationPlan() {
-    console.log('Creating mitigation plan...');
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Creating mitigation plan...');
+      alert('Mitigation plan created');
+    }, 800);
   }
 
   // Notify clients
   notifyClients() {
-    console.log('Notifying clients...');
+    this.loadingService.show();
+    
+    setTimeout(() => {
+      this.loadingService.hide();
+      console.log('Notifying clients...');
+      alert('Clients notified successfully');
+    }, 600);
   }
 }

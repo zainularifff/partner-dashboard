@@ -8,8 +8,8 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { LoadingService } from '../../services/loading.service';
 
-// Service Imports - GUNA QWEN
-import { QwenService } from '../../services/qwen.service'; 
+// Service Imports
+import { GeminiService } from '../../services/gemini-services'; 
 import { IncidentApi } from '../../services/dashboard.api';
 
 @Component({
@@ -27,14 +27,15 @@ import { IncidentApi } from '../../services/dashboard.api';
 })
 export class ReportComponent implements OnInit {
   // Services Injection
-  private qwenService = inject(QwenService);  // <-- GUNA QWEN
+  private geminiService = inject(GeminiService);  // <-- GUNA inject()
   private api = inject(IncidentApi); 
   
   // Variables
+  private model: any; 
   isAnalyzing = false;
   aiResult: string = '';
   selectedFormat: string = 'PDF';
-  qwenConnected = false;
+
 
   // Data Dashboard (UI State)
   vendorHealth = [
@@ -60,15 +61,17 @@ export class ReportComponent implements OnInit {
     private loadingService: LoadingService
   ) {}
 
-  async ngOnInit() {
+  ngOnInit(): void {
     this.loadingService.show();
     
     setTimeout(async () => {
-      console.log('📊 Report Dashboard Initialized');
+      console.log('Partner Operational Dashboard Initialized');
       
-      // Test Qwen connection
-      this.qwenConnected = await this.qwenService.testConnection();
-      console.log('Qwen status:', this.qwenConnected ? 'ONLINE ✅' : 'OFFLINE ❌');
+      if (this.geminiService) {
+        this.model = this.geminiService.getModel();
+        const isConnected = await this.testGeminiConnection();
+        console.log('Gemini status:', isConnected ? 'ONLINE ✅' : 'OFFLINE ❌ (using mock data)');
+      }
       
       // Set mock data as fallback
       if (!this.aiResult) {
@@ -79,7 +82,24 @@ export class ReportComponent implements OnInit {
     }, 1000);
   }
 
-  // ==================== QWEN AI ANALYSIS ====================
+  // ==================== GEMINI AI ANALYSIS ====================
+
+  async testGeminiConnection(): Promise<boolean> {
+    try {
+      if (!this.model) {
+        console.log('🔄 Initializing Gemini model...');
+        this.model = this.geminiService.getModel();
+      }
+      
+      const result = await this.model.generateContent("Respond with 'OK' if you can read this.");
+      const response = await result.response;
+      console.log('✅ Gemini connection OK:', response.text());
+      return true;
+    } catch (error) {
+      console.error('❌ Gemini connection failed:', error);
+      return false;
+    }
+  }
 
   async generateAIAnalysis() {
     if (this.isAnalyzing) {
@@ -126,29 +146,33 @@ export class ReportComponent implements OnInit {
         const totalTickets = data.summary.openTotal + data.summary.solvedTotal;
         if (totalTickets === 0 && data.aging.length === 0) {
           console.warn('⚠️ No data from APIs, using mock data');
+          
+          // Gunakan mock data kalau API tak return data
           this.aiResult = this.getMockAIAnalysis();
           this.isAnalyzing = false;
           this.loadingService.hide();
           return;
         }
         
-        // Check if Qwen is connected
-        if (!this.qwenConnected) {
-          console.warn('⚠️ Qwen not connected, using mock data');
+        // Check if model is available
+        if (!this.model) {
+          console.error('❌ Gemini model not initialized');
           this.aiResult = this.getMockAIAnalysis();
           this.isAnalyzing = false;
           this.loadingService.hide();
           return;
         }
         
-        const prompt = this.buildQwenPrompt(data);
-        console.log('🤖 Sending to Qwen...');
+        const context = this.buildAIContext(data);
+        console.log('🤖 Sending to Gemini...');
 
         try {
-          this.aiResult = await this.qwenService.generateReport(prompt, data);
-          console.log('✅ Qwen Response received');
+          const result = await this.model.generateContent(context);
+          const response = await result.response;
+          this.aiResult = response.text();
+          console.log('✅ AI Response received');
         } catch (err) {
-          console.error("💥 Qwen Error:", err);
+          console.error("💥 Gemini Error:", err);
           this.aiResult = this.getMockAIAnalysis();
         } finally {
           this.isAnalyzing = false;
@@ -164,12 +188,13 @@ export class ReportComponent implements OnInit {
     });
   }
 
-  // Helper function untuk build prompt untuk Qwen
-  private buildQwenPrompt(data: any): string {
+  // Helper function untuk build context
+  private buildAIContext(data: any): string {
     return `
-      Anda adalah pakar analisis data untuk dashboard eksekutif nPoints™ AISM.
-      
-      DATA OPERASI:
+      System: nPoints™ AISM Strategic Intelligence.
+      Role: Chief Information Officer (CIO).
+
+      LIVE OPERATIONAL DATA FROM SQL SERVERS:
       
       1. INCIDENT PERFORMANCE (SLA):
          - Total Tickets: ${data.summary.openTotal + data.summary.solvedTotal}
@@ -187,14 +212,9 @@ export class ReportComponent implements OnInit {
          - FSI Assets: ${data.assetStats.fsi}
          - Gov/Edu Assets: ${data.assetStats.gov + data.assetStats.edu}
 
-      TUGASAN: 
-      Analisis jika 'SLA Lapsed' yang tinggi berkorelasi dengan jenama yang mempunyai 'Critical Attrition'. 
-      Berikan 3 ayat Insight Eksekutif dan satu cadangan bajet CapEx untuk sektor yang paling berisiko.
-      
-      FORMAT:
-      - Gunakan Bahasa Melayu atau Inggeris
-      - Sertakan data spesifik
-      - Berikan cadangan yang actionable
+      TASK: 
+      Analyze if the high 'SLA Lapsed' tickets correlate with the 'Critical Attrition' brands. 
+      Provide a 3-sentence Executive Insight and one CapEx budget recommendation for the most at-risk sector.
     `;
   }
 
@@ -898,7 +918,7 @@ export class ReportComponent implements OnInit {
               <div class="ai-content">
                   ${this.generateAIContent(title, data)}
               </div>
-              <div class="ai-footer">Analysis powered by Qwen 2.5 • Based on Real-time SQL Data</div>
+              <div class="ai-footer">Analysis powered by Gemini 1.5 Flash • Based on Real-time SQL Data</div>
           </div>
 
           <!-- Client SLA Performance -->

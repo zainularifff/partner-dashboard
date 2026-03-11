@@ -126,8 +126,8 @@ export class ClientComponent implements OnInit {
   public agingDonut: any = {
     series: [45, 35, 20],
     chart: { type: 'donut', height: 280 },
-    labels: ['New Deployment', 'Mid-Term', 'End-of-Life'],
-    colors: ['#10b981', '#fbbf24', '#ef4444'],
+    labels: ['New', 'Mid-Life', 'Aging','End-of-Life'],
+    colors: ['#10b981', '#f9fd04', '#f7b100', , '#ef4444'],
     legend: { position: 'bottom' },
     plotOptions: { pie: { donut: { size: '70%' } } }
   };

@@ -3,9 +3,9 @@
     <header class="crm-header premium">
         <div class="header-left">
             <button class="back-btn-modern" (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-        <span>Back</span>
-      </button>
+                <mat-icon>arrow_back</mat-icon>
+                <span>Back</span>
+            </button>
 
             <div class="title-section">
                 <div class="title-badge">
@@ -15,13 +15,20 @@
                 <h1>Asset <span class="highlight">Utilization</span></h1>
                 <p class="subtitle">
                     <mat-icon>inventory_2</mat-icon>
-                    Deployment efficiency across projects and clients
+                    Real-time asset status across all clients
                 </p>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="last-updated">
+                <mat-icon>schedule</mat-icon>
+                <span>Updated: {{ lastUpdated | date:'dd MMM yyyy, HH:mm' }}</span>
             </div>
         </div>
     </header>
 
-    <!-- KPI GRID - 4 Cards -->
+    <!-- KPI GRID - Based on Real Data -->
     <div class="kpi-grid">
         <!-- Overall Utilization -->
         <div class="kpi-card main">
@@ -31,45 +38,43 @@
             <div class="kpi-content">
                 <div class="kpi-label">Overall Utilization</div>
                 <div class="kpi-value">{{ utilizationRate }}</div>
-                <div class="kpi-trend up">
-                    <mat-icon>trending_up</mat-icon> +2.3% from last month
-                </div>
+                <div class="kpi-sub">{{ onlineAssets }} online · {{ totalAssets }} total</div>
             </div>
         </div>
 
-        <!-- Deployed Units -->
+        <!-- Online Assets -->
         <div class="kpi-card">
             <div class="kpi-icon green">
                 <mat-icon>check_circle</mat-icon>
             </div>
             <div class="kpi-content">
-                <div class="kpi-label">Deployed Units</div>
-                <div class="kpi-value">{{ deployedUnits | number }}</div>
-                <div class="kpi-sub">Active in field</div>
+                <div class="kpi-label">Online Assets</div>
+                <div class="kpi-value">{{ onlineAssets | number }}</div>
+                <div class="kpi-sub">{{ ((onlineAssets / totalAssets) * 100).toFixed(1) }}% of total</div>
             </div>
         </div>
 
-        <!-- Idle Units -->
+        <!-- Offline Assets -->
         <div class="kpi-card">
             <div class="kpi-icon orange">
                 <mat-icon>pause_circle</mat-icon>
             </div>
             <div class="kpi-content">
-                <div class="kpi-label">Idle Units</div>
-                <div class="kpi-value">{{ idleUnits | number }}</div>
-                <div class="kpi-sub">{{ idlePercentage }}% of total</div>
+                <div class="kpi-label">Offline Assets</div>
+                <div class="kpi-value">{{ offlineAssets | number }}</div>
+                <div class="kpi-sub">{{ offlinePercentage }}% of total</div>
             </div>
         </div>
 
-        <!-- Revenue Loss -->
+        <!-- EOL Risk -->
         <div class="kpi-card">
             <div class="kpi-icon red">
                 <mat-icon>warning</mat-icon>
             </div>
             <div class="kpi-content">
-                <div class="kpi-label">Revenue Loss (Idle)</div>
-                <div class="kpi-value">{{ revenueLoss }}</div>
-                <div class="kpi-sub">Per month</div>
+                <div class="kpi-label">EOL Risk (>7yrs)</div>
+                <div class="kpi-value">{{ eolUnits | number }}</div>
+                <div class="kpi-sub">{{ eolPercentage }}% of total</div>
             </div>
         </div>
     </div>
@@ -77,136 +82,107 @@
     <!-- TABS -->
     <div class="tabs-container">
         <div class="tabs">
-            <button class="tab" [class.active]="activeTab === 'project'" (click)="activeTab = 'project'">
-        <mat-icon>assignment</mat-icon> By Project
-      </button>
             <button class="tab" [class.active]="activeTab === 'client'" (click)="activeTab = 'client'">
-        <mat-icon>corporate_fare</mat-icon> By Client
-      </button>
-            <button class="tab" [class.active]="activeTab === 'location'" (click)="activeTab = 'location'">
-        <mat-icon>location_on</mat-icon> By Location
-      </button>
+                <mat-icon>corporate_fare</mat-icon> By Client
+            </button>
+            <button class="tab" [class.active]="activeTab === 'os'" (click)="activeTab = 'os'">
+                <mat-icon>computer</mat-icon> By OS
+            </button>
             <button class="tab" [class.active]="activeTab === 'age'" (click)="activeTab = 'age'">
-        <mat-icon>schedule</mat-icon> By Asset Age
-      </button>
+                <mat-icon>schedule</mat-icon> By Asset Age
+            </button>
         </div>
     </div>
 
     <!-- TAB CONTENT -->
     <div class="tab-content">
-        <!-- PROJECT TAB -->
-        <div *ngIf="activeTab === 'project'" class="project-tab">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Utilization by Project</h3>
-                    <div class="card-actions">
-                        <button class="btn-icon" (click)="exportData('project')">
-              <mat-icon>download</mat-icon>
-            </button>
-                    </div>
-                </div>
-
-                <table class="util-table">
-                    <thead>
-                        <tr>
-                            <th>Project</th>
-                            <th>Total Units</th>
-                            <th>Deployed</th>
-                            <th>Idle</th>
-                            <th>Utilization</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let item of projectUtilization" class="clickable-row" (click)="viewProjectDetail(item)">
-                            <td>
-                                <strong>{{ item.projectName }}</strong>
-                            </td>
-                            <td>{{ item.total | number }}</td>
-                            <td>{{ item.deployed | number }}</td>
-                            <td>{{ item.idle | number }}</td>
-                            <td>
-                                <div class="progress-cell">
-                                    <span class="progress-value">{{ item.utilization }}%</span>
-                                    <div class="progress-bar-small">
-                                        <div class="progress-fill" [style.width.%]="item.utilization" [style.background]="getUtilizationColor(item.utilization)"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <button class="btn-view" (click)="viewProjectDetail(item); $event.stopPropagation()">
-                  View
-                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- CLIENT TAB -->
         <div *ngIf="activeTab === 'client'" class="client-tab">
             <div class="card">
                 <div class="card-header">
-                    <h3>Utilization by Client</h3>
+                    <h3>Asset Distribution by Client</h3>
                     <div class="card-actions">
                         <button class="btn-icon" (click)="exportData('client')">
-              <mat-icon>download</mat-icon>
-            </button>
+                            <mat-icon>download</mat-icon>
+                        </button>
                     </div>
                 </div>
 
-                <table class="util-table">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>Projects</th>
-                            <th>Total Units</th>
-                            <th>Deployed</th>
-                            <th>Idle</th>
-                            <th>Utilization</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let item of clientUtilization" class="clickable-row">
-                            <td>
-                                <strong>{{ item.clientName }}</strong>
-                            </td>
-                            <td>{{ item.projectCount }}</td>
-                            <td>{{ item.total | number }}</td>
-                            <td>{{ item.deployed | number }}</td>
-                            <td>{{ item.idle | number }}</td>
-                            <td>
-                                <div class="progress-cell">
-                                    <span class="progress-value">{{ item.utilization }}%</span>
-                                    <div class="progress-bar-small">
-                                        <div class="progress-fill" [style.width.%]="item.utilization" [style.background]="getUtilizationColor(item.utilization)"></div>
+                <div class="table-responsive">
+                    <table class="util-table">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Total Assets</th>
+                                <th>Online</th>
+                                <th>Offline</th>
+                                <th>Utilization</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let item of clientUtilization" class="clickable-row" (click)="viewClientDetail(item)">
+                                <td>
+                                    <strong>{{ item.clientName }}</strong>
+                                </td>
+                                <td>{{ item.total | number }}</td>
+                                <td class="online-text">{{ item.online | number }}</td>
+                                <td class="offline-text">{{ item.offline | number }}</td>
+                                <td>
+                                    <div class="progress-cell">
+                                        <span class="progress-value">{{ item.utilization.toFixed(1) }}%</span>
+                                        <div class="progress-bar-small">
+                                            <div class="progress-fill" 
+                                                 [style.width.%]="item.utilization" 
+                                                 [style.background]="getUtilizationColor(item.utilization)"></div>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                </td>
+                                <td>
+                                    <button class="btn-view" (click)="viewClientDetail(item); $event.stopPropagation()">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- LOCATION TAB -->
-        <div *ngIf="activeTab === 'location'" class="location-tab">
+        <!-- OS TAB -->
+        <div *ngIf="activeTab === 'os'" class="os-tab">
             <div class="card">
                 <div class="card-header">
-                    <h3>Idle Assets by Location</h3>
+                    <h3>Assets by Operating System</h3>
                 </div>
-                <div class="location-grid">
-                    <div class="location-item" *ngFor="let loc of locationBreakdown">
-                        <div class="location-header">
-                            <span class="location-name">{{ loc.name }}</span>
-                            <span class="location-count">{{ loc.count | number }}</span>
+
+                <div class="os-grid">
+                    <div class="os-chart-container">
+                        <!-- Simple bar chart representation -->
+                        <div class="os-bars">
+                            <div class="os-bar-item" *ngFor="let os of osBreakdown">
+                                <div class="bar-label">{{ os.name }}</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" 
+                                         [style.width.%]="os.percentage" 
+                                         [style.background]="os.color"
+                                         [style.height]="'24px'">
+                                    </div>
+                                </div>
+                                <div class="bar-values">
+                                    <span class="bar-count">{{ os.count | number }}</span>
+                                    <span class="bar-percentage">{{ os.percentage }}%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress" [style.width.%]="loc.percentage" [style.background]="loc.count > 500 ? '#ef4444' : '#f59e0b'"></div>
-                        </div>
-                        <div class="location-footer">
-                            <small>{{ loc.percentage }}% of total idle</small>
+                    </div>
+                    
+                    <div class="os-summary">
+                        <div class="summary-card" *ngFor="let os of osBreakdown" [style.border-left]="'4px solid ' + os.color">
+                            <div class="summary-title">{{ os.name }}</div>
+                            <div class="summary-count">{{ os.count | number }}</div>
+                            <div class="summary-percent">{{ os.percentage }}%</div>
                         </div>
                     </div>
                 </div>
@@ -219,12 +195,58 @@
                 <div class="card-header">
                     <h3>Asset Age Distribution</h3>
                 </div>
-                <div class="age-insights">
-                    <div class="insight-card warning" *ngFor="let insight of ageInsights">
-                        <mat-icon>info</mat-icon>
-                        <div class="insight-text">
-                            <strong>{{ insight.title }}</strong>
-                            <p>{{ insight.description }}</p>
+
+                <div class="age-grid">
+                    <div class="age-bars">
+                        <div class="age-bar-item" *ngFor="let age of ageBreakdown">
+                            <div class="bar-label">{{ age.range }}</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" 
+                                     [style.width.%]="age.percentage" 
+                                     [style.background]="age.color"
+                                     [style.height]="'32px'">
+                                </div>
+                            </div>
+                            <div class="bar-values">
+                                <span class="bar-count">{{ age.count | number }}</span>
+                                <span class="bar-percentage">{{ age.percentage }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="age-insights">
+                        <div class="insight-card" *ngFor="let insight of ageInsights" [style.background]="insight.color + '20'">
+                            <mat-icon [style.color]="insight.color">info</mat-icon>
+                            <div class="insight-text">
+                                <strong [style.color]="insight.color">{{ insight.title }}</strong>
+                                <p>{{ insight.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOCATION TAB -->
+        <div *ngIf="activeTab === 'location'" class="location-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Assets by Location (WSSB Internal)</h3>
+                </div>
+
+                <div class="location-grid">
+                    <div class="location-item" *ngFor="let loc of locationBreakdown">
+                        <div class="location-header">
+                            <span class="location-name">{{ loc.name }}</span>
+                            <span class="location-count">{{ loc.count | number }}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" 
+                                 [style.width.%]="loc.percentage" 
+                                 [style.background]="getRiskColor(loc.percentage)"></div>
+                        </div>
+                        <div class="location-footer">
+                            <small>{{ loc.percentage }}% of assets</small>
                         </div>
                     </div>
                 </div>
@@ -236,30 +258,20 @@
     <div class="idle-breakdown-section">
         <div class="card">
             <div class="card-header">
-                <h3>Idle Assets Deep Dive</h3>
-                <span class="badge-warning">{{ idleUnits | number }} units idle</span>
+                <h3>Offline Assets Analysis</h3>
+                <span class="badge-warning">{{ offlineAssets | number }} units offline</span>
             </div>
 
             <!-- Desktop Header -->
             <div class="idle-grid-header">
-                <div class="header-cell">BY REASON</div>
                 <div class="header-cell">BY DURATION</div>
                 <div class="header-cell">BY CONDITION</div>
+                <div class="header-cell">RECOMMENDATION</div>
             </div>
 
             <!-- Idle Grid -->
             <div class="idle-grid">
-                <!-- Column 1: By Reason -->
-                <div class="idle-column">
-                    <div class="column-title-mobile">📋 BY REASON</div>
-                    <div class="idle-item" *ngFor="let reason of idleReasons">
-                        <span class="item-label">{{ reason.name }}:</span>
-                        <span class="item-value">{{ reason.count | number }}</span>
-                        <span class="item-percent">{{ reason.percent }}%</span>
-                    </div>
-                </div>
-
-                <!-- Column 2: By Duration -->
+                <!-- Column 1: By Duration -->
                 <div class="idle-column">
                     <div class="column-title-mobile">⏱️ BY DURATION</div>
                     <div class="idle-item" *ngFor="let duration of idleDurations">
@@ -269,26 +281,45 @@
                     </div>
                 </div>
 
-                <!-- Column 3: By Condition -->
+                <!-- Column 2: By Condition -->
                 <div class="idle-column">
                     <div class="column-title-mobile">🔧 BY CONDITION</div>
                     <div class="idle-item" *ngFor="let condition of idleConditions">
                         <span class="item-label">{{ condition.name }}:</span>
-                        <span class="item-value">{{ condition.percent }}%</span>
+                        <span class="item-value">{{ condition.count | number }}</span>
                         <span class="condition-badge" [style.background]="condition.color">
-              {{ condition.status }}
-            </span>
+                            {{ condition.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Column 3: Recommendation -->
+                <div class="idle-column">
+                    <div class="column-title-mobile">📋 RECOMMENDATION</div>
+                    <div class="idle-item">
+                        <span class="item-label">Good:</span>
+                        <span class="item-value">Redeploy immediately</span>
+                    </div>
+                    <div class="idle-item">
+                        <span class="item-label">Fair:</span>
+                        <span class="item-value">Schedule maintenance</span>
+                    </div>
+                    <div class="idle-item">
+                        <span class="item-label">Poor:</span>
+                        <span class="item-value">Plan EOL replacement</span>
                     </div>
                 </div>
             </div>
 
-            <!-- PERCENTAGE BREAKDOWN -->
+            <!-- CONDITION BREAKDOWN -->
             <div class="condition-breakdown">
                 <h4>Condition Distribution</h4>
                 <div class="percent-item" *ngFor="let condition of idleConditions">
                     <span class="percent-label">{{ condition.name }}</span>
                     <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="condition.percent" [style.background]="condition.color"></div>
+                        <div class="progress-fill" 
+                             [style.width.%]="condition.percent" 
+                             [style.background]="condition.color"></div>
                     </div>
                     <span class="percent-value">{{ condition.percent }}%</span>
                 </div>
@@ -299,35 +330,16 @@
                 <div class="action-left">
                     <mat-icon>lightbulb</mat-icon>
                     <span>
-            <strong>Opportunity:</strong> Redeploying 1,200 idle units could generate
-            <strong>RM 180k/month</strong>
-          </span>
+                        <strong>Opportunity:</strong> Redeploying 
+                        <strong>{{ idleConditions[0].count | number }}</strong> good condition units 
+                        could improve utilization by 
+                        <strong>{{ ((idleConditions[0].count / totalAssets) * 100).toFixed(1) }}%</strong>
+                    </span>
                 </div>
                 <button class="btn-primary" (click)="generateOptimizationPlan()">
-          <mat-icon>auto_awesome</mat-icon> Generate Plan
-        </button>
+                    <mat-icon>auto_awesome</mat-icon> Generate Plan
+                </button>
             </div>
         </div>
     </div>
-
-    <!-- QUICK ACTIONS -->
-    <!-- <div class="actions-section">
-        <div class="card">
-            <div class="card-header">
-                <h3>Quick Actions</h3>
-            </div>
-            <div class="action-buttons">
-                <button class="action-btn primary" (click)="redeployIdle()">
-          <mat-icon>forward</mat-icon> Redeploy Idle
-        </button>
-                <button class="action-btn" (click)="scheduleAudit()">
-          <mat-icon>assignment</mat-icon> Schedule Audit
-        </button>
-                <button class="action-btn" (click)="exportFullReport()">
-          <mat-icon>download</mat-icon> Export Report
-        </button>
-            </div>
-        </div>
-    </div> -->
 </div>
-<!-- Tutup asset-container -->

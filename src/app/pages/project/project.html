@@ -39,7 +39,7 @@
     </header>
 
     <!-- Overall Connectivity Health (Donut Chart) -->
-    <div class="overall-analytics-row">
+    <!-- <div class="overall-analytics-row">
       <div class="analytics-card">
         <div class="analytics-info">
           <h3>Overall Connectivity Health</h3>
@@ -75,10 +75,10 @@
           ></apx-chart>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Sector Deployment Comparison Chart -->
-    <div class="sector-chart-row" *ngIf="sectorCategories.length">
+    <!-- <div class="sector-chart-row" *ngIf="sectorCategories.length">
       <div class="card">
         <div class="card-header">
           <div>
@@ -104,7 +104,7 @@
           ></apx-chart>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Sector Filter KPI Cards -->
     <div class="kpi-row-compact">
@@ -157,10 +157,6 @@
               <div class="meta-row-sm">
                 <mat-icon>computer</mat-icon>
                 <span>{{ p.deployed | number }} Agents Deployed</span>
-              </div>
-              <div class="meta-row-sm" *ngIf="p.balance > 0">
-                <mat-icon>hourglass_empty</mat-icon>
-                <span>{{ p.balance | number }} Pending Deployment</span>
               </div>
             </div>
 

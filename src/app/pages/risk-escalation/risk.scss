@@ -919,3 +919,326 @@
     padding: 16px;
   }
 }
+
+
+/* Additional styles for the new UI */
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-right: 4px;
+  
+  &.awaiting { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+  &.resolved { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+}
+
+.kpi-trend.clients {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .label {
+      color: #94a3b8;
+      flex: 1;
+    }
+    
+    .value {
+      color: white;
+      font-weight: 600;
+    }
+  }
+}
+
+.status-summary {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 15px;
+  
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      
+      &.awaiting { background: #ef4444; }
+      &.resolved { background: #10b981; }
+    }
+  }
+}
+
+.asset-risk-section {
+  background: #1a2639;
+  border: 1px solid #2d3b52;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    
+    .section-icon {
+      color: #3b82f6;
+    }
+    
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      flex: 1;
+    }
+    
+    .total-assets {
+      background: #0b1120;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      border: 1px solid #2d3b52;
+    }
+  }
+  
+  .asset-risk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    
+    @media (max-width: 1024px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
+    
+    .risk-card {
+      background: #0b1120;
+      border: 1px solid #2d3b52;
+      border-radius: 12px;
+      padding: 16px;
+      
+      .risk-card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        
+        mat-icon {
+          color: #3b82f6;
+          font-size: 18px;
+        }
+        
+        h4 {
+          margin: 0;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #94a3b8;
+          text-transform: uppercase;
+        }
+      }
+      
+      .risk-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 2px;
+      }
+      
+      .risk-percentage {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        margin-bottom: 10px;
+      }
+      
+      .risk-bar {
+        height: 6px;
+        background: #1a2639;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        
+        .risk-fill {
+          height: 100%;
+          border-radius: 3px;
+        }
+      }
+      
+      .risk-breakdown {
+        .breakdown-item {
+          display: flex;
+          justify-content: space-between;
+          padding: 4px 0;
+          font-size: 0.75rem;
+          color: #94a3b8;
+          border-bottom: 1px solid #1a2639;
+          
+          &:last-child { border-bottom: none; }
+          
+          span:last-child {
+            color: white;
+            font-weight: 600;
+          }
+        }
+      }
+      
+      .status-indicators {
+        display: flex;
+        gap: 15px;
+        
+        .status-item {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.7rem;
+          
+          .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            
+            &.online { background: #10b981; }
+            &.offline { background: #ef4444; }
+          }
+        }
+      }
+    }
+  }
+}
+
+.incident-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    background: #0b1120;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #2d3b52;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+  }
+  
+  .incident-id {
+    font-family: monospace;
+    color: #fbbf24;
+    font-weight: 600;
+  }
+  
+  .incident-title {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    
+    &.awaiting { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    &.resolved { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  }
+  
+  .days-badge {
+    padding: 2px 6px;
+    background: #1a2639;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    
+    &.critical {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+  }
+}
+
+.filter-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #0b1120;
+  border: 1px solid #2d3b52;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  
+  mat-icon {
+    font-size: 16px;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px;
+  
+  button {
+    padding: 6px;
+    background: #0b1120;
+    border: 1px solid #2d3b52;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    &:hover:not(:disabled) {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+  }
+  
+  span {
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+}

@@ -1,5 +1,5 @@
 <div class="risk-container">
-  <!-- PREMIUM HEADER (MATCH PROJECT & CLIENT) -->
+  <!-- PREMIUM HEADER -->
   <header class="crm-header premium">
     <div class="header-left">
       <button class="back-btn-modern" (click)="goBack()">
@@ -12,343 +12,306 @@
           <span class="badge-icon">⚠️</span>
           <span class="badge-text">Level 2</span>
         </div>
-        <h1>Technical Risk & <span class="highlight">Escalation</span></h1>
+        <h1>Technical Risk & <span class="highlight">Incidents</span></h1>
         <p class="subtitle">
           <mat-icon>warning</mat-icon>
-          Correlation between Asset Health (OS/BIOS) and Service Delivery
+          Incident tracking and asset risk analysis based on actual data
         </p>
       </div>
     </div>
     
     <div class="header-right">
-      <!-- SEARCH BOX - SAME AS PROJECT & CLIENT -->
       <div class="search-box-premium">
         <mat-icon>search</mat-icon>
         <input
           type="text"
           [(ngModel)]="searchQuery"
           (ngModelChange)="filterTable()"
-          placeholder="Search by client, OS or BIOS..."
+          placeholder="Search incidents..."
         />
         <span class="shortcut-hint">⌘ K</span>
       </div>
     </div>
   </header>
 
-  <!-- SECTION 1: SUMMARY KPI CARDS - REDESIGNED -->
+  <!-- SECTION 1: KPI CARDS -->
   <div class="kpi-grid">
-    <div class="kpi-card critical">
+    <!-- Total Incidents -->
+    <div class="kpi-card">
       <div class="kpi-icon">
         <mat-icon>warning</mat-icon>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Total Escalations</div>
-        <div class="kpi-value">10</div>
-        <div class="kpi-trend up">+2 from last month</div>
+        <div class="kpi-label">Total Incidents</div>
+        <div class="kpi-value">8</div>
+        <div class="kpi-trend">
+          <span class="badge awaiting">7 Awaiting</span>
+          <span class="badge resolved">1 Resolved</span>
+        </div>
       </div>
     </div>
 
+    <!-- Affected Clients -->
     <div class="kpi-card">
       <div class="kpi-icon">
         <mat-icon>business</mat-icon>
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Affected Clients</div>
-        <div class="kpi-value">3</div>
-        <div class="kpi-trend">KKM, MOE, PETRONAS</div>
+        <div class="kpi-value">5</div>
+        <div class="kpi-trend clients">
+          WSSB Internal · Internal · Natalie · Alfred · Sri KDU
+        </div>
       </div>
     </div>
 
+    <!-- Open Tickets -->
     <div class="kpi-card">
       <div class="kpi-icon">
-        <mat-icon>attach_money</mat-icon>
+        <mat-icon>pending_actions</mat-icon>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Revenue at Risk</div>
-        <div class="kpi-value">RM 1.2M</div>
-        <div class="kpi-trend down">From Level 1</div>
+        <div class="kpi-label">Open Tickets</div>
+        <div class="kpi-value">7</div>
+        <div class="kpi-trend">87.5% of total incidents</div>
       </div>
     </div>
 
+    <!-- Avg Resolution Time -->
     <div class="kpi-card">
       <div class="kpi-icon">
-        <mat-icon>build</mat-icon>
+        <mat-icon>timelapse</mat-icon>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Remediation Cost</div>
-        <div class="kpi-value">RM 450k</div>
-        <div class="kpi-trend">ROI 62%</div>
+        <div class="kpi-label">Avg Resolution Time</div>
+        <div class="kpi-value">4.2 days</div>
+        <div class="kpi-trend">Based on resolved incidents</div>
       </div>
     </div>
   </div>
 
-  <!-- SECTION 2: MAIN CHARTS ROW - NEW LAYOUT -->
+  <!-- SECTION 2: INCIDENT DISTRIBUTION -->
   <div class="charts-row">
-    <!-- Fleet Technical Vulnerability Chart -->
-    <div class="chart-card main-chart">
+    <!-- Incidents by Client (Donut Chart) -->
+    <div class="chart-card">
       <div class="chart-card-header">
         <div class="header-left">
-          <mat-icon class="card-icon">assessment</mat-icon>
-          <h3>Fleet Technical Vulnerability</h3>
-        </div>
-        <div class="card-actions">
-          <button class="btn-icon" (click)="exportChart()" matTooltip="Export Chart">
-            <mat-icon>download</mat-icon>
-          </button>
-          <button class="btn-icon" (click)="expandChart()" matTooltip="Expand">
-            <mat-icon>fullscreen</mat-icon>
-          </button>
+          <mat-icon class="card-icon">pie_chart</mat-icon>
+          <h3>Incidents by Client</h3>
         </div>
       </div>
       <div class="chart-container">
         <apx-chart 
-          [series]="riskChart.series" 
-          [chart]="riskChart.chart" 
-          [xaxis]="riskChart.xaxis"
-          [colors]="riskChart.colors"
-          [plotOptions]="riskChart.plotOptions"
-          [legend]="riskChart.legend"
-          [dataLabels]="riskChart.dataLabels"
-          [tooltip]="riskChart.tooltip"
-          (chartClick)="onChartClick($event)">
+          [series]="incidentByClient.series" 
+          [chart]="incidentByClient.chart" 
+          [labels]="incidentByClient.labels"
+          [colors]="incidentByClient.colors"
+          [plotOptions]="incidentByClient.plotOptions"
+          [legend]="incidentByClient.legend">
         </apx-chart>
       </div>
       <div class="chart-footer">
-        <div class="legend-items">
-          <span class="legend-item"><span class="dot" style="background: #f43f5e;"></span> Outdated OS</span>
-          <span class="legend-item"><span class="dot" style="background: #fbbf24;"></span> Legacy BIOS</span>
+        <div class="legend-list">
+          <div class="legend-item" *ngFor="let item of clientIncidentData">
+            <span class="dot" [style.background]="item.color"></span>
+            <span class="label">{{ item.name }}</span>
+            <span class="value">{{ item.count }} ({{ item.percentage }}%)</span>
+          </div>
         </div>
-        <span class="hint">Click bars to drill down</span>
       </div>
     </div>
 
-    <!-- Escalation Trend Chart -->
+    <!-- Incidents by Status -->
     <div class="chart-card">
       <div class="chart-card-header">
         <div class="header-left">
-          <mat-icon class="card-icon">trending_up</mat-icon>
-          <h3>Escalation Trend (90 Days)</h3>
-        </div>
-        <div class="trend-badge" [class.up]="trendDirection === 'up'" [class.down]="trendDirection === 'down'">
-          <mat-icon>{{ trendDirection === 'up' ? 'trending_up' : 'trending_down' }}</mat-icon>
-          {{ trendPercentage }}%
+          <mat-icon class="card-icon">donut_large</mat-icon>
+          <h3>Incidents by Status</h3>
         </div>
       </div>
       <div class="chart-container small">
         <apx-chart 
-          [series]="trendChart.series" 
-          [chart]="trendChart.chart" 
-          [xaxis]="trendChart.xaxis"
-          [colors]="trendChart.colors"
-          [stroke]="trendChart.stroke"
-          [markers]="trendChart.markers"
-          [annotations]="trendChart.annotations">
+          [series]="incidentByStatus.series" 
+          [chart]="incidentByStatus.chart" 
+          [labels]="incidentByStatus.labels"
+          [colors]="incidentByStatus.colors"
+          [plotOptions]="incidentByStatus.plotOptions">
         </apx-chart>
       </div>
-      <div class="forecast-warning" *ngIf="trendDirection === 'up'">
-        <mat-icon>warning_amber</mat-icon>
-        <span>Forecast: 95 tickets by Aug</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION 3: BREAKDOWN GRID - REDESIGNED -->
-  <div class="breakdown-grid">
-    <!-- By Entity -->
-    <div class="card">
-      <div class="card-header">
-        <mat-icon class="card-icon">pie_chart</mat-icon>
-        <h3>Breakdown by Entity</h3>
-      </div>
-      <div class="entity-list">
-        <div class="entity-item" *ngFor="let item of entityBreakdown">
-          <div class="entity-info">
-            <span class="entity-name">{{ item.name }}</span>
-            <span class="entity-value">{{ item.value }}</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="item.percentage" [style.background]="item.color"></div>
-          </div>
-          <span class="entity-percent">{{ item.percentage }}%</span>
+      <div class="status-summary">
+        <div class="status-item">
+          <span class="status-dot awaiting"></span>
+          <span>Awaiting: 7 (87.5%)</span>
         </div>
-      </div>
-    </div>
-
-    <!-- By OS/Hardware -->
-    <div class="card">
-      <div class="card-header">
-        <mat-icon class="card-icon">computer</mat-icon>
-        <h3>By OS/Hardware</h3>
-      </div>
-      <div class="os-list">
-        <div class="os-item" *ngFor="let os of osBreakdown">
-          <div class="os-info">
-            <span class="os-name">{{ os.name }}</span>
-            <span class="os-count">{{ os.count }}</span>
-          </div>
-          <div class="os-risk-badge" [style.background]="os.color">{{ os.risk }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- By Issue Type -->
-    <div class="card">
-      <div class="card-header">
-        <mat-icon class="card-icon">bug_report</mat-icon>
-        <h3>By Issue Type</h3>
-      </div>
-      <div class="donut-container">
-        <apx-chart 
-          [series]="donutChart.series" 
-          [chart]="donutChart.chart"
-          [labels]="donutChart.labels"
-          [colors]="donutChart.colors"
-          [plotOptions]="donutChart.plotOptions"
-          [dataLabels]="donutChart.dataLabels"
-          [legend]="donutChart.legend">
-        </apx-chart>
-      </div>
-      <div class="donut-legend">
-        <div class="legend-item" *ngFor="let item of donutLegend; let i = index">
-          <span class="dot" [style.background]="donutChart.colors[i]"></span>
-          <span class="label">{{ item.label }}</span>
-          <span class="value">{{ item.value }}</span>
+        <div class="status-item">
+          <span class="status-dot resolved"></span>
+          <span>Resolved: 1 (12.5%)</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SECTION 4: FINANCIAL IMPACT - REDESIGNED -->
-  <div class="financial-section">
-    <div class="financial-card">
-      <div class="financial-header">
-        <div class="header-left">
-          <mat-icon class="card-icon">payments</mat-icon>
-          <h3>Financial Impact Analysis</h3>
-        </div>
-        <span class="roi-badge">ROI 62% • 8 months payback</span>
+  <!-- SECTION 3: ASSET RISK SUMMARY WITH DROPDOWN -->
+  <div class="asset-risk-section" *ngIf="assetRiskData">
+    <div class="section-header">
+      <div class="header-left">
+        <mat-icon class="section-icon">hardware</mat-icon>
+        <h3>Asset Risk Summary</h3>
       </div>
       
-      <div class="financial-content">
-        <div class="financial-columns">
-          <!-- Revenue at Risk -->
-            <div class="financial-col">
-              <h4>Revenue at Risk</h4>
-              <div class="amount">RM 1.2M</div>
-              <div class="breakdown-list">
-                <div class="breakdown-item" *ngFor="let item of revenueBreakdown">
-                  <span class="entity">{{ item.entity }}</span>
-                  <span class="amount">RM {{ item.amount }}k</span>
-                  <span class="percentage">{{ item.percentage }}%</span>
-                </div>
-              </div>
-            </div>
+      <!-- Dropdown - SATU SAJA -->
+      <div class="client-dropdown">
+        <mat-form-field appearance="outline">
+          <mat-label>Select Client</mat-label>
+          <mat-select [(value)]="selectedClient" (selectionChange)="onClientChange()">
+            <mat-option value="all">All Clients (Overall)</mat-option>
+            <mat-option *ngFor="let client of clientList" [value]="client.CustomerName">
+              {{ client.CustomerName }} ({{ client.total_assets }} assets)
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
 
-            <!-- Remediation Cost -->
-            <div class="financial-col">
-              <h4>Remediation Cost</h4>
-              <div class="amount">RM 450k</div>
-              <div class="breakdown-list">
-                <div class="breakdown-item" *ngFor="let item of costBreakdown">
-                  <span class="entity">{{ item.entity }}</span>
-                  <span class="amount">RM {{ item.amount }}k</span>
-                  <span class="percentage">{{ item.percentage }}%</span>
-                </div>
-              </div>
-            </div>
+    <!-- Asset Risk Cards -->
+    <div class="asset-risk-grid">
+      <!-- OS Risk Card -->
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <mat-icon>computer</mat-icon>
+          <h4>OS RISK</h4>
+        </div>
+        <div class="risk-value">{{ assetRiskData.osRiskUnits }} units</div>
+        <div class="risk-percentage">{{ assetRiskData.osRiskPercentage }}% of total</div>
+        <div class="risk-bar">
+          <div class="risk-fill" [style.width.%]="assetRiskData.osRiskPercentage" 
+               [style.background]="getRiskColor(assetRiskData.osRiskPercentage)"></div>
+        </div>
+        <div class="risk-breakdown">
+          <div class="breakdown-item" *ngFor="let os of assetRiskData.osBreakdown">
+            <span>{{ os.name }}</span>
+            <span>{{ os.count }}</span>
+          </div>
+        </div>
+      </div>
 
-          <!-- Priority -->
-          <div class="financial-col priority">
-            <div class="priority-content">
-              <mat-icon>priority_high</mat-icon>
-              <div>
-                <strong>KKM Priority</strong>
-                <p>Highest ROI (72%) - Focus here first</p>
-              </div>
-            </div>
-            <button class="btn-action" (click)="mitigateAll()">
-              <mat-icon>security</mat-icon> Mitigate Risks
-            </button>
+      <!-- BIOS/EOL Risk Card -->
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <mat-icon>memory</mat-icon>
+          <h4>BIOS/EOL RISK</h4>
+        </div>
+        <div class="risk-value">{{ assetRiskData.eolUnits }} units</div>
+        <div class="risk-percentage">{{ assetRiskData.eolPercentage }}% of total</div>
+        <div class="risk-bar">
+          <div class="risk-fill" [style.width.%]="assetRiskData.eolPercentage" 
+               [style.background]="getRiskColor(assetRiskData.eolPercentage)"></div>
+        </div>
+        <div class="risk-breakdown">
+          <div class="breakdown-item">
+            <span>Age > 5 years</span>
+            <span>{{ assetRiskData.eolUnits }}</span>
+          </div>
+          <div class="breakdown-item">
+            <span>Age ≤ 5 years</span>
+            <span>{{ assetRiskData.totalAssets - assetRiskData.eolUnits }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Status Card -->
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <mat-icon>power</mat-icon>
+          <h4>AGENT STATUS</h4>
+        </div>
+        <div class="risk-value">{{ assetRiskData.offlineUnits }} units</div>
+        <div class="risk-percentage">{{ assetRiskData.offlinePercentage }}% offline</div>
+        <div class="risk-bar">
+          <div class="risk-fill" [style.width.%]="assetRiskData.offlinePercentage" 
+               [style.background]="getRiskColor(assetRiskData.offlinePercentage)"></div>
+        </div>
+        <div class="status-indicators">
+          <div class="status-item">
+            <span class="status-dot online"></span>
+            <span>Online: {{ assetRiskData.onlineUnits }}</span>
+          </div>
+          <div class="status-item">
+            <span class="status-dot offline"></span>
+            <span>Offline: {{ assetRiskData.offlineUnits }}</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SECTION 5: ENTITY DETAILS TABLE -->
+  <!-- SECTION 4: INCIDENT DETAILS TABLE -->
   <div class="table-section">
     <div class="table-card">
       <div class="table-header">
         <div class="header-left">
-          <mat-icon class="card-icon">table_rows</mat-icon>
-          <h3>Entity Details</h3>
+          <mat-icon class="card-icon">list_alt</mat-icon>
+          <h3>Incident Details</h3>
         </div>
         <div class="table-filters">
-          <div class="search-box">
-            <mat-icon>search</mat-icon>
-            <input 
-              type="text" 
-              [(ngModel)]="searchQuery" 
-              (ngModelChange)="filterTable()"
-              placeholder="Search...">
-          </div>
-          <button class="btn-filter">
+          <div class="filter-badge">
             <mat-icon>filter_list</mat-icon>
-          </button>
+            <span>{{ filteredIncidents.length }} of 8</span>
+          </div>
         </div>
       </div>
 
       <div class="table-responsive-wrapper">
-        <table class="risk-table">
+        <table class="incident-table">
           <thead>
             <tr>
+              <th>Incident ID</th>
               <th>Client</th>
-              <th>OS Security</th>
-              <th>BIOS Risk</th>
-              <th>Tickets</th>
-              <th>SLA</th>
-              <th>Trend</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Days Open</th>
+              <th>Assigned To</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of filteredRiskData" class="clickable-row" (click)="navigateToEntity(item.client)">
+            <tr *ngFor="let incident of filteredIncidents">
+              <td class="incident-id">{{ incident.id }}</td>
+              <td>{{ incident.client }}</td>
+              <td class="incident-title">{{ incident.title }}</td>
               <td>
-                <div class="client-cell">
-                  <strong>{{ item.client }}</strong>
-                </div>
-              </td>
-              <td>
-                <span class="badge" [style.background]="getRiskColor(item.osRisk)">
-                  {{ item.osVersion }}
+                <span class="status-badge" [class.awaiting]="incident.status === 'Awaiting'"
+                                            [class.resolved]="incident.status === 'Resolved'">
+                  {{ incident.status }}
                 </span>
               </td>
+              <td>{{ incident.created | date:'dd MMM yyyy' }}</td>
               <td>
-                <span class="badge" [style.background]="getRiskColor(item.biosRisk)">
-                  {{ item.biosAge }}
+                <span class="days-badge" [class.critical]="incident.daysOpen > 10">
+                  {{ incident.daysOpen }} days
                 </span>
               </td>
-              <td>
-                <span class="ticket-badge">{{ item.openTickets }}</span>
-              </td>
-              <td>
-                <span class="sla-value" [style.color]="getSlaColor(item.slaStatus)">
-                  {{ item.slaStatus }}
-                </span>
-              </td>
-              <td>
-                <mat-icon class="trend-icon" [style.color]="item.trend === 'up' ? '#ef4444' : '#10b981'">
-                  {{ item.trend === 'up' ? 'trending_up' : 'trending_down' }}
-                </mat-icon>
-              </td>
+              <td>{{ incident.assignedTo }}</td>
             </tr>
-            <tr *ngIf="filteredRiskData.length === 0">
-              <td colspan="6" class="empty-state">
+            <tr *ngIf="filteredIncidents.length === 0">
+              <td colspan="7" class="empty-state">
                 <mat-icon>search_off</mat-icon>
-                <p>No results found</p>
+                <p>No incidents found</p>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button [disabled]="currentPage === 1" (click)="prevPage()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button [disabled]="currentPage === totalPages" (click)="nextPage()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
       </div>
     </div>
   </div>

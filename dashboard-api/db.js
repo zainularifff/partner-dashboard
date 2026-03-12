@@ -18,42 +18,41 @@ const config = {
     }
 };
 
-let poolPromise = null;
+let pool = null;
 
-// 1. INIT CONFIG
-async function initConfig() {
-    if (!poolPromise) {
-        console.log('🚀 [DB] Connecting to Natalie\'s Consolidated MSSQL...');
-        poolPromise = new sql.ConnectionPool(config)
-            .connect()
-            .then(pool => {
-                console.log('[DB] Connected to MSSQL (aism) Successfully!');
-                return pool;
-            })
-            .catch(err => {
-                console.error('[DB] Connection Failed:', err.message);
-                poolPromise = null;
-                throw err;
-            });
+async function getPool() {
+    if (!pool) {
+        try {
+            console.log('🔄 Connecting to MSSQL...');
+            pool = await sql.connect(config);
+            console.log('✅ Connected to MSSQL successfully');
+        } catch (err) {
+            console.error('❌ Connection failed:', err.message);
+            throw err;
+        }
     }
-    return poolPromise;
+    return pool;
 }
 
-async function queryDatabase(queryStr) {
+async function query(queryStr, params = {}) {
     try {
-        const pool = await initConfig();
-        const result = await pool.request().query(queryStr);
-        return result.recordset; 
+        const pool = await getPool();
+        const request = pool.request();
+        
+        // Add parameters if any
+        Object.keys(params).forEach(key => {
+            request.input(key, params[key]);
+        });
+        
+        const result = await request.query(queryStr);
+        return result.recordset;
     } catch (err) {
-        console.error('❌ [Query Error]:', err.message);
-        return [];
+        console.error('❌ Query error:', err.message);
+        throw err;
     }
 }
 
-module.exports = { 
-    initConfig, 
-    queryDatabase,
-    // Alias untuk kekalkan compatibility dengan server.js lama kau
-    queryAllServers: (type, q) => queryDatabase(q),
-    querySpecificServers: (type, q) => queryDatabase(q)
+module.exports = {
+    query,
+    getPool
 };

@@ -12,9 +12,9 @@
     <!-- Header -->
     <header class="page-header">
         <h1>OS Risk Analysis & Compliance</h1>
-        <p class="subtitle">Track outdated operating systems and EOL risks across all entities</p>
+        <p class="subtitle">Track outdated operating systems and EOL risks across all Clients</p>
         <div class="last-updated">
-            <mat-icon>schedule</mat-icon> Last updated: Today, 10:30 AM
+            <mat-icon>schedule</mat-icon> Last updated: {{ lastUpdated | date:'dd MMM yyyy, HH:mm' }}
         </div>
     </header>
 
@@ -49,7 +49,7 @@
             <div class="kpi-content">
                 <div class="kpi-label">Critical Units</div>
                 <div class="kpi-value">{{ criticalUnits | number }}</div>
-                <div class="kpi-sub">Win10 19041 (EOL soon)</div>
+                <div class="kpi-sub">Win7/8/XP & Win10 (EOL)</div>
             </div>
         </div>
 
@@ -60,7 +60,7 @@
             <div class="kpi-content">
                 <div class="kpi-label">EOL Deadline</div>
                 <div class="kpi-value">{{ eolDeadline }}</div>
-                <div class="kpi-sub">Windows 10 19041</div>
+                <div class="kpi-sub">Windows 10 (EOL)</div>
             </div>
         </div>
     </div>
@@ -69,17 +69,17 @@
     <div class="tabs-container">
         <div class="tabs">
             <button class="tab" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">
-        <mat-icon>dashboard</mat-icon> Overview
-      </button>
+                <mat-icon>dashboard</mat-icon> Overview
+            </button>
             <button class="tab" [class.active]="activeTab === 'byentity'" (click)="activeTab = 'byentity'">
-        <mat-icon>business</mat-icon> By Client
-      </button>
+                <mat-icon>business</mat-icon> By Client
+            </button>
             <button class="tab" [class.active]="activeTab === 'timeline'" (click)="activeTab = 'timeline'">
-        <mat-icon>timeline</mat-icon> EOL Timeline
-      </button>
+                <mat-icon>timeline</mat-icon> EOL Timeline
+            </button>
             <button class="tab" [class.active]="activeTab === 'assets'" (click)="activeTab = 'assets'">
-        <mat-icon>inventory</mat-icon> Asset List
-      </button>
+                <mat-icon>inventory</mat-icon> Asset List
+            </button>
         </div>
     </div>
 
@@ -90,7 +90,7 @@
             <!-- OS Distribution Chart -->
             <div class="card">
                 <div class="card-header">
-                    <h3>OS Distribution Across All Entities</h3>
+                    <h3>OS Distribution Across All Clients</h3>
                     <div class="legend-inline">
                         <span class="legend-item"><span class="dot" style="background: #ef4444;"></span> End of Life</span>
                         <span class="legend-item"><span class="dot" style="background: #f59e0b;"></span> Outdated</span>
@@ -98,28 +98,32 @@
                     </div>
                 </div>
                 <div class="chart-container">
-                    <apx-chart [series]="osDistributionChart.series" [chart]="osDistributionChart.chart" [xaxis]="osDistributionChart.xaxis" [colors]="osDistributionChart.colors" [plotOptions]="osDistributionChart.plotOptions" [dataLabels]="osDistributionChart.dataLabels"
+                    <apx-chart 
+                        [series]="osDistributionChart.series" 
+                        [chart]="osDistributionChart.chart" 
+                        [xaxis]="osDistributionChart.xaxis" 
+                        [colors]="osDistributionChart.colors" 
+                        [plotOptions]="osDistributionChart.plotOptions" 
+                        [dataLabels]="osDistributionChart.dataLabels"
                         [legend]="osDistributionChart.legend">
                     </apx-chart>
                 </div>
             </div>
 
             <!-- OS Risk by Entity Table -->
-            <!-- OS Risk by Entity Table -->
             <div class="card">
                 <div class="card-header">
-                    <h3>OS Risk by Entity</h3>
+                    <h3>OS Risk by Client</h3>
                     <button class="btn-icon" (click)="exportTable()">
-      <mat-icon>download</mat-icon>
-    </button>
+                        <mat-icon>download</mat-icon>
+                    </button>
                 </div>
 
-                <!-- ADD THIS WRAPPER FOR HORIZONTAL SCROLL -->
                 <div class="table-responsive-wrapper">
                     <table class="risk-table">
                         <thead>
                             <tr>
-                                <th>Entity</th>
+                                <th>Client</th>
                                 <th>Win 7/XP/8</th>
                                 <th>Win10 (Out)</th>
                                 <th>Win10 (Ok)</th>
@@ -143,13 +147,19 @@
                                 <td>{{ item.total }}</td>
                                 <td>
                                     <span class="status-pill" [style.background]="item.riskColor">
-                                {{ item.riskLevel }}
-                                </span>
+                                        {{ item.riskLevel }}
+                                    </span>
                                 </td>
                                 <td>
                                     <button class="btn-view" (click)="viewEntityDetail(item.entity); $event.stopPropagation()">
-                                View
-                                </button>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="osRiskData.length === 0">
+                                <td colspan="8" class="empty-state">
+                                    <mat-icon>info</mat-icon>
+                                    <p>No data available</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -158,13 +168,12 @@
             </div>
 
             <!-- Financial Impact -->
-            <div class="financial-card">
+            <div class="financial-card" *ngIf="financialImpactData.length > 0">
                 <div class="financial-header">
                     <h3>Financial Impact by Client</h3>
                     <span class="total-badge">Total: {{ financialImpact }}</span>
                 </div>
 
-                <!-- TABLE FOR FINANCIAL IMPACT -->
                 <table class="financial-table">
                     <thead>
                         <tr>
@@ -187,37 +196,23 @@
                         </tr>
                     </tbody>
                 </table>
-
-                <!-- <div class="financial-footer">
-                    <div class="roi-card">
-                        <span class="roi-label">Remediation Cost</span>
-                        <span class="roi-value">RM 287k</span>
-                    </div>
-                    <div class="roi-card">
-                        <span class="roi-label">ROI</span>
-                        <span class="roi-value positive">100% (6 months)</span>
-                    </div>
-                    <button class="btn-primary" (click)="createMitigationPlan()">
-                        <mat-icon>auto_awesome</mat-icon> Create Mitigation Plan
-                    </button>
-                </div> -->
             </div>
         </div>
 
         <!-- BY ENTITY TAB -->
         <div *ngIf="activeTab === 'byentity'" class="byentity-tab">
-            <div class="entity-selector">
+            <div class="entity-selector" *ngIf="entities.length > 0">
                 <button *ngFor="let entity of entities" class="entity-btn" [class.active]="selectedEntity === entity.code" (click)="selectEntity(entity.code)">
-          {{ entity.name }}
-        </button>
+                    {{ entity.name }}
+                </button>
             </div>
 
             <div *ngIf="selectedEntityData" class="entity-detail">
                 <div class="entity-header">
                     <h2>{{ selectedEntityData.name }}</h2>
                     <span class="risk-badge-large" [style.background]="selectedEntityData.riskColor">
-            {{ selectedEntityData.riskLevel }} RISK
-          </span>
+                        {{ selectedEntityData.riskLevel }} RISK
+                    </span>
                 </div>
 
                 <div class="entity-stats">
@@ -252,14 +247,14 @@
 
                 <div class="entity-actions">
                     <button class="btn-primary" (click)="scheduleUpgrade(selectedEntityData)">
-            <mat-icon>upgrade</mat-icon> Schedule Upgrades
-          </button>
+                        <mat-icon>upgrade</mat-icon> Schedule Upgrades
+                    </button>
                     <button class="btn-outline" (click)="viewEntityAssets(selectedEntityData.code)">
-            <mat-icon>list</mat-icon> View Asset List
-          </button>
+                        <mat-icon>list</mat-icon> View Asset List
+                    </button>
                     <button class="btn-outline" (click)="exportEntityReport(selectedEntityData.code)">
-            <mat-icon>download</mat-icon> Export Report
-          </button>
+                        <mat-icon>download</mat-icon> Export Report
+                    </button>
                 </div>
             </div>
         </div>
@@ -267,17 +262,10 @@
         <!-- TIMELINE TAB -->
         <div *ngIf="activeTab === 'timeline'" class="timeline-tab">
             <div class="card">
-                <h3>Windows 10 19041 End of Life Timeline</h3>
-                <p class="timeline-desc">Support ends in <strong>6 months</strong> (October 2025)</p>
+                <h3>Windows EOL Timeline</h3>
+                <p class="timeline-desc">Critical units by entity</p>
 
                 <div class="timeline-container">
-                    <div class="timeline-header">
-                        <span>Months remaining:</span>
-                        <div class="timeline-markers">
-                            <span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span><span>0</span>
-                        </div>
-                    </div>
-
                     <div class="timeline-bars">
                         <div class="timeline-item" *ngFor="let item of timelineData">
                             <div class="timeline-label">{{ item.entity }}</div>
@@ -288,9 +276,6 @@
                                 </div>
                                 <span class="timeline-count">{{ item.critical }} units</span>
                             </div>
-                            <button class="timeline-action" (click)="scheduleEntityUpgrade(item.entity)">
-                Schedule
-              </button>
                         </div>
                     </div>
                 </div>
@@ -312,22 +297,22 @@
 
                 <div class="filter-dropdowns">
                     <select [(ngModel)]="osFilter" (change)="filterAssets()" class="filter-select">
-            <option value="all">All OS</option>
-            <option value="win7">Win 7/XP/8</option>
-            <option value="win10out">Win10 (Outdated)</option>
-            <option value="win10ok">Win10 (Current)</option>
-            <option value="win11">Win11</option>
-          </select>
+                        <option value="all">All OS</option>
+                        <option value="win7">Win 7/XP/8</option>
+                        <option value="win10out">Win10 (Outdated)</option>
+                        <option value="win10ok">Win10 (Current)</option>
+                        <option value="win11">Win11</option>
+                    </select>
 
                     <select [(ngModel)]="entityFilter" (change)="filterAssets()" class="filter-select">
-            <option value="all">All Entities</option>
-            <option *ngFor="let e of entities" [value]="e.code">{{ e.name }}</option>
-          </select>
+                        <option value="all">All Clients</option>
+                        <option *ngFor="let e of entities" [value]="e.code">{{ e.name }}</option>
+                    </select>
                 </div>
 
                 <button class="btn-excel" (click)="exportAssetList()">
-          <mat-icon>download</mat-icon> Export
-        </button>
+                    <mat-icon>download</mat-icon> Export
+                </button>
             </div>
 
             <div class="card no-padding">
@@ -352,7 +337,6 @@
                             </th>
                             <th>EOL Status</th>
                             <th>Risk</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -361,22 +345,17 @@
                             <td>{{ asset.entity }}</td>
                             <td>
                                 <span class="os-badge" [class]="getOsClass(asset.osVersion)">
-                  {{ asset.osVersion }}
-                </span>
+                                    {{ asset.osVersion }}
+                                </span>
                             </td>
                             <td>{{ asset.installDate | date:'dd MMM yyyy' }}</td>
                             <td>
                                 <span class="eol-badge" [class.critical]="asset.eolStatus === 'EOL' || asset.eolMonths <= 6">
-                  {{ asset.eolStatus }}
-                </span>
+                                    {{ asset.eolStatus }}
+                                </span>
                             </td>
                             <td>
                                 <span class="risk-indicator" [style.background]="asset.riskColor"></span> {{ asset.risk }}
-                            </td>
-                            <td>
-                                <button class="btn-schedule" (click)="scheduleUpgrade(asset); $event.stopPropagation()">
-                  Schedule
-                </button>
                             </td>
                         </tr>
                         <tr *ngIf="filteredAssets.length === 0">
@@ -391,26 +370,13 @@
 
             <div class="pagination" *ngIf="totalPages > 1">
                 <button [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
+                    <mat-icon>chevron_left</mat-icon>
+                </button>
                 <span>Page {{ currentPage }} of {{ totalPages }}</span>
                 <button [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
+                    <mat-icon>chevron_right</mat-icon>
+                </button>
             </div>
         </div>
     </div>
-
-    <!-- Quick Actions Footer -->
-    <!-- <div class="action-footer">
-        <button class="btn-primary large" (click)="bulkScheduleUpgrade()">
-      <mat-icon>upgrade</mat-icon> Bulk Schedule Upgrades
-    </button>
-        <button class="btn-outline large" (click)="generateReport()">
-      <mat-icon>description</mat-icon> Generate Risk Report
-    </button>
-        <button class="btn-outline large" (click)="notifyClients()">
-      <mat-icon>notifications</mat-icon> Notify Clients
-    </button>
-    </div> -->
 </div>

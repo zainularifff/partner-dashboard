@@ -28,7 +28,7 @@
         </div>
     </header>
 
-    <!-- KPI GRID - Based on Real Data -->
+    <!-- KPI GRID -->
     <div class="kpi-grid">
         <!-- Overall Utilization -->
         <div class="kpi-card main">
@@ -38,7 +38,7 @@
             <div class="kpi-content">
                 <div class="kpi-label">Overall Utilization</div>
                 <div class="kpi-value">{{ utilizationRate }}</div>
-                <div class="kpi-sub">{{ onlineAssets }} online · {{ totalAssets }} total</div>
+                <div class="kpi-sub">{{ onlineAssets | number }} online · {{ totalAssets | number }} total</div>
             </div>
         </div>
 
@@ -50,7 +50,7 @@
             <div class="kpi-content">
                 <div class="kpi-label">Online Assets</div>
                 <div class="kpi-value">{{ onlineAssets | number }}</div>
-                <div class="kpi-sub">{{ ((onlineAssets / totalAssets) * 100).toFixed(1) }}% of total</div>
+                <div class="kpi-sub">{{ ((onlineAssets / totalAssets) * 100 || 0).toFixed(1) }}% of total</div>
             </div>
         </div>
 
@@ -91,6 +91,9 @@
             <button class="tab" [class.active]="activeTab === 'age'" (click)="activeTab = 'age'">
                 <mat-icon>schedule</mat-icon> By Asset Age
             </button>
+            <button class="tab" [class.active]="activeTab === 'location'" (click)="activeTab = 'location'">
+                <mat-icon>location_on</mat-icon> By Location
+            </button>
         </div>
     </div>
 
@@ -102,7 +105,7 @@
                 <div class="card-header">
                     <h3>Asset Distribution by Client</h3>
                     <div class="card-actions">
-                        <button class="btn-icon" (click)="exportData('client')">
+                        <button class="btn-icon" (click)="exportData('client')" title="Export CSV">
                             <mat-icon>download</mat-icon>
                         </button>
                     </div>
@@ -144,6 +147,12 @@
                                     </button>
                                 </td>
                             </tr>
+                            <tr *ngIf="clientUtilization.length === 0">
+                                <td colspan="6" class="empty-state">
+                                    <mat-icon>info</mat-icon>
+                                    <p>No client data available</p>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -159,7 +168,6 @@
 
                 <div class="os-grid">
                     <div class="os-chart-container">
-                        <!-- Simple bar chart representation -->
                         <div class="os-bars">
                             <div class="os-bar-item" *ngFor="let os of osBreakdown">
                                 <div class="bar-label">{{ os.name }}</div>
@@ -231,7 +239,7 @@
         <div *ngIf="activeTab === 'location'" class="location-tab">
             <div class="card">
                 <div class="card-header">
-                    <h3>Assets by Location (WSSB Internal)</h3>
+                    <h3>Assets by Location</h3>
                 </div>
 
                 <div class="location-grid">
@@ -249,13 +257,17 @@
                             <small>{{ loc.percentage }}% of assets</small>
                         </div>
                     </div>
+                    <div *ngIf="locationBreakdown.length === 0" class="empty-state">
+                        <mat-icon>location_off</mat-icon>
+                        <p>No location data available</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- IDLE ASSETS DEEP DIVE -->
-    <div class="idle-breakdown-section">
+    <div class="idle-breakdown-section" *ngIf="offlineAssets > 0">
         <div class="card">
             <div class="card-header">
                 <h3>Offline Assets Analysis</h3>
@@ -326,14 +338,14 @@
             </div>
 
             <!-- OPPORTUNITY ROW -->
-            <div class="idle-action-box">
+            <div class="idle-action-box" *ngIf="idleConditions.length > 0">
                 <div class="action-left">
                     <mat-icon>lightbulb</mat-icon>
                     <span>
                         <strong>Opportunity:</strong> Redeploying 
-                        <strong>{{ idleConditions[0].count | number }}</strong> good condition units 
+                        <strong>{{ idleConditions[0]?.count | number }}</strong> good condition units 
                         could improve utilization by 
-                        <strong>{{ ((idleConditions[0].count / totalAssets) * 100).toFixed(1) }}%</strong>
+                        <strong>{{ ((idleConditions[0]?.count / totalAssets) * 100 || 0).toFixed(1) }}%</strong>
                     </span>
                 </div>
                 <button class="btn-primary" (click)="generateOptimizationPlan()">

@@ -6,6 +6,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LoadingService } from '../../services/loading.service';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -22,164 +24,282 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./asset-utilization.scss']
 })
 export class AssetUtilizationComponent implements OnInit, OnDestroy {
-  activeTab: string = 'client';  // Default to client tab (since project tab has no data)
+  // API Base URL
+  private apiUrl = 'http://localhost:3000/api';
   
-  // ==================== REAL DATA FROM ASSETS.JSON ====================
-  // Total assets across all clients
-  totalAssets: number = 816;  // 801 (WSSB) + 15 (Natalie) + 0 (SUKS)
-  onlineAssets: number = 6;   // 4 (WSSB) + 2 (Natalie)
-  offlineAssets: number = 810; // 797 (WSSB) + 13 (Natalie)
-    lastUpdated: Date = new Date();  // Will show current date/time
-    
-
+  activeTab: string = 'client';
+  
+  // ==================== DATA FROM API ====================
+  totalAssets: number = 0;
+  onlineAssets: number = 0;
+  offlineAssets: number = 0;
+  lastUpdated: Date = new Date();
   
   // OS Breakdown
-  osBreakdown = [
-    { name: 'Windows 7/8/XP', count: 125, percentage: 15.3, color: '#ef4444' },
-    { name: 'Windows 10', count: 458, percentage: 56.1, color: '#3b82f6' },
-    { name: 'Windows 11', count: 233, percentage: 28.6, color: '#10b981' }
-  ];
+  osBreakdown: any[] = [];
   
-  // Age Breakdown (PCAge)
-  ageBreakdown = [
-    { range: '<3 years', count: 292, percentage: 35.8, color: '#10b981' },
-    { range: '3-5 years', count: 291, percentage: 35.7, color: '#3b82f6' },
-    { range: '5-7 years', count: 63, percentage: 7.7, color: '#f59e0b' },
-    { range: '>7 years', count: 170, percentage: 20.8, color: '#ef4444' }
-  ];
+  // Age Breakdown
+  ageBreakdown: any[] = [];
   
-  // EOL Risk (PCAge > 5)
-  eolUnits: number = 233;  // 63 + 170
-  eolPercentage: number = 28.5;
+  // EOL Risk
+  eolUnits: number = 0;
+  eolPercentage: number = 0;
   
   // Client Utilization
-  clientUtilization = [
-    { 
-      clientId: '0ce9fc8c-1cfa-488d-9697-bcb3a22d3562',
-      clientName: 'WSSB Internal', 
-      total: 801, 
-      online: 4, 
-      offline: 797, 
-      utilization: 0.5,
-      utilizationColor: '#ef4444'
-    },
-    { 
-      clientId: '1a4caf30-3774-4079-9fab-e963b9a81258',
-      clientName: 'Natalie Internal', 
-      total: 15, 
-      online: 2, 
-      offline: 13, 
-      utilization: 13.3,
-      utilizationColor: '#ef4444'
-    },
-    { 
-      clientId: 'db2c4ce8-b39a-4d61-a0c3-7a163c257aad',
-      clientName: 'SUKS', 
-      total: 0, 
-      online: 0, 
-      offline: 0, 
-      utilization: 0,
-      utilizationColor: '#94a3b8'
-    }
-  ];
+  clientUtilization: any[] = [];
   
-  // Location Breakdown (from Branch column in Assets)
-  locationBreakdown = [
-    { name: 'HQ', count: 450, percentage: 55.2 },
-    { name: 'The Stand Branch', count: 120, percentage: 14.7 },
-    { name: 'CAWANGAN HENTIAN', count: 80, percentage: 9.8 },
-    { name: 'CAWANGAN ECOHILL', count: 75, percentage: 9.2 },
-    { name: 'Other Branches', count: 90, percentage: 11.1 }
-  ];
+  // Location Breakdown
+  locationBreakdown: any[] = [];
+  
+  // All assets for processing
+  allAssets: any[] = [];
+  allClients: any[] = [];
   
   // ==================== DERIVED PROPERTIES ====================
   get utilizationRate(): string {
-    return ((this.onlineAssets / this.totalAssets) * 100).toFixed(1) + '%';
+    return this.totalAssets > 0 ? ((this.onlineAssets / this.totalAssets) * 100).toFixed(1) + '%' : '0%';
   }
   
   get offlinePercentage(): number {
-    return Math.round((this.offlineAssets / this.totalAssets) * 100);
+    return this.totalAssets > 0 ? Math.round((this.offlineAssets / this.totalAssets) * 100) : 0;
   }
   
   get idlePercentage(): number {
     return this.offlinePercentage;
   }
   
-  // For KPI cards - deployed units = online assets
   get deployedUnits(): number {
     return this.onlineAssets;
   }
   
-  // For KPI cards - idle units = offline assets
   get idleUnits(): number {
     return this.offlineAssets;
   }
   
-  // Revenue loss - from Level 1 dashboard
-  revenueLoss: string = 'RM 345k';
+  revenueLoss: string = 'RM 345k'; // From Level 1 dashboard
   
-  // ==================== IDLE BREAKDOWN (Based on real data) ====================
-  idleReasons = [
-    { name: 'Offline (No reason)', count: this.offlineAssets, percent: this.offlinePercentage }
-  ];
-  
-  idleDurations = [
-    { range: '<30 days', count: 450, percent: 55 },
-    { range: '30-90 days', count: 250, percent: 31 },
-    { range: '>90 days', count: 110, percent: 14 }
-  ];
-  
-  idleConditions = [
-    { name: 'Good (Age<3, Win10/11)', count: 0, status: 'Redeployable', color: '#10b981', percent: 0 },
-    { name: 'Fair (Age 3-5, Win10)', count: 0, status: 'Needs maintenance', color: '#f59e0b', percent: 0 },
-    { name: 'Poor (Age>5 or Win7/8)', count: this.offlineAssets, status: 'Retire/EOL', color: '#ef4444', percent: 100 }
-  ];
+  // ==================== IDLE BREAKDOWN ====================
+  idleReasons: any[] = [];
+  idleDurations: any[] = [];
+  idleConditions: any[] = [];
   
   // Age Insights
-  ageInsights = [
-    { title: `${this.ageBreakdown[2].count + this.ageBreakdown[3].count} units >5 years old`, 
-      description: 'Critical risk - EOL assets need replacement', 
-      color: '#ef4444' },
-    { title: `${this.ageBreakdown[1].count} units aged 3-5 years`, 
-      description: 'Mid-life assets - monitor performance', 
-      color: '#f59e0b' },
-    { title: `${this.ageBreakdown[0].count} units <3 years old`, 
-      description: 'New assets - good condition', 
-      color: '#10b981' }
-  ];
+  ageInsights: any[] = [];
   
   private subscription: Subscription = new Subscription();
 
   constructor(
     private location: Location, 
     private router: Router,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private http: HttpClient
   ) {}
 
-  ngOnInit(): void {
-    console.log('🚀 Asset Utilization - Loading data');
+  async ngOnInit(): Promise<void> {
     this.loadingService.show();
-    
-    // Simulate data loading
-    setTimeout(() => {
-      this.calculateIdleConditions();
-      this.loadingService.hide();
-      console.log('✅ Asset Utilization data loaded');
-    }, 1000);
+    await this.loadAssetData();
   }
-  
-  calculateIdleConditions() {
-    // This would be calculated from actual asset data
-    // For now, using approximation
-    const goodCount = Math.round(this.offlineAssets * 0.2);  // 20% might be good
-    const fairCount = Math.round(this.offlineAssets * 0.3);  // 30% fair
-    const poorCount = this.offlineAssets - goodCount - fairCount;
+
+  async loadAssetData() {
+    try {
+      // Load all data in parallel
+      const [assets, utilization, osRisk, clients] = await Promise.all([
+        this.fetchData('/assets'),
+        this.fetchData('/utilization'),
+        this.fetchData('/os-risk'),
+        this.fetchData('/clients')
+      ]);
+
+      console.log('Assets:', assets);
+      console.log('Utilization:', utilization);
+      console.log('OS Risk:', osRisk);
+      console.log('Clients:', clients);
+
+      // Store all assets
+      if (assets && Array.isArray(assets)) {
+        this.allAssets = assets;
+        this.processAssetData(assets);
+      }
+
+      // Update overall stats
+      if (utilization?.overall) {
+        this.totalAssets = utilization.overall.total;
+        this.onlineAssets = utilization.overall.active;
+        this.offlineAssets = utilization.overall.total - utilization.overall.active;
+      }
+
+      // Process OS breakdown
+      if (osRisk?.breakdown) {
+        this.osBreakdown = osRisk.breakdown.map((item: any) => ({
+          name: item.os_name,
+          count: item.count,
+          percentage: Math.round((item.count / this.totalAssets) * 100),
+          color: this.getOSColor(item.os_name)
+        }));
+      }
+
+      // Process client utilization
+      if (clients && Array.isArray(clients)) {
+        this.allClients = clients;
+        this.clientUtilization = clients.map((client: any) => {
+          const clientAssets = assets.filter((a: any) => a.CustomerName === client.CompanyName);
+          const total = clientAssets.length;
+          const online = clientAssets.filter((a: any) => a.AgentStatus === 'On').length;
+          const offline = total - online;
+          const utilization = total > 0 ? (online / total) * 100 : 0;
+          
+          return {
+            clientId: client.ClientID,
+            clientName: client.CompanyName,
+            total,
+            online,
+            offline,
+            utilization,
+            utilizationColor: this.getUtilizationColor(utilization)
+          };
+        }).filter((c: any) => c.total > 0); // Only show clients with assets
+      }
+
+      // Process age breakdown
+      await this.processAgeData(assets);
+
+      // Process location breakdown
+      await this.processLocationData(assets);
+
+      // Calculate EOL
+      this.eolUnits = assets.filter((a: any) => a.PCAge > 5).length;
+      this.eolPercentage = Math.round((this.eolUnits / this.totalAssets) * 100);
+
+      // Process idle breakdown
+      this.processIdleData(assets);
+
+      this.lastUpdated = new Date();
+      this.loadingService.hide();
+      console.log('✅ Asset Utilization data loaded from API');
+
+    } catch (error) {
+      console.error('Error loading asset data:', error);
+      this.loadingService.hide();
+    }
+  }
+
+  private async fetchData(endpoint: string): Promise<any> {
+    try {
+      return await lastValueFrom(this.http.get(`${this.apiUrl}${endpoint}`));
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
+      return null;
+    }
+  }
+
+  private processAssetData(assets: any[]) {
+    // Process by client - handled in main method
+  }
+
+  private processAgeData(assets: any[]) {
+    const ages = assets.map((a: any) => a.PCAge || 0);
     
-    this.idleConditions = [
-      { name: 'Good', count: goodCount, status: 'Redeployable', color: '#10b981', percent: Math.round(goodCount / this.offlineAssets * 100) },
-      { name: 'Fair', count: fairCount, status: 'Needs maintenance', color: '#f59e0b', percent: Math.round(fairCount / this.offlineAssets * 100) },
-      { name: 'Poor', count: poorCount, status: 'Retire/EOL', color: '#ef4444', percent: Math.round(poorCount / this.offlineAssets * 100) }
+    const lessThan3 = assets.filter((a: any) => a.PCAge < 3).length;
+    const between3And5 = assets.filter((a: any) => a.PCAge >= 3 && a.PCAge < 5).length;
+    const between5And7 = assets.filter((a: any) => a.PCAge >= 5 && a.PCAge < 7).length;
+    const moreThan7 = assets.filter((a: any) => a.PCAge >= 7).length;
+
+    this.ageBreakdown = [
+      { range: '<3 years', count: lessThan3, percentage: Math.round((lessThan3 / this.totalAssets) * 100), color: '#10b981' },
+      { range: '3-5 years', count: between3And5, percentage: Math.round((between3And5 / this.totalAssets) * 100), color: '#3b82f6' },
+      { range: '5-7 years', count: between5And7, percentage: Math.round((between5And7 / this.totalAssets) * 100), color: '#f59e0b' },
+      { range: '>7 years', count: moreThan7, percentage: Math.round((moreThan7 / this.totalAssets) * 100), color: '#ef4444' }
     ];
+
+    this.ageInsights = [
+      { title: `${between5And7 + moreThan7} units >5 years old`, 
+        description: 'Critical risk - EOL assets need replacement', 
+        color: '#ef4444' },
+      { title: `${between3And5} units aged 3-5 years`, 
+        description: 'Mid-life assets - monitor performance', 
+        color: '#f59e0b' },
+      { title: `${lessThan3} units <3 years old`, 
+        description: 'New assets - good condition', 
+        color: '#10b981' }
+    ];
+  }
+
+  private processLocationData(assets: any[]) {
+    const locationMap = new Map();
+    
+    assets.forEach((asset: any) => {
+      const branch = asset.Branch || 'Other';
+      locationMap.set(branch, (locationMap.get(branch) || 0) + 1);
+    });
+
+    this.locationBreakdown = Array.from(locationMap.entries())
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: Math.round((count / this.totalAssets) * 100)
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5); // Top 5 locations
+  }
+
+  private processIdleData(assets: any[]) {
+    const offlineAssets = assets.filter((a: any) => a.AgentStatus === 'Off');
+    const offlineCount = offlineAssets.length;
+
+    // Calculate by condition
+    const goodOffline = offlineAssets.filter((a: any) => 
+      a.PCAge < 3 && (a.OS?.includes('Windows 10') || a.OS?.includes('Windows 11'))
+    ).length;
+    
+    const fairOffline = offlineAssets.filter((a: any) => 
+      a.PCAge >= 3 && a.PCAge <= 5 && a.OS?.includes('Windows 10')
+    ).length;
+    
+    const poorOffline = offlineAssets.filter((a: any) => 
+      a.PCAge > 5 || a.OS?.includes('Windows 7') || a.OS?.includes('Windows 8') || a.OS?.includes('XP')
+    ).length;
+
+    this.idleConditions = [
+      { name: 'Good', count: goodOffline, status: 'Redeployable', color: '#10b981', 
+        percent: offlineCount > 0 ? Math.round((goodOffline / offlineCount) * 100) : 0 },
+      { name: 'Fair', count: fairOffline, status: 'Needs maintenance', color: '#f59e0b', 
+        percent: offlineCount > 0 ? Math.round((fairOffline / offlineCount) * 100) : 0 },
+      { name: 'Poor', count: poorOffline, status: 'Retire/EOL', color: '#ef4444', 
+        percent: offlineCount > 0 ? Math.round((poorOffline / offlineCount) * 100) : 0 }
+    ];
+
+    // Idle durations (simulated for now - would need last seen data)
+    const now = new Date();
+    const lessThan30 = offlineAssets.filter((a: any) => {
+      const lastSeen = a.ConnectionTime ? new Date(a.ConnectionTime) : new Date(0);
+      const daysDiff = (now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60 * 24);
+      return daysDiff < 30;
+    }).length;
+
+    const between30And90 = offlineAssets.filter((a: any) => {
+      const lastSeen = a.ConnectionTime ? new Date(a.ConnectionTime) : new Date(0);
+      const daysDiff = (now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60 * 24);
+      return daysDiff >= 30 && daysDiff < 90;
+    }).length;
+
+    const moreThan90 = offlineAssets.filter((a: any) => {
+      const lastSeen = a.ConnectionTime ? new Date(a.ConnectionTime) : new Date(0);
+      const daysDiff = (now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60 * 24);
+      return daysDiff >= 90;
+    }).length;
+
+    this.idleDurations = [
+      { range: '<30 days', count: lessThan30, percent: offlineCount > 0 ? Math.round((lessThan30 / offlineCount) * 100) : 0 },
+      { range: '30-90 days', count: between30And90, percent: offlineCount > 0 ? Math.round((between30And90 / offlineCount) * 100) : 0 },
+      { range: '>90 days', count: moreThan90, percent: offlineCount > 0 ? Math.round((moreThan90 / offlineCount) * 100) : 0 }
+    ];
+  }
+
+  private getOSColor(osName: string): string {
+    if (osName.includes('7') || osName.includes('XP') || osName.includes('8')) return '#ef4444';
+    if (osName.includes('10')) return '#3b82f6';
+    if (osName.includes('11')) return '#10b981';
+    return '#94a3b8';
   }
 
   ngOnDestroy(): void {
@@ -205,7 +325,7 @@ export class AssetUtilizationComponent implements OnInit, OnDestroy {
     if (value >= 80) return '#f59e0b';
     if (value >= 70) return '#f97316';
     if (value >= 50) return '#ef4444';
-    return '#7f1d1d';  // Very low utilization
+    return '#7f1d1d';
   }
 
   getRiskColor(percentage: number): string {
@@ -220,6 +340,7 @@ export class AssetUtilizationComponent implements OnInit, OnDestroy {
     
     setTimeout(() => {
       this.loadingService.hide();
+      // Navigate to client detail page
       this.router.navigate(['/client', client.clientId]);
     }, 300);
   }
@@ -229,8 +350,28 @@ export class AssetUtilizationComponent implements OnInit, OnDestroy {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Exporting', type, 'data');
-      alert(`Exporting ${type} data as CSV...`);
+      
+      // Generate CSV based on active tab
+      let csvContent = '';
+      if (type === 'client') {
+        const headers = ['Client', 'Total Assets', 'Online', 'Offline', 'Utilization'];
+        const rows = this.clientUtilization.map(c => [
+          c.clientName, c.total, c.online, c.offline, c.utilization.toFixed(1) + '%'
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      } else if (type === 'os') {
+        const headers = ['OS', 'Count', 'Percentage'];
+        const rows = this.osBreakdown.map(o => [o.name, o.count, o.percentage + '%']);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      }
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `asset-utilization-${type}-${new Date().getTime()}.csv`;
+      link.click();
+      window.URL.revokeObjectURL(url);
     }, 500);
   }
 
@@ -240,16 +381,15 @@ export class AssetUtilizationComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.loadingService.hide();
       
-      // Calculate potential revenue recovery
-      const redeployableUnits = this.idleConditions[0].count;
-      const potentialRevenue = redeployableUnits * 150; // Assume RM150/unit/month
+      const redeployableUnits = this.idleConditions[0]?.count || 0;
+      const potentialRevenue = redeployableUnits * 150;
       
       alert(`✅ Optimization Plan Generated!\n\n` +
             `Redeployable units: ${redeployableUnits}\n` +
             `Potential revenue recovery: RM ${potentialRevenue.toLocaleString()}/month\n\n` +
-            `1. Redeploy Good condition assets (${this.idleConditions[0].count} units)\n` +
-            `2. Schedule maintenance for Fair assets (${this.idleConditions[1].count} units)\n` +
-            `3. Plan EOL replacement for Poor assets (${this.idleConditions[2].count} units)`);
+            `1. Redeploy Good condition assets (${this.idleConditions[0]?.count || 0} units)\n` +
+            `2. Schedule maintenance for Fair assets (${this.idleConditions[1]?.count || 0} units)\n` +
+            `3. Plan EOL replacement for Poor assets (${this.idleConditions[2]?.count || 0} units)`);
     }, 800);
   }
 }

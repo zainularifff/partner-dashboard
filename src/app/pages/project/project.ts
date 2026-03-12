@@ -5,7 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { NgApexchartsModule } from "ng-apexcharts";
 import { Router } from '@angular/router';
-import { LoadingService } from '../../services/loading.service'; // <-- IMPORT LOADING SERVICE
+import { LoadingService } from '../../services/loading.service';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-project',
@@ -19,7 +21,12 @@ export class ProjectComponent implements OnInit {
 
   selectedSector: string = 'ALL';
   searchQuery: string = '';
-  // BUANG loading variable - tak perlu lagi
+  
+  // API Base URL
+  private apiUrl = 'http://localhost:3000/api';
+  
+  // Data dari API
+  projects: any[] = [];
   groupedProjectsData: { key: string, value: any[] }[] = [];
 
   totalOnlineAll: number = 0;
@@ -50,57 +57,97 @@ export class ProjectComponent implements OnInit {
     tooltip: { y: { formatter: (val: number) => val.toLocaleString() + ' units' } }
   };
 
-  // Project Data
-  projects = [
-    { id: 1, name: 'FGV', client: 'MOE', sector: 'EDU', assets: 5500, deployed: 4200, balance: 1300, onlineAgents: 3800, offlineAgents: 400, status: 'Active' },
-    { id: 2, name: 'FGV', client: 'MINDEF', sector: 'GOV', assets: 1500, deployed: 1150, balance: 350, onlineAgents: 1100, offlineAgents: 50, status: 'Active' },
-    { id: 3, name: 'WSSB', client: 'KKM', sector: 'GOV', assets: 3200, deployed: 800, balance: 2400, onlineAgents: 750, offlineAgents: 50, status: 'Active' },
-    { id: 4, name: 'WSSB', client: 'MBB', sector: 'FIN', assets: 850, deployed: 800, balance: 50, onlineAgents: 790, offlineAgents: 10, status: 'Completed' },
-    { id: 5, name: 'FGV', client: 'CIMB', sector: 'FIN', assets: 1600, deployed: 600, balance: 1000, onlineAgents: 550, offlineAgents: 50, status: 'Active' },
-    { id: 6, name: 'WSSB', client: 'PETRONAS', sector: 'GLC', assets: 1600, deployed: 600, balance: 1000, onlineAgents: 580, offlineAgents: 20, status: 'Active' }
-  ];
-
   constructor(
-    // BUANG ChangeDetectorRef - tak perlu
     private location: Location,
     private router: Router,
-    private loadingService: LoadingService  // <-- TAMBAH LOADING SERVICE
+    private loadingService: LoadingService,
+    private http: HttpClient
   ) { }
 
-  ngOnInit(): void {
-    // Show loading
+  async ngOnInit(): Promise<void> {
     this.loadingService.show();
-    
-    // Simulate data fetching
-    setTimeout(() => {
+    await this.loadProjectData();
+  }
+
+  async loadProjectData() {
+    try {
+      // Load all data in parallel
+      const [projects, sectors, overall] = await Promise.all([
+        this.fetchData('/projects'),
+        this.fetchData('/sectors/stats'),
+        this.fetchData('/overall/stats')
+      ]);
+
+      console.log('Projects:', projects);
+      console.log('Sectors:', sectors);
+      console.log('Overall:', overall);
+
+      // Map projects data
+      if (projects && Array.isArray(projects)) {
+        this.projects = projects.map(p => ({
+          id: p.name,
+          name: p.project || p.name,
+          client: p.name,
+          sector: p.sector || 'Other',
+          assets: p.assets || 0,
+          deployed: p.deployed || 0,
+          balance: (p.assets || 0) - (p.deployed || 0),
+          onlineAgents: p.onlineAgents || 0,
+          offlineAgents: p.offlineAgents || 0,
+          status: p.status || 'Active'
+        }));
+      }
+
+      // Set overall stats
+      if (overall) {
+        this.totalOnlineAll = overall.total_online || 0;
+        this.totalOfflineAll = overall.total_offline || 0;
+      }
+
+      // Update groups and charts
       this.updateGroups();
-      this.calculateOverallStats();
       this.calculateSectorChart();
-      
-      // Hide loading lepas data siap
+
       this.loadingService.hide();
-      console.log('Project data loaded');
-    }, 1000);
+      console.log('Project data loaded from API');
+
+    } catch (error) {
+      console.error('Error loading project data:', error);
+      this.loadingService.hide();
+    }
+  }
+
+  private async fetchData(endpoint: string): Promise<any> {
+    try {
+      return await lastValueFrom(this.http.get(`${this.apiUrl}${endpoint}`));
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
+      return null;
+    }
   }
 
   // Calculate Sector Chart Data
   calculateSectorChart() {
-    const sectors = ['EDU', 'GOV', 'FIN', 'GLC'];
+    const sectors = ['EDU', 'GOV', 'FIN', 'GLC', 'Other'];
     const sectorMap = new Map();
     
     sectors.forEach(s => sectorMap.set(s, { assets: 0, deployed: 0 }));
     
     this.projects.forEach(p => {
-      if (sectorMap.has(p.sector)) {
-        const data = sectorMap.get(p.sector);
+      const sector = p.sector || 'Other';
+      if (sectorMap.has(sector)) {
+        const data = sectorMap.get(sector);
         data.assets += p.assets;
         data.deployed += p.deployed;
       }
     });
     
-    this.sectorCategories = Array.from(sectorMap.keys());
-    const assetsData = Array.from(sectorMap.values()).map(d => d.assets);
-    const deployedData = Array.from(sectorMap.values()).map(d => d.deployed);
+    this.sectorCategories = Array.from(sectorMap.keys()).filter(k => 
+      sectorMap.get(k).assets > 0 || sectorMap.get(k).deployed > 0
+    );
+    
+    const assetsData = this.sectorCategories.map(k => sectorMap.get(k).assets);
+    const deployedData = this.sectorCategories.map(k => sectorMap.get(k).deployed);
     
     this.sectorChartSeries = [
       { name: 'Total Assets', data: assetsData },
@@ -110,17 +157,9 @@ export class ProjectComponent implements OnInit {
     this.sectorChartOptions.xaxis = { categories: this.sectorCategories };
   }
 
-  // Calculate Overall Stats (Online/Offline)
+  // Calculate Overall Stats (Online/Offline) - guna dari API
   calculateOverallStats() {
-    this.totalOnlineAll = 0;
-    this.totalOfflineAll = 0;
-    const activeProjects = this.projects.filter(p => 
-      (this.selectedSector === 'ALL' || p.sector === this.selectedSector)
-    );
-    activeProjects.forEach(p => {
-      this.totalOnlineAll += (p.onlineAgents || 0);
-      this.totalOfflineAll += (p.offlineAgents || 0);
-    });
+    // Already set from API
   }
 
   // Health Rate Formatter for Donut Chart
@@ -134,7 +173,6 @@ export class ProjectComponent implements OnInit {
   setSector(sector: string) {
     this.selectedSector = sector;
     this.updateGroups();
-    this.calculateOverallStats();
   }
 
   // Update Project Groups based on filter
@@ -158,35 +196,38 @@ export class ProjectComponent implements OnInit {
 
   // Sector Stats for KPI Cards
   get sectorStats(): any {
-    return {
-      ALL: this.projects.length,
-      EDU: this.projects.filter(p => p.sector === 'EDU').length,
-      GOV: this.projects.filter(p => p.sector === 'GOV').length,
-      FIN: this.projects.filter(p => p.sector === 'FIN').length,
-      GLC: this.projects.filter(p => p.sector === 'GLC').length
-    };
+    const stats: any = { ALL: this.projects.length };
+    this.projects.forEach(p => {
+      const sector = p.sector || 'Other';
+      stats[sector] = (stats[sector] || 0) + 1;
+    });
+    return stats;
   }
 
   // Open Modal with Agent List
-  openProjectModal(project: any) {
+  async openProjectModal(project: any) {
     this.selectedProject = project;
     this.isModalOpen = true;
     this.currentPage = 1;
     this.agentSearchQuery = '';
     document.body.style.overflow = 'hidden';
 
-    const brands = ['Dell Inc.', 'HP', 'Lenovo', 'Apple'];
-    const models = ['Latitude 3420', 'EliteBook 840', 'ThinkPad X1', 'MacBook Pro'];
-
-    this.allAgents = Array.from({ length: project.deployed }).map((_, i) => ({
-      AssetTag: `WTECH-${project.client}-${(i + 1).toString().padStart(4, '0')}`,
-      IP: `10.22.${Math.floor(i / 254) + 1}.${(i % 254) + 1}`,
-      Brand: brands[Math.floor(Math.random() * brands.length)],
-      Model: models[Math.floor(Math.random() * models.length)],
-      AgentStatus: Math.random() > 0.1 ? 'On' : 'Off',
-      ConnectionTime: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString()
-    }));
-    this.applyFiltersAndSort();
+    try {
+      // Load agents for this project
+      const agents = await this.fetchData(`/projects/${encodeURIComponent(project.client)}/agents`);
+      
+      if (agents && Array.isArray(agents)) {
+        this.allAgents = agents;
+      } else {
+        this.allAgents = [];
+      }
+      
+      this.applyFiltersAndSort();
+    } catch (error) {
+      console.error('Error loading agents:', error);
+      this.allAgents = [];
+      this.applyFiltersAndSort();
+    }
   }
 
   // Modal Helper Functions
@@ -278,7 +319,7 @@ export class ProjectComponent implements OnInit {
 
   // Go Back with referrer check
   goBack() { 
-    this.loadingService.show(); // <-- SHOW LOADING
+    this.loadingService.show();
     
     setTimeout(() => {
       this.loadingService.hide();

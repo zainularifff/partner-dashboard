@@ -4,7 +4,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { NgApexchartsModule } from "ng-apexcharts";
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LoadingService } from '../../services/loading.service'; // <-- IMPORT LOADING SERVICE
+import { LoadingService } from '../../services/loading.service';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-client',
@@ -14,7 +16,8 @@ import { LoadingService } from '../../services/loading.service'; // <-- IMPORT L
   styleUrls: ['./client.scss']
 })
 export class ClientComponent implements OnInit {
-  // BUANG isLoading - tak perlu lagi
+  // API Base URL
+  private apiUrl = 'http://localhost:3000/api';
 
   // Search
   searchQuery: string = '';
@@ -22,87 +25,14 @@ export class ClientComponent implements OnInit {
 
   // Summary Stats
   clientStats = {
-    total: 4,
-    healthy: 2,
-    warning: 1,
-    critical: 1
+    total: 0,
+    healthy: 0,
+    warning: 0,
+    critical: 0
   };
 
   // Client Data
-  clients = [
-    { 
-      name: 'KKM', 
-      sector: 'Healthcare',
-      contractType: 'Leasing - Phase 4A',
-      status: 'Critical', 
-      totalAssets: 5200, 
-      deployed: 4800,
-      onlineAgents: 3800,
-      offlineAgents: 1000,
-      leaseEnd: '30 Aug 2026', 
-      remainingMonths: 5, 
-      utilization: '94%',
-      engineer: 'Zul + 2',
-      sla: '72%',
-      osCompliance: '55%',
-      biosAging: '5.2 Years',
-      healthScore: 76
-    },
-    { 
-      name: 'PETRONAS', 
-      sector: 'Energy / O&G',
-      contractType: 'Subscription Model',
-      status: 'Warning', 
-      totalAssets: 2800, 
-      deployed: 2300,
-      onlineAgents: 2100,
-      offlineAgents: 200,
-      leaseEnd: '15 Dec 2027', 
-      remainingMonths: 21, 
-      utilization: '82%',
-      engineer: 'Ahmad',
-      sla: '85%',
-      osCompliance: '80%',
-      biosAging: '3.8 Years',
-      healthScore: 82
-    },
-    { 
-      name: 'MOE (KPM)', 
-      sector: 'Education',
-      contractType: 'Leasing - Phase 5',
-      status: 'Healthy', 
-      totalAssets: 12500, 
-      deployed: 12250,
-      onlineAgents: 11800,
-      offlineAgents: 450,
-      leaseEnd: '01 Jan 2028', 
-      remainingMonths: 22, 
-      utilization: '98%',
-      engineer: 'Sarah',
-      sla: '98%',
-      osCompliance: '98%',
-      biosAging: '1.2 Years',
-      healthScore: 95
-    },
-    { 
-      name: 'MINDEF', 
-      sector: 'Defense',
-      contractType: 'Outright Purchase',
-      status: 'Healthy', 
-      totalAssets: 4100, 
-      deployed: 3900,
-      onlineAgents: 3700,
-      offlineAgents: 200,
-      leaseEnd: 'N/A (Owned)', 
-      remainingMonths: 36, 
-      utilization: '90%',
-      engineer: 'Farid',
-      sla: '90%',
-      osCompliance: '88%',
-      biosAging: '2.5 Years',
-      healthScore: 88
-    }
-  ];
+  clients: any[] = [];
 
   // Charts
   public performanceChart: any = {
@@ -124,10 +54,10 @@ export class ClientComponent implements OnInit {
   };
 
   public agingDonut: any = {
-    series: [45, 35, 20],
+    series: [0, 0, 0],
     chart: { type: 'donut', height: 280 },
-    labels: ['New', 'Mid-Life', 'Aging','End-of-Life'],
-    colors: ['#10b981', '#f9fd04', '#f7b100', , '#ef4444'],
+    labels: ['New (≤2 yrs)', 'Mid-Life (2-4 yrs)', 'Aging (>4 yrs)'],
+    colors: ['#10b981', '#f59e0b', '#ef4444'],
     legend: { position: 'bottom' },
     plotOptions: { pie: { donut: { size: '70%' } } }
   };
@@ -151,24 +81,119 @@ export class ClientComponent implements OnInit {
   constructor(
     private location: Location, 
     private router: Router,
-    private loadingService: LoadingService  // <-- TAMBAH LOADING SERVICE
+    private loadingService: LoadingService,
+    private http: HttpClient
   ) {}
 
-  ngOnInit(): void {
-    // Show global loading
+  async ngOnInit(): Promise<void> {
     this.loadingService.show();
-    console.log('🔄 Loading started');
-    
-    // Simulate data fetching
-    setTimeout(() => {
-      // Load data
-      this.filteredClients = [...this.clients];
-      this.updateChartsFromData();
-      
-      // Hide loading
+    await this.loadClientData();
+  }
+
+  async loadClientData() {
+    try {
+      // Load all data in parallel
+      const [portfolio, stats, maturity, performance] = await Promise.all([
+        this.fetchData('/clients/portfolio'),
+        this.fetchData('/clients/stats'),
+        this.fetchData('/clients/hardware-maturity'),
+        this.fetchData('/clients/performance')
+      ]);
+
+      console.log('Client Portfolio:', portfolio);
+      console.log('Client Stats:', stats);
+      console.log('Hardware Maturity:', maturity);
+      console.log('Performance:', performance);
+
+      // Set clients data
+      if (portfolio && Array.isArray(portfolio)) {
+        this.clients = portfolio.map(c => ({
+          name: c.name || 'Unknown',
+          sector: c.sector || 'Other',
+          contractType: c.contractType || 'Standard',
+          status: c.status || 'Healthy',
+          totalAssets: c.totalAssets || 0,
+          deployed: c.deployed || 0,
+          onlineAgents: c.onlineAgents || 0,
+          offlineAgents: c.offlineAgents || 0,
+          leaseEnd: c.leaseEnd ? new Date(c.leaseEnd).toLocaleDateString('en-GB', { 
+            day: '2-digit', 
+            month: 'short', 
+            year: 'numeric' 
+          }) : 'N/A',
+          remainingMonths: c.remainingMonths || this.calculateRemainingMonths(c.leaseEnd),
+          utilization: c.utilization ? c.utilization + '%' : '0%',
+          engineer: 'Assigned',
+          sla: '98%',
+          osCompliance: c.avgPcAge ? (100 - Math.min(c.avgPcAge * 10, 100)).toFixed(0) + '%' : '85%',
+          biosAging: c.avgPcAge ? c.avgPcAge.toFixed(1) + ' Years' : '2.5 Years',
+          healthScore: c.healthScore || 85
+        }));
+        
+        this.filteredClients = [...this.clients];
+      }
+
+      // Set client stats
+      if (stats) {
+        this.clientStats = {
+          total: stats.total || 0,
+          healthy: stats.healthy || 0,
+          warning: stats.warning || 0,
+          critical: stats.critical || 0
+        };
+      }
+
+      // Set hardware maturity
+      if (maturity) {
+        this.agingDonut.series = [
+          maturity.new || 0,
+          maturity.mid || 0,
+          maturity.aging || 0
+        ];
+      }
+
+      // Update performance chart
+      if (performance && Array.isArray(performance)) {
+        this.performanceChart.series = [
+          { 
+            name: 'Utilization (%)', 
+            type: 'column', 
+            data: performance.map(p => p.utilization || 0) 
+          },
+          { 
+            name: 'Remaining Tenure (Months)', 
+            type: 'line', 
+            data: performance.map(p => p.remainingMonths || 0) 
+          }
+        ];
+        this.performanceChart.labels = performance.map(p => p.name || '');
+      }
+
       this.loadingService.hide();
-      console.log('✅ Loading finished - data loaded');
-    }, 1000);
+      console.log('✅ Client data loaded from API');
+
+    } catch (error) {
+      console.error('Error loading client data:', error);
+      this.loadingService.hide();
+    }
+  }
+
+  private async fetchData(endpoint: string): Promise<any> {
+    try {
+      return await lastValueFrom(this.http.get(`${this.apiUrl}${endpoint}`));
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
+      return null;
+    }
+  }
+
+  private calculateRemainingMonths(leaseEnd: string): number {
+    if (!leaseEnd || leaseEnd === 'N/A') return 36;
+    const end = new Date(leaseEnd);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30));
+    return diffMonths > 0 ? diffMonths : 0;
   }
 
   // Navigation
@@ -199,67 +224,47 @@ export class ClientComponent implements OnInit {
     }
   }
 
-  // Update Charts from Data
-  updateChartsFromData() {
-    console.log('📊 Updating charts with data');
-    
-    // Safely update performance chart
-    if (this.performanceChart && this.clients) {
-      this.performanceChart.series = [
-        { name: 'Utilization (%)', type: 'column', data: this.clients.map(c => parseInt(c.utilization) || 0) },
-        { name: 'Remaining Tenure (Months)', type: 'line', data: this.clients.map(c => c.remainingMonths || 0) }
-      ];
-      this.performanceChart.labels = this.clients.map(c => c.name || '');
-    }
-    
-    // Safely update donut chart
-    if (this.agingDonut && this.clients) {
-      const eol = this.clients.filter(c => parseFloat(c.biosAging) > 4).length;
-      const mid = this.clients.filter(c => parseFloat(c.biosAging) > 2 && parseFloat(c.biosAging) <= 4).length;
-      const new_ = this.clients.filter(c => parseFloat(c.biosAging) <= 2).length;
-      
-      this.agingDonut.series = [new_ * 10, mid * 10, eol * 10]; // Scale for demo
-    }
-    
-    console.log('✅ Charts updated');
-  }
-
   // Status Color
   getStatusColor(status: string) {
-    switch(status) {
-      case 'Critical': return '#ef4444';
-      case 'Warning': return '#f59e0b';
+    switch(status?.toLowerCase()) {
+      case 'critical': return '#ef4444';
+      case 'warning': return '#f59e0b';
       default: return '#10b981';
     }
   }
 
   // Modal Functions
-  openClientModal(client: any) {
+  async openClientModal(client: any) {
     this.loadingService.show();
     
-    setTimeout(() => {
-      this.selectedClient = client;
-      this.isModalOpen = true;
-      this.currentPage = 1;
-      this.agentSearchQuery = '';
-      document.body.style.overflow = 'hidden';
+    this.selectedClient = client;
+    this.isModalOpen = true;
+    this.currentPage = 1;
+    this.agentSearchQuery = '';
+    document.body.style.overflow = 'hidden';
+    
+    try {
+      // Load real agents for this client
+      const agents = await this.fetchData(`/projects/${encodeURIComponent(client.name)}/agents`);
       
-      // Generate mock agents
-      const brands = ['Dell Inc.', 'HP', 'Lenovo', 'Apple'];
-      const models = ['Latitude 3420', 'EliteBook 840', 'ThinkPad X1', 'MacBook Pro'];
-      
-      this.clientAgents = Array.from({ length: client.deployed || 100 }).map((_, i) => ({
-        AssetTag: `AST-${client.name}-${(i + 1).toString().padStart(4, '0')}`,
-        IP: `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-        Brand: brands[Math.floor(Math.random() * brands.length)],
-        Model: models[Math.floor(Math.random() * models.length)],
-        AgentStatus: Math.random() > 0.15 ? 'On' : 'Off',
-        LastSeen: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString()
-      }));
+      if (agents && Array.isArray(agents)) {
+        this.clientAgents = agents.map(a => ({
+          ...a,
+          LastSeen: a.ConnectionTime || a.LastSeen || new Date().toISOString()
+        }));
+      } else {
+        this.clientAgents = [];
+      }
       
       this.filteredAgents = [...this.clientAgents];
-      this.loadingService.hide();
-    }, 300);
+      
+    } catch (error) {
+      console.error('Error loading agents:', error);
+      this.clientAgents = [];
+      this.filteredAgents = [];
+    }
+    
+    this.loadingService.hide();
   }
 
   closeModal() {
@@ -293,7 +298,7 @@ export class ClientComponent implements OnInit {
       let valA = a?.[this.sortConfig.key];
       let valB = b?.[this.sortConfig.key];
       
-      if (this.sortConfig.key === 'LastSeen') {
+      if (this.sortConfig.key === 'LastSeen' || this.sortConfig.key === 'ConnectionTime') {
         valA = new Date(valA || 0).getTime();
         valB = new Date(valB || 0).getTime();
       }

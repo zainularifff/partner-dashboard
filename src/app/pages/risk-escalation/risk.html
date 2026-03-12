@@ -43,10 +43,10 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Total Incidents</div>
-        <div class="kpi-value">8</div>
+        <div class="kpi-value">{{ totalIncidents }}</div>
         <div class="kpi-trend">
-          <span class="badge awaiting">7 Awaiting</span>
-          <span class="badge resolved">1 Resolved</span>
+          <span class="badge awaiting">{{ awaitingCount }} Awaiting</span>
+          <span class="badge resolved">{{ resolvedCount }} Resolved</span>
         </div>
       </div>
     </div>
@@ -58,9 +58,9 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Affected Clients</div>
-        <div class="kpi-value">5</div>
+        <div class="kpi-value">{{ affectedClientsCount }}</div>
         <div class="kpi-trend clients">
-          WSSB Internal · Internal · Natalie · Alfred · Sri KDU
+          {{ affectedClientsList }}
         </div>
       </div>
     </div>
@@ -72,8 +72,8 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Open Tickets</div>
-        <div class="kpi-value">7</div>
-        <div class="kpi-trend">87.5% of total incidents</div>
+        <div class="kpi-value">{{ awaitingCount }}</div>
+        <div class="kpi-trend">{{ openTicketsPercentage }}% of total incidents</div>
       </div>
     </div>
 
@@ -84,7 +84,7 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Avg Resolution Time</div>
-        <div class="kpi-value">4.2 days</div>
+        <div class="kpi-value">{{ avgResolutionTime }}</div>
         <div class="kpi-trend">Based on resolved incidents</div>
       </div>
     </div>
@@ -141,11 +141,11 @@
       <div class="status-summary">
         <div class="status-item">
           <span class="status-dot awaiting"></span>
-          <span>Awaiting: 7 (87.5%)</span>
+          <span>Awaiting: {{ awaitingCount }} ({{ awaitingPercentage }}%)</span>
         </div>
         <div class="status-item">
           <span class="status-dot resolved"></span>
-          <span>Resolved: 1 (12.5%)</span>
+          <span>Resolved: {{ resolvedCount }} ({{ resolvedPercentage }}%)</span>
         </div>
       </div>
     </div>
@@ -256,7 +256,7 @@
         <div class="table-filters">
           <div class="filter-badge">
             <mat-icon>filter_list</mat-icon>
-            <span>{{ filteredIncidents.length }} of 8</span>
+            <span>{{ filteredIncidents.length }} of {{ totalIncidents }}</span>
           </div>
         </div>
       </div>

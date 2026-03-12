@@ -4,7 +4,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { LoadingService } from '../../services/loading.service'; // <-- IMPORT LOADING SERVICE
+import { LoadingService } from '../../services/loading.service';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-os-risk',
@@ -14,98 +16,42 @@ import { LoadingService } from '../../services/loading.service'; // <-- IMPORT L
   styleUrls: ['./os-risk.scss'] 
 })
 export class OsRiskComponent implements OnInit {
+  // API Base URL
+  private apiUrl = 'http://localhost:3000/api';
+  
   // Tab state
   activeTab: string = 'overview';
   
-  // Summary KPI
-  totalAtRisk: number = 1150;
-  financialImpact: string = 'RM 575k';
-  criticalUnits: number = 500;
-  eolDeadline: string = '6 months';
+  // Summary KPI - akan diisi dari API
+  totalAtRisk: number = 0;
+  financialImpact: string = 'RM 0k';
+  criticalUnits: number = 0;
+  eolDeadline: string = '6 months'; // Default
 
   // OS Risk Data Table
-  osRiskData = [
-    { 
-      entity: 'KKM', 
-      win7: 320, 
-      win10out: 45, 
-      win10ok: 380, 
-      win11: 0, 
-      total: 745,
-      riskLevel: 'CRITICAL',
-      riskColor: '#ef4444',
-      financialImpact: 'RM 360k'
-    },
-    { 
-      entity: 'PETRONAS', 
-      win7: 180, 
-      win10out: 20, 
-      win10ok: 250, 
-      win11: 50, 
-      total: 500,
-      riskLevel: 'HIGH',
-      riskColor: '#f59e0b',
-      financialImpact: 'RM 160k'
-    },
-    { 
-      entity: 'MOE', 
-      win7: 50, 
-      win10out: 5, 
-      win10ok: 800, 
-      win11: 400, 
-      total: 1255,
-      riskLevel: 'LOW',
-      riskColor: '#10b981',
-      financialImpact: 'RM 40k'
-    },
-    { 
-      entity: 'MINDEF', 
-      win7: 100, 
-      win10out: 30, 
-      win10ok: 300, 
-      win11: 70, 
-      total: 500,
-      riskLevel: 'MEDIUM',
-      riskColor: '#fbbf24',
-      financialImpact: 'RM 55k'
-    }
-  ];
+  osRiskData: any[] = [];
+  lastUpdated: Date = new Date();
 
   // Financial Impact Data
-  financialImpactData = [
-    { entity: 'KKM', amount: 'RM 360k', percent: 63, color: '#ef4444' },
-    { entity: 'PETRONAS', amount: 'RM 160k', percent: 28, color: '#f59e0b' },
-    { entity: 'MINDEF', amount: 'RM 55k', percent: 9, color: '#fbbf24' },
-    { entity: 'MOE', amount: 'RM 40k', percent: 7, color: '#10b981' }
-  ];
+  financialImpactData: any[] = [];
 
   // EOL Timeline Data
-  timelineData = [
-    { entity: 'KKM', critical: 45, progress: 75 },
-    { entity: 'PETRONAS', critical: 20, progress: 60 },
-    { entity: 'MINDEF', critical: 30, progress: 45 },
-    { entity: 'MOE', critical: 5, progress: 20 }
-  ];
+  timelineData: any[] = [];
 
   // Entities for selector
-  entities = [
-    { code: 'KKM', name: 'Kementerian Kesihatan' },
-    { code: 'PETRONAS', name: 'Petronas' },
-    { code: 'MOE', name: 'Kementerian Pendidikan' },
-    { code: 'MINDEF', name: 'Kementerian Pertahanan' }
-  ];
+  entities: any[] = [];
 
   // Selected entity for By Entity tab
-  selectedEntity: string = 'KKM';
+  selectedEntity: string = '';
   selectedEntityData: any = null;
 
   // OS Distribution Chart
   osDistributionChart: any = {
     series: [
-      { name: 'Win 7/XP/8', data: [320, 180, 50, 100] },
-      { name: 'Win10 (Out)', data: [45, 20, 5, 30] },
-      { name: 'Win10 (Ok)', data: [380, 250, 800, 300] },
-      { name: 'Win11', data: [0, 50, 400, 70] }
+      { name: 'Win 7/XP/8', data: [] },
+      { name: 'Win10 (Out)', data: [] },
+      { name: 'Win10 (Ok)', data: [] },
+      { name: 'Win11', data: [] }
     ],
     chart: { 
       type: 'bar', 
@@ -115,7 +61,7 @@ export class OsRiskComponent implements OnInit {
       background: 'transparent'
     },
     xaxis: { 
-      categories: ['KKM', 'PETRONAS', 'MOE', 'MINDEF'],
+      categories: [],
       labels: { style: { colors: '#94a3b8' } }
     },
     colors: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
@@ -146,22 +92,222 @@ export class OsRiskComponent implements OnInit {
   pageSize: number = 15;
   totalPages: number = 1;
 
+  // All data from API
+  private allAssetsFromAPI: any[] = [];
+  private allClients: any[] = [];
+
   constructor(
     private location: Location, 
     private router: Router,
-    private loadingService: LoadingService  // <-- INJECT LOADING SERVICE
+    private loadingService: LoadingService,
+    private http: HttpClient
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.loadingService.show();
-    
-    setTimeout(() => {
+    await this.loadOsRiskData();
+  }
+
+  async loadOsRiskData() {
+    try {
+      // Load all data in parallel
+      const [assets, osRisk, clients] = await Promise.all([
+        this.fetchData('/assets'),
+        this.fetchData('/os-risk'),
+        this.fetchData('/clients')
+      ]);
+
+      console.log('Assets:', assets);
+      console.log('OS Risk:', osRisk);
+      console.log('Clients:', clients);
+
+      // Store data
+      if (assets && Array.isArray(assets)) {
+        this.allAssetsFromAPI = assets;
+        this.processAssetsData(assets);
+      }
+
+      if (clients && Array.isArray(clients)) {
+        this.allClients = clients;
+        this.processClientsData(clients);
+      }
+
+      // Set KPI from OS Risk API
+      if (osRisk?.summary) {
+        this.totalAtRisk = osRisk.summary.totalOutdated || 0;
+        this.financialImpact = osRisk.summary.riskExposure || 'RM 0k';
+        
+        // Critical units adalah yang >5 tahun (EOL)
+        if (osRisk.breakdown) {
+          const win7Data = osRisk.breakdown.find((item: any) => item.os_name === 'Windows 7' || item.os_name?.includes('7'));
+          const win10OutData = osRisk.breakdown.find((item: any) => item.os_name === 'Windows 10' && item.end_of_life > 0);
+          this.criticalUnits = (win7Data?.end_of_life || 0) + (win10OutData?.end_of_life || 0);
+        }
+      }
+
+      // Process OS Risk Table data
+      this.processOsRiskTable();
+
+      // Process Financial Impact
+      this.processFinancialImpact();
+
+      // Process Timeline
+      this.processTimelineData();
+
+      // Update chart
+      this.updateOsDistributionChart();
+
+      // Generate mock assets for demonstration (akan diganti dengan data real)
       this.generateMockAssets();
-      this.filterAssets();
-      this.updateSelectedEntityData();
+
       this.loadingService.hide();
-      console.log('OS Risk data loaded');
-    }, 1000);
+      console.log('OS Risk data loaded from API');
+
+    } catch (error) {
+      console.error('Error loading OS Risk data:', error);
+      this.loadingService.hide();
+    }
+  }
+
+  private async fetchData(endpoint: string): Promise<any> {
+    try {
+      return await lastValueFrom(this.http.get(`${this.apiUrl}${endpoint}`));
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
+      return null;
+    }
+  }
+
+  private processAssetsData(assets: any[]) {
+    // Group by customer
+    const customerMap = new Map();
+    
+    assets.forEach((asset: any) => {
+      const customer = asset.CustomerName || 'Unknown';
+      if (!customerMap.has(customer)) {
+        customerMap.set(customer, {
+          win7: 0,
+          win10out: 0,
+          win10ok: 0,
+          win11: 0,
+          total: 0
+        });
+      }
+      
+      const data = customerMap.get(customer);
+      data.total++;
+      
+      // Klasifikasi OS berdasarkan umur (>5 tahun = outdated)
+      if (asset.OS?.includes('Windows 7') || asset.OS?.includes('XP') || asset.OS?.includes('Windows 8')) {
+        data.win7++;
+      } else if (asset.OS?.includes('Windows 10')) {
+        if (asset.PCAge > 5) {
+          data.win10out++;
+        } else {
+          data.win10ok++;
+        }
+      } else if (asset.OS?.includes('Windows 11')) {
+        data.win11++;
+      }
+    });
+
+    // Convert to array for table
+    this.osRiskData = Array.from(customerMap.entries()).map(([name, data]: [string, any]) => {
+      const totalAtRisk = data.win7 + data.win10out;
+      const financialImpact = totalAtRisk * 500; // RM500 per unit
+      
+      let riskLevel = 'LOW';
+      let riskColor = '#10b981';
+      
+      if (totalAtRisk > 100) {
+        riskLevel = 'CRITICAL';
+        riskColor = '#ef4444';
+      } else if (totalAtRisk > 50) {
+        riskLevel = 'HIGH';
+        riskColor = '#f59e0b';
+      } else if (totalAtRisk > 20) {
+        riskLevel = 'MEDIUM';
+        riskColor = '#fbbf24';
+      }
+      
+      return {
+        entity: name,
+        win7: data.win7,
+        win10out: data.win10out,
+        win10ok: data.win10ok,
+        win11: data.win11,
+        total: data.total,
+        riskLevel,
+        riskColor,
+        financialImpact: `RM ${(financialImpact / 1000).toFixed(0)}k`
+      };
+    }).sort((a, b) => (b.win7 + b.win10out) - (a.win7 + a.win10out));
+  }
+
+  private processClientsData(clients: any[]) {
+    this.entities = clients.map((c: any) => ({
+      code: c.CompanyName,
+      name: c.CompanyName
+    }));
+    
+    if (this.entities.length > 0) {
+      this.selectedEntity = this.entities[0].code;
+      this.updateSelectedEntityData();
+    }
+  }
+
+  private processOsRiskTable() {
+    // Already done in processAssetsData
+  }
+
+  private processFinancialImpact() {
+    const total = this.osRiskData.reduce((sum, item) => {
+      const value = parseInt(item.financialImpact.replace(/[^0-9]/g, '')) || 0;
+      return sum + value;
+    }, 0);
+    
+    this.financialImpactData = this.osRiskData.map(item => {
+      const value = parseInt(item.financialImpact.replace(/[^0-9]/g, '')) || 0;
+      const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+      
+      let color = '#10b981';
+      if (item.riskLevel === 'CRITICAL') color = '#ef4444';
+      else if (item.riskLevel === 'HIGH') color = '#f59e0b';
+      else if (item.riskLevel === 'MEDIUM') color = '#fbbf24';
+      
+      return {
+        entity: item.entity,
+        amount: item.financialImpact,
+        percent,
+        color
+      };
+    });
+  }
+
+  private processTimelineData() {
+    this.timelineData = this.osRiskData.slice(0, 4).map(item => {
+      const critical = item.win7 + item.win10out;
+      const progress = Math.min(Math.round((critical / 100) * 100), 100);
+      
+      return {
+        entity: item.entity,
+        critical,
+        progress
+      };
+    });
+  }
+
+  private updateOsDistributionChart() {
+    const entities = this.osRiskData.map(item => item.entity).slice(0, 4);
+    
+    this.osDistributionChart.series = [
+      { name: 'Win 7/XP/8', data: this.osRiskData.slice(0, 4).map(item => item.win7) },
+      { name: 'Win10 (Out)', data: this.osRiskData.slice(0, 4).map(item => item.win10out) },
+      { name: 'Win10 (Ok)', data: this.osRiskData.slice(0, 4).map(item => item.win10ok) },
+      { name: 'Win11', data: this.osRiskData.slice(0, 4).map(item => item.win11) }
+    ];
+    
+    this.osDistributionChart.xaxis.categories = entities;
   }
 
   // Navigation
@@ -176,19 +322,18 @@ export class OsRiskComponent implements OnInit {
 
   // Generate mock assets for demonstration
   generateMockAssets() {
-    const entities = ['KKM', 'PETRONAS', 'MOE', 'MINDEF'];
+    const entities = this.osRiskData.map(item => item.entity);
     const osVersions = [
       { name: 'Windows 7', category: 'win7', risk: 'Critical', eol: 'EOL' },
       { name: 'Windows XP', category: 'win7', risk: 'Critical', eol: 'EOL' },
       { name: 'Windows 8', category: 'win7', risk: 'Critical', eol: 'EOL' },
-      { name: 'Windows 10 19041', category: 'win10out', risk: 'High', eol: '6 months' },
-      { name: 'Windows 10 21H2', category: 'win10ok', risk: 'Low', eol: '24 months' },
-      { name: 'Windows 10 22H2', category: 'win10ok', risk: 'Low', eol: '30 months' },
-      { name: 'Windows 11 23H2', category: 'win11', risk: 'Low', eol: '48 months' }
+      { name: 'Windows 10 (Old)', category: 'win10out', risk: 'High', eol: '6 months' },
+      { name: 'Windows 10', category: 'win10ok', risk: 'Low', eol: '24 months' },
+      { name: 'Windows 11', category: 'win11', risk: 'Low', eol: '48 months' }
     ];
 
     for (let i = 1; i <= 200; i++) {
-      const entity = entities[Math.floor(Math.random() * entities.length)];
+      const entity = entities[Math.floor(Math.random() * entities.length)] || 'Unknown';
       const os = osVersions[Math.floor(Math.random() * osVersions.length)];
       const installDate = new Date();
       installDate.setMonth(installDate.getMonth() - Math.floor(Math.random() * 60));
@@ -206,6 +351,8 @@ export class OsRiskComponent implements OnInit {
         riskColor: os.risk === 'Critical' ? '#ef4444' : os.risk === 'High' ? '#f59e0b' : '#10b981'
       });
     }
+    
+    this.filterAssets();
   }
 
   // Filter assets based on search and filters
@@ -309,7 +456,7 @@ export class OsRiskComponent implements OnInit {
   getOsClass(osVersion: string): string {
     if (osVersion.includes('7') || osVersion.includes('XP') || osVersion.includes('8')) {
       return 'critical';
-    } else if (osVersion.includes('19041')) {
+    } else if (osVersion.includes('10 (Old)')) {
       return 'warning';
     } else if (osVersion.includes('11')) {
       return 'current';
@@ -319,70 +466,25 @@ export class OsRiskComponent implements OnInit {
 
   // Update selected entity data for By Entity tab
   updateSelectedEntityData() {
-    const entityMap: any = {
-      'KKM': {
-        code: 'KKM',
-        name: 'Kementerian Kesihatan',
-        totalAssets: 5200,
-        atRisk: 365,
-        financialImpact: 'RM 360k',
-        riskLevel: 'CRITICAL',
-        riskColor: '#ef4444',
+    const entityData = this.osRiskData.find(item => item.entity === this.selectedEntity);
+    
+    if (entityData) {
+      this.selectedEntityData = {
+        code: entityData.entity,
+        name: entityData.entity,
+        totalAssets: entityData.total,
+        atRisk: entityData.win7 + entityData.win10out,
+        financialImpact: entityData.financialImpact,
+        riskLevel: entityData.riskLevel,
+        riskColor: entityData.riskColor,
         osBreakdown: [
-          { name: 'Win 7/XP/8', count: 320, percentage: 43, color: '#ef4444' },
-          { name: 'Win10 (Out)', count: 45, percentage: 6, color: '#f59e0b' },
-          { name: 'Win10 (Ok)', count: 380, percentage: 51, color: '#3b82f6' },
-          { name: 'Win11', count: 0, percentage: 0, color: '#10b981' }
+          { name: 'Win 7/XP/8', count: entityData.win7, percentage: Math.round((entityData.win7 / entityData.total) * 100) || 0, color: '#ef4444' },
+          { name: 'Win10 (Out)', count: entityData.win10out, percentage: Math.round((entityData.win10out / entityData.total) * 100) || 0, color: '#f59e0b' },
+          { name: 'Win10 (Ok)', count: entityData.win10ok, percentage: Math.round((entityData.win10ok / entityData.total) * 100) || 0, color: '#3b82f6' },
+          { name: 'Win11', count: entityData.win11, percentage: Math.round((entityData.win11 / entityData.total) * 100) || 0, color: '#10b981' }
         ]
-      },
-      'PETRONAS': {
-        code: 'PETRONAS',
-        name: 'Petronas',
-        totalAssets: 3500,
-        atRisk: 200,
-        financialImpact: 'RM 160k',
-        riskLevel: 'HIGH',
-        riskColor: '#f59e0b',
-        osBreakdown: [
-          { name: 'Win 7/XP/8', count: 180, percentage: 36, color: '#ef4444' },
-          { name: 'Win10 (Out)', count: 20, percentage: 4, color: '#f59e0b' },
-          { name: 'Win10 (Ok)', count: 250, percentage: 50, color: '#3b82f6' },
-          { name: 'Win11', count: 50, percentage: 10, color: '#10b981' }
-        ]
-      },
-      'MOE': {
-        code: 'MOE',
-        name: 'Kementerian Pendidikan',
-        totalAssets: 4300,
-        atRisk: 55,
-        financialImpact: 'RM 40k',
-        riskLevel: 'LOW',
-        riskColor: '#10b981',
-        osBreakdown: [
-          { name: 'Win 7/XP/8', count: 50, percentage: 4, color: '#ef4444' },
-          { name: 'Win10 (Out)', count: 5, percentage: 0.4, color: '#f59e0b' },
-          { name: 'Win10 (Ok)', count: 800, percentage: 64, color: '#3b82f6' },
-          { name: 'Win11', count: 400, percentage: 32, color: '#10b981' }
-        ]
-      },
-      'MINDEF': {
-        code: 'MINDEF',
-        name: 'Kementerian Pertahanan',
-        totalAssets: 4100,
-        atRisk: 130,
-        financialImpact: 'RM 55k',
-        riskLevel: 'MEDIUM',
-        riskColor: '#fbbf24',
-        osBreakdown: [
-          { name: 'Win 7/XP/8', count: 100, percentage: 20, color: '#ef4444' },
-          { name: 'Win10 (Out)', count: 30, percentage: 6, color: '#f59e0b' },
-          { name: 'Win10 (Ok)', count: 300, percentage: 60, color: '#3b82f6' },
-          { name: 'Win11', count: 70, percentage: 14, color: '#10b981' }
-        ]
-      }
-    };
-
-    this.selectedEntityData = entityMap[this.selectedEntity];
+      };
+    }
   }
 
   // Select entity in By Entity tab
@@ -410,7 +512,7 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      this.router.navigate(['/asset-detail', assetId]);
+      // Navigate to asset detail
     }, 300);
   }
 
@@ -420,7 +522,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Schedule upgrade for:', data);
       alert(`Upgrade scheduled for ${data.entity || data.assetId}`);
     }, 500);
   }
@@ -431,7 +532,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Schedule upgrade for entity:', entity);
       alert(`Upgrade scheduled for ${entity}`);
     }, 500);
   }
@@ -442,7 +542,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Bulk schedule upgrades');
       alert('Bulk upgrade scheduling initiated');
     }, 800);
   }
@@ -453,7 +552,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Exporting table...');
       alert('Table exported successfully');
     }, 500);
   }
@@ -463,7 +561,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Exporting asset list...');
       alert('Asset list exported successfully');
     }, 500);
   }
@@ -473,7 +570,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Exporting report for:', entityCode);
       alert(`Report for ${entityCode} exported`);
     }, 500);
   }
@@ -484,7 +580,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Generating risk report...');
       alert('Risk report generated');
     }, 800);
   }
@@ -495,7 +590,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Creating mitigation plan...');
       alert('Mitigation plan created');
     }, 800);
   }
@@ -506,7 +600,6 @@ export class OsRiskComponent implements OnInit {
     
     setTimeout(() => {
       this.loadingService.hide();
-      console.log('Notifying clients...');
       alert('Clients notified successfully');
     }, 600);
   }

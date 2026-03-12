@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <!-- KPI GRID - 6 Cards (Smaller) -->
+    <!-- KPI GRID - 6 Cards -->
     <div class="kpi-grid">
       <!-- 1. Total Active Projects -->
       <div class="kpi-card clickable" (click)="onCardClick('Project Portfolio')">
@@ -37,8 +37,8 @@
         <div class="kpi-content">
           <div class="kpi-label">TOTAL ACTIVE PROJECTS</div>
           <div class="kpi-value-row">
-            <span class="kpi-value">2</span>
-            <span class="kpi-trend positive">+12.5%</span>
+            <span class="kpi-value">{{ totalActiveProjects }}</span>
+            <span class="kpi-trend positive">{{ projectTrend }}</span>
           </div>
           <div class="kpi-footer">
             <span>View Portfolio</span>
@@ -55,8 +55,8 @@
         <div class="kpi-content">
           <div class="kpi-label">MANAGED CLIENT ENTITIES</div>
           <div class="kpi-value-row">
-            <span class="kpi-value">6</span>
-            <span class="kpi-trend">Client</span>
+            <span class="kpi-value">{{ managedClientEntities }}</span>
+            <span class="kpi-trend">{{ clientLabel }}</span>
           </div>
           <div class="kpi-footer">
             <span>View Clients</span>
@@ -73,8 +73,8 @@
         <div class="kpi-content">
           <div class="kpi-label">TECHNICAL RISK ESCALATIONS</div>
           <div class="kpi-value-row">
-            <span class="kpi-value">10</span>
-            <span class="kpi-trend warning">+2.2% Rate</span>
+            <span class="kpi-value">{{ technicalEscalations }}</span>
+            <span class="kpi-trend warning">{{ escalationRate }}</span>
           </div>
           <div class="kpi-footer">
             <span>View Risks</span>
@@ -91,16 +91,16 @@
         <div class="kpi-content">
           <div class="kpi-label">ASSET UTILIZATION</div>
           <div class="kpi-value-row">
-            <span class="kpi-value">87.6%</span>
+            <span class="kpi-value">{{ utilizationRate }}</span>
           </div>
           <div class="kpi-footer">
-            <span>16,200 Deployed Units</span>
+            <span>{{ deployedUnits | number }} Deployed Units</span>
             <mat-icon>arrow_forward</mat-icon>
           </div>
         </div>
       </div>
 
-      <!-- 5. CAPEX Exposure - FIXED -->
+      <!-- 5. CAPEX Exposure -->
       <div class="kpi-card clickable" (click)="onCardClick('Capex')">
         <div class="kpi-icon gold-glow">
           <mat-icon>payments</mat-icon>
@@ -108,7 +108,7 @@
         <div class="kpi-content">
           <div class="kpi-label">CAPEX EXPOSURE</div>
           <div class="kpi-value-row">
-            <span class="kpi-value">RM 5.40M</span>
+            <span class="kpi-value">{{ totalCapexExposure }}</span>
           </div>
           <div class="kpi-footer">
             <span>Total Asset Value</span>
@@ -116,53 +116,32 @@
           </div>
         </div>
       </div>
-
-      <!-- 6. Portfolio Divergence -->
-      <!-- <div class="kpi-card clickable" (click)="onCardClick('Portfolio Divergence')">
-        <div class="kpi-icon blue-glow">
-          <mat-icon>scatter_plot</mat-icon>
-        </div>
-        <div class="kpi-content">
-          <div class="kpi-label">PORTFOLIO DIVERGENCE</div>
-          <div class="kpi-value-row">
-            <span class="kpi-value">70</span>
-            <span class="kpi-trend warning">15.8 Rate</span>
-          </div>
-          <div class="kpi-footer">
-            <span>Analyze Spread</span>
-            <mat-icon>arrow_forward</mat-icon>
-          </div>
-        </div>
-      </div> -->
     </div>
 
     <!-- STRATEGIC CARDS -->
     <div class="strategic-row">
-      <!-- Revenue at Risk -->
+      <!-- Critical Asset Value -->
       <div class="strategic-card revenue-card clickable" (click)="onCardClick('Revenue Risk')">
         <div class="card-header">
           <mat-icon>warning</mat-icon>
           <span>CRITICAL ASSET VALUE</span>
         </div>
-        <div class="card-value">RM 1.2M</div>
-        <div class="card-desc">Lease renewals due in 90 days</div>
+        <div class="card-value">{{ criticalAssetValue }}</div>
         <div class="card-meta">
-          <span>3 entities • 1,250 units</span>
-          <span class="badge danger">Action Required</span>
+          <span>{{ criticalAssetEntities }} entities • {{ criticalAssetUnits | number }} units</span>
+          <span class="badge danger">{{ criticalAssetStatus }}</span>
         </div>
       </div>
 
-      <!-- Monthly Recurring -->
+      <!-- Asset Replacement Cost -->
       <div class="strategic-card recurring-card clickable" (click)="onCardClick('Monthly Revenue')">
         <div class="card-header">
           <mat-icon>trending_up</mat-icon>
           <span>ASSET REPLACEMENT COST</span>
         </div>
-        <div class="card-value">RM 3.00M</div>
-        <div class="card-desc">Projected for Current Month</div>
+        <div class="card-value">{{ replacementCost }}</div>
         <div class="card-meta">
-          <span>+12.5% vs last month</span>
-          <span class="badge success">Healthy Pipeline</span>
+          <span>{{ replacementTrend }}</span>
         </div>
       </div>
     </div>
@@ -176,23 +155,23 @@
             <mat-icon>security</mat-icon>
             <span>OS RISK ANALYSIS</span>
           </div>
-          <span class="risk-badge high">HIGH</span>
+          <span class="risk-badge" [ngClass]="osRiskLevel.toLowerCase()">{{ osRiskLevel }}</span>
         </div>
-        <div class="insight-value">RM 575k</div>
+        <div class="insight-value">{{ osRiskExposure }}</div>
         <div class="insight-label">Potential Financial Impact</div>
         <div class="os-breakdown">
           <div class="os-row">
             <span>Win 7/XP/8</span>
-            <span>650 (57%)</span>
+            <span>{{ osRiskWin7 }} ({{ osRiskWin7Percent }}%)</span>
           </div>
           <div class="os-row">
             <span>Win 10 (Out)</span>
-            <span>500 (43%)</span>
+            <span>{{ osRiskWin10 }} ({{ osRiskWin10Percent }}%)</span>
           </div>
         </div>
-        <div class="trend-indicator up">
-          <mat-icon>trending_up</mat-icon>
-          <span>+8% from last month</span>
+        <div class="trend-indicator" [ngClass]="osRiskTrend.includes('+') ? 'up' : 'down'">
+          <mat-icon>{{ osRiskTrend.includes('+') ? 'trending_up' : 'trending_down' }}</mat-icon>
+          <span>{{ osRiskTrend }}</span>
         </div>
       </div>
 
@@ -204,21 +183,21 @@
             <span>SERVICE PERFORMANCE</span>
           </div>
         </div>
-        <div class="insight-value">98.2%</div>
+        <div class="insight-value">{{ slaCompliance }}</div>
         <div class="insight-label">SLA Compliance</div>
         <div class="service-stats">
           <div class="service-row">
             <span>Avg Response</span>
-            <strong>18m</strong>
+            <strong>{{ avgResponseTime }}</strong>
           </div>
           <div class="service-row">
             <span>Resolved L1</span>
-            <strong>380</strong>
+            <strong>{{ resolvedL1 }}</strong>
           </div>
         </div>
-        <div class="trend-indicator up">
-          <mat-icon>trending_up</mat-icon>
-          <span>+2.1% vs last month</span>
+        <div class="trend-indicator" [ngClass]="serviceTrend.includes('+') ? 'up' : 'down'">
+          <mat-icon>{{ serviceTrend.includes('+') ? 'trending_up' : 'trending_down' }}</mat-icon>
+          <span>{{ serviceTrend }}</span>
         </div>
       </div>
     </div>

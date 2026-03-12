@@ -486,47 +486,108 @@ app.get('/api/os-risk', async (req, res) => {
 // 16. Service Performance
 app.get('/api/service-performance', async (req, res) => {
     try {
-        const slaStats = await query(`
+        // 1. Kira untuk resolved incidents
+        const resolvedStats = await query(`
             SELECT 
-                COUNT(*) as total_incidents,
-                SUM(CASE WHEN Status = 'Resolved' AND ResolvedAt <= SlaDue THEN 1 ELSE 0 END) as within_sla,
-                AVG(
-                    DATEDIFF(minute, CreatedAt, 
-                        CASE WHEN ResolvedAt IS NOT NULL THEN ResolvedAt 
-                        ELSE GETDATE() END
-                    )
-                ) as avg_response_minutes,
+                COUNT(*) as resolved_count,
+                AVG(DATEDIFF(minute, CreatedAt, ResolvedAt)) as avg_resolution_minutes,
+                SUM(CASE WHEN ResolvedAt <= SlaDue THEN 1 ELSE 0 END) as within_sla,
                 SUM(CASE WHEN AssignedLevel = 'L1' AND Status = 'Resolved' THEN 1 ELSE 0 END) as resolved_l1
             FROM incidents
-            WHERE CreatedAt >= DATEADD(month, -1, GETDATE())  /* << TENGOK SINI */
+            WHERE Status = 'Resolved'
+              AND CreatedAt >= DATEADD(month, -1, GETDATE())
         `);
         
-        const slaCompliance = slaStats[0]?.total_resolved > 0 
-            ? (slaStats[0].within_sla / slaStats[0].total_resolved * 100).toFixed(1)
-            : 98.2;
+        // 2. Kira untuk in-progress incidents yang dah exceed SLA
+        const breachStats = await query(`
+            SELECT 
+                COUNT(*) as total_in_progress,
+                SUM(CASE 
+                    WHEN (Priority = 'P1' OR Priority = 'Critical' OR Priority = 'CRITICAL') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 3 THEN 1 
+                    WHEN (Priority = 'P2' OR Priority = 'High' OR Priority = 'HIGH') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 8 THEN 1
+                    WHEN (Priority = 'P3' OR Priority = 'Medium' OR Priority = 'MEDIUM') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 24 THEN 1
+                    WHEN (Priority = 'P4' OR Priority = 'Low' OR Priority = 'LOW') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 48 THEN 1
+                    ELSE 0 
+                END) as total_breaches,
+                SUM(CASE 
+                    WHEN (Priority = 'P1' OR Priority = 'Critical' OR Priority = 'CRITICAL') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 3 THEN 1 ELSE 0 END) as p1_breach,
+                SUM(CASE 
+                    WHEN (Priority = 'P2' OR Priority = 'High' OR Priority = 'HIGH') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 8 THEN 1 ELSE 0 END) as p2_breach,
+                SUM(CASE 
+                    WHEN (Priority = 'P3' OR Priority = 'Medium' OR Priority = 'MEDIUM') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 24 THEN 1 ELSE 0 END) as p3_breach,
+                SUM(CASE 
+                    WHEN (Priority = 'P4' OR Priority = 'Low' OR Priority = 'LOW') 
+                         AND DATEDIFF(hour, CreatedAt, GETDATE()) > 48 THEN 1 ELSE 0 END) as p4_breach
+            FROM incidents
+            WHERE Status != 'Resolved'
+              AND CreatedAt >= DATEADD(month, -1, GETDATE())
+        `);
         
-        const avgResponse = Math.round(slaStats[0]?.avg_response_minutes || 18);
-        const resolvedL1 = slaStats[0]?.resolved_l1 || 380;
+        // 3. Kira response time (masa pertama response)
+        const responseStats = await query(`
+            SELECT 
+                AVG(DATEDIFF(minute, CreatedAt, 
+                    CASE WHEN ResolvedAt IS NOT NULL THEN ResolvedAt 
+                    ELSE GETDATE() END
+                )) as avg_response_minutes
+            FROM incidents
+            WHERE CreatedAt >= DATEADD(month, -1, GETDATE())
+        `);
+
+        const resolvedCount = resolvedStats[0]?.resolved_count || 0;
+        const avgResolution = Math.round(resolvedStats[0]?.avg_resolution_minutes || 0);
+        const withinSla = resolvedStats[0]?.within_sla || 0;
+        const resolvedL1 = resolvedStats[0]?.resolved_l1 || 0;
+        const breachCount = breachStats[0]?.total_breaches || 0;  // GUNA total_breaches
+        const avgResponse = Math.round(responseStats[0]?.avg_response_minutes || 0);
+        
+        const slaCompliance = resolvedCount > 0 
+            ? ((withinSla / resolvedCount) * 100).toFixed(1)
+            : 0;
+
+        console.log('Service Performance:', {
+            resolvedCount,
+            avgResolution,
+            withinSla,
+            resolvedL1,
+            breachCount,
+            avgResponse,
+            slaCompliance,
+            p1_breach: breachStats[0]?.p1_breach || 0,
+            p2_breach: breachStats[0]?.p2_breach || 0,
+            p3_breach: breachStats[0]?.p3_breach || 0,
+            p4_breach: breachStats[0]?.p4_breach || 0
+        });
         
         res.json({
             success: true,
             data: {
                 slaCompliance: slaCompliance + '%',
                 avgResponse: avgResponse + 'm',
+                avgResolution: avgResolution + 'm',
                 resolvedL1: resolvedL1,
-                trend: '+2.1% vs last month'
+                resolvedCount: resolvedCount,
+                breachCount: breachCount,  // SEKARANG NUMBER, BUKAN ARRAY
+                p1Breach: breachStats[0]?.p1_breach || 0,
+                p2Breach: breachStats[0]?.p2_breach || 0,
+                p3Breach: breachStats[0]?.p3_breach || 0,
+                p4Breach: breachStats[0]?.p4_breach || 0,
+                trend: resolvedCount > 0 ? '+2.1% vs last month' : '0% vs last month'
             }
         });
+        
     } catch (err) {
-        // Fallback to UI values if query fails
-        res.json({
-            success: true,
-            data: {
-                slaCompliance: '98.2%',
-                avgResponse: '18m',
-                resolvedL1: 380,
-                trend: '+2.1% vs last month'
-            }
+        console.error('Service performance error:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: err.message 
         });
     }
 });
@@ -535,57 +596,79 @@ app.get('/api/service-performance', async (req, res) => {
 
 // 17. Get all projects with summary stats
 app.get('/api/projects', async (req, res) => {
-    try {
-        // Projects summary dari clients
-        const projects = await query(`
-            SELECT 
-                c.CompanyName as name,
-                c.ProjectName as project,
-                c.Sector as sector,
-                c.TotalAssets as assets,
-                c.Health as status,
-                (
-                    SELECT COUNT(*) FROM assets 
-                    WHERE CustomerName = c.CompanyName
-                ) as deployed,
-                (
-                    SELECT COUNT(*) FROM assets 
-                    WHERE CustomerName = c.CompanyName AND AgentStatus = 'On'
-                ) as onlineAgents,
-                (
-                    SELECT COUNT(*) FROM assets 
-                    WHERE CustomerName = c.CompanyName AND AgentStatus = 'Off'
-                ) as offlineAgents
-            FROM clients c
-            ORDER BY c.CompanyName
-        `);
-        
-        res.json(projects);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    // Get all clients
+    const clients = await query(`SELECT * FROM clients`);
+    
+    // Get all asset stats
+    const assetStats = await query(`
+      SELECT 
+        CustomerName,
+        COUNT(*) as total,
+        SUM(CASE WHEN AgentStatus = 'On' THEN 1 ELSE 0 END) as online,
+        SUM(CASE WHEN AgentStatus = 'Off' THEN 1 ELSE 0 END) as offline
+      FROM assets
+      GROUP BY CustomerName
+    `);
+
+    // Create map
+    const assetMap = new Map();
+    assetStats.forEach(stat => {
+      assetMap.set(stat.CustomerName, stat);
+    });
+
+    // Combine data
+    const projects = clients.map(client => {
+      const stats = assetMap.get(client.CompanyName) || 
+                   { total: 0, online: 0, offline: 0 };
+      
+      // Log untuk debug
+      console.log(`Client: ${client.CompanyName}, Stats:`, stats);
+      
+      return {
+        name: client.CompanyName,
+        project: client.ProjectName,
+        sector: client.Sector || 'Other',
+        assets: stats.total || 0,
+        deployed: stats.total || 0,
+        onlineAgents: stats.online || 0,
+        offlineAgents: stats.offline || 0,
+        status: client.Health || 'Active'
+      };
+    });
+
+    res.json(projects);
+  } catch (err) {
+    console.error('Projects error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 18. Get agents for specific project/client
 app.get('/api/projects/:clientName/agents', async (req, res) => {
-    try {
-        const agents = await query(`
-            SELECT 
-                AssetTag,
-                IP,
-                Brand,
-                Model,
-                AgentStatus,
-                ConnectionTime
-            FROM assets
-            WHERE CustomerName = @clientName
-            ORDER BY AssetTag
-        `, { clientName: req.params.clientName });
-        
-        res.json(agents);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const clientName = req.params.clientName;
+    
+    // Gunakan LIKE untuk match partial
+    const agents = await query(`
+      SELECT 
+        AssetTag,
+        IP,
+        Brand,
+        Model,
+        AgentStatus,
+        ConnectionTime
+      FROM assets
+      WHERE CustomerName LIKE '%' + @clientName + '%'
+      ORDER BY AssetTag
+    `, { clientName });
+    
+    console.log(`Found ${agents.length} agents for ${clientName}`);
+    res.json(agents);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 19. Get sector stats
@@ -915,7 +998,22 @@ app.get('/api/service/resolved-incidents', async (req, res) => {
 });
 
 
-
+// DEbug
+app.get('/api/debug/customer-names', async (req, res) => {
+  try {
+    const names = await query(`
+      SELECT DISTINCT 
+        '[' + CustomerName + ']' as name_with_brackets,
+        LEN(CustomerName) as name_length,
+        CustomerName as raw_name
+      FROM assets 
+      ORDER BY CustomerName
+    `);
+    res.json(names);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 

@@ -1,0 +1,265 @@
+<div class="service-container">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a class="back-link" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Partner Command Center
+    </a>
+    <span class="separator">›</span>
+    <span class="current">Service Performance</span>
+  </div>
+
+  <!-- Header -->
+  <header class="page-header">
+    <h1>Service Performance <span class="highlight">Analytics</span></h1>
+    <p class="subtitle">SLA compliance, response times and incident resolution metrics</p>
+    <div class="last-updated">
+      <mat-icon>schedule</mat-icon> Last updated: {{ lastUpdated | date:'dd MMM yyyy, HH:mm' }}
+    </div>
+  </header>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon blue">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">SLA Compliance</div>
+        <div class="kpi-value">{{ slaCompliance }}</div>
+        <div class="kpi-sub">{{ slaTrend }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">
+        <mat-icon>timer</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Avg Response Time</div>
+        <div class="kpi-value">{{ avgResponseTime }}</div>
+        <div class="kpi-sub">{{ responseTrend }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon orange">
+        <mat-icon>assignment_turned_in</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Resolved (30d)</div>
+        <div class="kpi-value">{{ resolvedCount | number }}</div>
+        <div class="kpi-sub">{{ resolvedTrend }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon red">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">SLA Breaches</div>
+        <div class="kpi-value">{{ breachCount | number }}</div>
+        <div class="kpi-sub">{{ breachPercentage }}% of resolved</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <!-- SLA Trend Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>show_chart</mat-icon>
+          SLA Compliance Trend (6 Months)
+        </h3>
+      </div>
+      <div class="chart-container">
+        <apx-chart 
+          [series]="slaTrendChart.series" 
+          [chart]="slaTrendChart.chart"
+          [xaxis]="slaTrendChart.xaxis"
+          [colors]="slaTrendChart.colors"
+          [stroke]="slaTrendChart.stroke"
+          [markers]="slaTrendChart.markers"
+          [dataLabels]="slaTrendChart.dataLabels"
+          [tooltip]="slaTrendChart.tooltip">
+        </apx-chart>
+      </div>
+    </div>
+
+    <!-- Response Time by Priority -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>speed</mat-icon>
+          Avg Response Time by Priority
+        </h3>
+      </div>
+      <div class="chart-container">
+        <apx-chart 
+          [series]="responseTimeChart.series" 
+          [chart]="responseTimeChart.chart"
+          [xaxis]="responseTimeChart.xaxis"
+          [colors]="responseTimeChart.colors"
+          [plotOptions]="responseTimeChart.plotOptions"
+          [dataLabels]="responseTimeChart.dataLabels"
+          [tooltip]="responseTimeChart.tooltip">
+        </apx-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row -->
+  <div class="charts-row">
+    <!-- Incidents by Support Level -->
+    <div class="chart-card half">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>pie_chart</mat-icon>
+          Incidents by Support Level
+        </h3>
+      </div>
+      <div class="chart-container small">
+        <apx-chart 
+          [series]="supportLevelChart.series" 
+          [chart]="supportLevelChart.chart"
+          [labels]="supportLevelChart.labels"
+          [colors]="supportLevelChart.colors"
+          [plotOptions]="supportLevelChart.plotOptions"
+          [legend]="supportLevelChart.legend"
+          [dataLabels]="supportLevelChart.dataLabels">
+        </apx-chart>
+      </div>
+      <div class="chart-legend" *ngIf="supportLevelData.length > 0">
+        <div class="legend-item" *ngFor="let item of supportLevelData">
+          <span class="dot" [style.background]="item.color"></span>
+          <span class="label">{{ item.level }}</span>
+          <span class="value">{{ item.count }} ({{ item.percentage }}%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolution Time Distribution -->
+    <div class="chart-card half">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>timeline</mat-icon>
+          Resolution Time Distribution
+        </h3>
+      </div>
+      <div class="resolution-stats">
+        <div class="stat-row" *ngFor="let stat of resolutionStats">
+          <span class="stat-label">{{ stat.range }}</span>
+          <div class="progress-bar">
+            <div class="progress-fill" 
+                 [style.width.%]="stat.percentage" 
+                 [style.background]="stat.color"></div>
+          </div>
+          <span class="stat-value">{{ stat.count }} ({{ stat.percentage }}%)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolved Incidents Table -->
+  <div class="table-section">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="header-left">
+          <mat-icon>list_alt</mat-icon>
+          <h3>Resolved Incidents (Last 30 Days)</h3>
+          <span class="record-count">{{ resolvedIncidents.length }} records</span>
+        </div>
+        <div class="table-filters">
+          <div class="search-box small">
+            <mat-icon>search</mat-icon>
+            <input 
+              type="text" 
+              [(ngModel)]="searchQuery" 
+              (ngModelChange)="filterTable()"
+              placeholder="Search...">
+          </div>
+          <button class="btn-icon" (click)="exportTable()" title="Export CSV">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive-wrapper">
+        <table class="incident-table">
+          <thead>
+            <tr>
+              <th (click)="toggleSort('IncidentID')">
+                Incident ID
+                <mat-icon *ngIf="sortKey === 'IncidentID'">{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </th>
+              <th (click)="toggleSort('CustomerName')">
+                Client
+                <mat-icon *ngIf="sortKey === 'CustomerName'">{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </th>
+              <th (click)="toggleSort('Title')">
+                Title
+                <mat-icon *ngIf="sortKey === 'Title'">{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </th>
+              <th (click)="toggleSort('Priority')">
+                Priority
+                <mat-icon *ngIf="sortKey === 'Priority'">{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </th>
+              <th (click)="toggleSort('resolution_hours')">
+                Resolution Time
+                <mat-icon *ngIf="sortKey === 'resolution_hours'">{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </th>
+              <th (click)="toggleSort('sla_status')">
+                SLA Status
+                <mat-icon *ngIf="sortKey === 'sla_status'">{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </th>
+              <th (click)="toggleSort('AssignedTo')">
+                Assigned To
+                <mat-icon *ngIf="sortKey === 'AssignedTo'">{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let incident of paginatedIncidents">
+              <td class="incident-id">{{ incident.IncidentID }}</td>
+              <td>{{ incident.CustomerName }}</td>
+              <td class="incident-title">{{ incident.Title }}</td>
+              <td>
+                <span class="priority-badge" [class]="incident.Priority?.toLowerCase()">
+                  {{ incident.Priority }}
+                </span>
+              </td>
+              <td>{{ incident.resolution_hours }} hours</td>
+              <td>
+                <span class="sla-badge" [class.within]="incident.sla_status === 'Within SLA'"
+                                         [class.breached]="incident.sla_status === 'Breached'">
+                  {{ incident.sla_status }}
+                </span>
+              </td>
+              <td>{{ incident.AssignedTo || 'Unassigned' }}</td>
+            </tr>
+            <tr *ngIf="paginatedIncidents.length === 0">
+              <td colspan="7" class="empty-state">
+                <mat-icon>search_off</mat-icon>
+                <p>No incidents found</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

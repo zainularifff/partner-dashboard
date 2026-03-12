@@ -789,10 +789,130 @@ app.get('/api/clients/performance', async (req, res) => {
     }
 });
 
-// 5. Get client agents (already have this from projects)
-// GET /api/projects/:clientName/agents - reuse this
+// ============ SERVICE PERFORMANCE ENDPOINTS ============
 
+// 25. SLA Compliance Trend (last 6 months)
+app.get('/api/service/sla-trend', async (req, res) => {
+    try {
+        const trend = await query(`
+            SELECT 
+                CONCAT(
+                    DATENAME(month, CreatedAt), ' ', 
+                    YEAR(CreatedAt)
+                ) as month,
+                COUNT(*) as total_incidents,
+                SUM(CASE WHEN Status = 'Resolved' AND ResolvedAt <= SlaDue THEN 1 ELSE 0 END) as within_sla,
+                ROUND(
+                    SUM(CASE WHEN Status = 'Resolved' AND ResolvedAt <= SlaDue THEN 1 ELSE 0 END) * 100.0 / 
+                    NULLIF(COUNT(*), 0), 
+                    1
+                ) as sla_percentage
+            FROM incidents
+            WHERE CreatedAt >= DATEADD(month, -6, GETDATE())
+            GROUP BY 
+                DATENAME(month, CreatedAt),
+                YEAR(CreatedAt),
+                MONTH(CreatedAt)
+            ORDER BY 
+                MAX(YEAR(CreatedAt)) DESC, 
+                MAX(MONTH(CreatedAt)) DESC
+        `);
+        
+        res.json(trend);
+    } catch (err) {
+        console.error('SLA Trend error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
+// 26. Avg Response Time by Priority
+app.get('/api/service/response-time-by-priority', async (req, res) => {
+    try {
+        const responseTime = await query(`
+            SELECT 
+                ISNULL(Priority, 'Unknown') as Priority,
+                COUNT(*) as incident_count,
+                AVG(
+                    DATEDIFF(minute, CreatedAt, 
+                        CASE WHEN ResolvedAt IS NOT NULL THEN ResolvedAt 
+                        ELSE GETDATE() END
+                    )
+                ) as avg_response_minutes
+            FROM incidents
+            WHERE CreatedAt >= DATEADD(month, -1, GETDATE())
+            GROUP BY Priority
+            ORDER BY 
+                CASE ISNULL(Priority, 'Unknown')
+                    WHEN 'P1' THEN 1
+                    WHEN 'P2' THEN 2
+                    WHEN 'P3' THEN 3
+                    WHEN 'P4' THEN 4
+                    ELSE 5
+                END
+        `);
+        
+        res.json(responseTime);
+    } catch (err) {
+        console.error('Response Time error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 27. Incidents by Support Level
+app.get('/api/service/incidents-by-level', async (req, res) => {
+    try {
+        const byLevel = await query(`
+            SELECT 
+                ISNULL(AssignedLevel, 'Unassigned') as support_level,
+                COUNT(*) as incident_count,
+                ROUND(
+                    COUNT(*) * 100.0 / 
+                    (SELECT COUNT(*) FROM incidents WHERE CreatedAt >= DATEADD(month, -1, GETDATE())), 
+                    1
+                ) as percentage
+            FROM incidents
+            WHERE CreatedAt >= DATEADD(month, -1, GETDATE())
+            GROUP BY AssignedLevel
+            ORDER BY incident_count DESC
+        `);
+        
+        res.json(byLevel);
+    } catch (err) {
+        console.error('Incidents by Level error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 28. Resolved Incidents Table (Level 2)
+app.get('/api/service/resolved-incidents', async (req, res) => {
+    try {
+        const incidents = await query(`
+            SELECT 
+                IncidentID,
+                Title,
+                Priority,
+                Status,
+                CustomerName,
+                AssignedTo,
+                CreatedAt,
+                ResolvedAt,
+                DATEDIFF(hour, CreatedAt, ResolvedAt) as resolution_hours,
+                CASE 
+                    WHEN ResolvedAt <= SlaDue THEN 'Within SLA'
+                    ELSE 'Breached'
+                END as sla_status
+            FROM incidents
+            WHERE Status = 'Resolved'
+              AND CreatedAt >= DATEADD(month, -1, GETDATE())
+            ORDER BY ResolvedAt DESC
+        `);
+        
+        res.json(incidents);
+    } catch (err) {
+        console.error('Resolved Incidents error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
 
@@ -835,5 +955,11 @@ app.listen(PORT, async () => {
     console.log('GET  /api/projects/:clientName/agents');
     console.log('GET  /api/sectors/stats');
     console.log('GET  /api/overall/stats');
+
+    console.log('\n📊 SERVICE PERFORMANCE ENDPOINTS:');
+    console.log('GET  /api/service/sla-trend');
+    console.log('GET  /api/service/response-time-by-priority');
+    console.log('GET  /api/service/incidents-by-level');
+    console.log('GET  /api/service/resolved-incidents');
     console.log('=================================');
 });
